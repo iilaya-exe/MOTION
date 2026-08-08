@@ -485,6 +485,16 @@ select.field { cursor: pointer; }
   gap: 14px;
 }
 
+/* The empty-state message is a grid item like any card, so without an explicit
+   span it sits in the first ~292px track and wraps there — looking cramped while
+   the rest of the row sits empty. 1 / -1 makes it use the full width. */
+.checklist-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-3);
+  font-size: var(--fs-body-s);
+}
+
 .checklist-card {
   border: 1px solid var(--border);
   border-radius: var(--r-md);

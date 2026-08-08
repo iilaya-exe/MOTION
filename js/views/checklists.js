@@ -10,7 +10,7 @@ export function render() {
   const { checklists } = store.state;
 
   if (!checklists.length) {
-    grid.innerHTML = '<p class="subtitle" style="margin:0;">No checklists yet. Create one above to get started.</p>';
+    grid.innerHTML = '<p class="checklist-empty">No checklists yet. Create one above to get started.</p>';
     return;
   }
 
