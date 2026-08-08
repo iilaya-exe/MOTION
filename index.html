@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Motion</title>
+<meta name="description" content="Motion — a local-first workspace for tasks, calendar, class schedule, checklists and notes.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/calendar.css">
+<link rel="stylesheet" href="css/schedule.css">
+<link rel="stylesheet" href="css/notes.css">
+<link rel="stylesheet" href="css/responsive.css">
+
+<script>
+// Applied before first paint so a dark-theme user never sees a white flash.
+(function () {
+  try {
+    var t = localStorage.getItem("motionTheme");
+    if (t !== "light" && t !== "dark") {
+      t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {
+    document.documentElement.setAttribute("data-theme", "light");
+  }
+})();
+</script>
+
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-mark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17V7l4.5 4.5L12 7.5l3.5 4L20 7v10"/></svg>
+  </div>
+  <span>Loading your workspace…</span>
+</div>
+
+<header class="topbar" id="topbar">
+  <button class="topbar-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3.5 6.5h17M3.5 12h17M3.5 17.5h17"/></svg>
+  </button>
+  <div class="topbar-brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17V7l4.5 4.5L12 7.5l3.5 4L20 7v10"/></svg>
+    </div>
+    <span class="brand-name">Motion</span>
+  </div>
+</header>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17V7l4.5 4.5L12 7.5l3.5 4L20 7v10"/></svg>
+      </div>
+      <span class="brand-name">Motion</span>
+    </div>
+
+    <div class="nav-item" data-view="dashboard">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.8 12 3l9 6.8V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.8Z"/></svg>
+      Home
+    </div>
+    <div class="nav-item" data-view="tasks">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="m8 12.2 2.6 2.6L16 9.4"/></svg>
+      Tasks
+    </div>
+    <div class="nav-item" data-view="calendar">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3.5"/><path d="M3 10h18M8.5 3v4M15.5 3v4"/></svg>
+      Calendar
+    </div>
+    <div class="nav-item" data-view="schedule">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.2 2.2"/></svg>
+      Schedule
+    </div>
+    <div class="nav-item" data-view="checklists">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6.5 1.8 1.8L8 5.2M3 16.5l1.8 1.8L8 15.2M11.5 7h9.5M11.5 17h9.5"/></svg>
+      Checklists
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-header">
+        <span>Notes</span>
+        <button id="newPageBtn" title="New page" aria-label="New page">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div id="pageList"></div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="theme-toggle" id="themeToggle"></button>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <section id="view-dashboard" class="view">
+      <h1 id="greeting">Welcome back</h1>
+      <p class="subtitle" id="todayLabel"></p>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon indigo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="m8 12.2 2.6 2.6L16 9.4"/></svg></div></div>
+          <div class="num" id="statDueToday">0</div><div class="label">Tasks due today</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon red"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.2 2.2"/></svg></div></div>
+          <div class="num" id="statOverdue">0</div><div class="label">Overdue tasks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon green"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3.5"/><path d="M3 10h18M8.5 3v4M15.5 3v4"/></svg></div></div>
+          <div class="num" id="statEvents">0</div><div class="label">Events this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><div class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6.5 1.8 1.8L8 5.2M3 16.5l1.8 1.8L8 15.2M11.5 7h9.5M11.5 17h9.5"/></svg></div></div>
+          <div class="num" id="statChecklists">0</div><div class="label">Checklists in progress</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:26px;">
+        <div class="row task-form">
+          <input class="field grow" id="quickTaskInput" type="text" placeholder="Quick add a task and press Enter...">
+          <button class="btn" id="quickTaskBtn">Add Task</button>
+        </div>
+      </div>
+
+      <div class="dash-columns">
+        <div class="dash-col">
+          <h3>Due Today</h3>
+          <ul class="simple-list" id="dashDueToday"></ul>
+        </div>
+        <div class="dash-col">
+          <h3>Upcoming Events</h3>
+          <ul class="simple-list" id="dashUpcoming"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-tasks" class="view hidden">
+      <h1>Tasks</h1>
+      <p class="subtitle">Everything you need to get done.</p>
+
+      <div class="row task-form">
+        <input class="field grow" id="taskTextInput" type="text" placeholder="What needs to be done?">
+        <input class="field task-due" id="taskDueInput" type="date">
+        <select class="field" id="taskPriorityInput">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+        <button class="btn" id="addTaskBtn">Add Task</button>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="active">Active</button>
+        <button class="filter-tab" data-filter="done">Completed</button>
+      </div>
+
+      <ul class="task-list" id="taskList"></ul>
+    </section>
+
+    <section id="view-calendar" class="view hidden">
+      <h1>Calendar</h1>
+      <p class="subtitle">Click any day to see holidays, events and tasks. Philippine holidays are shown automatically — movable ones (Chinese New Year, Eid&rsquo;l Fitr, Eid&rsquo;l Adha) are estimated and may shift by a day pending official proclamation.</p>
+
+      <div class="cal-header">
+        <div class="cal-nav">
+          <button class="btn secondary icon-only" id="prevMonthBtn" title="Previous month" aria-label="Previous month">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="btn secondary" id="todayBtn">Today</button>
+          <button class="btn secondary icon-only" id="nextMonthBtn" title="Next month" aria-label="Next month">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <h2 id="calLabel"></h2>
+        <button class="btn new-event-btn" id="newEventBtn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          New Event
+        </button>
+      </div>
+
+      <div class="cal-scroll">
+        <div class="cal-inner"><div id="calGrid"></div></div>
+      </div>
+    </section>
+
+    <section id="view-schedule" class="view hidden">
+      <h1>Schedule</h1>
+      <p class="subtitle">Your recurring weekly classes, and what&rsquo;s running right now.</p>
+
+      <div class="now-card" id="nowCard"></div>
+
+      <div class="sched-bar">
+        <div class="day-picker" id="dayPicker"></div>
+        <div class="sched-actions">
+          <button class="btn secondary" id="fullSchedBtn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3.5"/><path d="M3 10h18M8.5 3v4M15.5 3v4"/></svg>
+            Full Schedule
+          </button>
+          <button class="btn add-class-btn" id="addClassBtn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add Class
+          </button>
+        </div>
+      </div>
+
+      <h3 class="sched-heading" id="dayHeading">Classes Today</h3>
+      <ul class="class-list" id="dayClassList"></ul>
+
+      <h3 class="sched-heading" style="margin-top:30px;">All Classes</h3>
+      <div class="table-scroll"><table class="sched-table" id="allClassesTable"></table></div>
+    </section>
+
+    <section id="view-checklists" class="view hidden">
+      <h1>Checklists</h1>
+      <p class="subtitle">Keep track of anything in list form.</p>
+
+      <div class="row" style="margin-bottom:20px;">
+        <input class="field grow" id="newChecklistInput" type="text" placeholder="New checklist name (e.g. Packing List)" style="max-width:46ch;">
+        <button class="btn" id="addChecklistBtn">Create Checklist</button>
+      </div>
+
+      <div class="checklist-grid" id="checklistGrid"></div>
+    </section>
+
+    <section id="view-notes" class="view hidden">
+      <div class="notes-toolbar">
+        <button data-block="h2" title="Heading">Heading</button>
+        <button data-block="h3" title="Subheading">Subheading</button>
+        <button data-block="p" title="Body text">Body</button>
+        <span class="toolbar-sep"></span>
+        <button data-cmd="bold" title="Bold"><b>B</b></button>
+        <button data-cmd="italic" title="Italic"><i>I</i></button>
+        <button data-cmd="underline" title="Underline"><u>U</u></button>
+        <span class="toolbar-sep"></span>
+        <button data-cmd="insertUnorderedList" title="Bullet list">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.2" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.2" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.2" cy="18" r="1.3" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button data-cmd="insertOrderedList" title="Numbered list">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11M3.4 5.2 4.8 4.6V9M3.2 14.4c0-.9 1.9-1.1 1.9 0 0 .8-1.9 1.6-1.9 2.9h2.1"/></svg>
+        </button>
+        <span class="toolbar-sep"></span>
+        <button data-insert="divider" title="Insert divider">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 12h18"/><path d="M6 7h12M6 17h12" opacity=".33"/></svg>
+        </button>
+      </div>
+      <input type="text" class="page-title-input" id="pageTitleInput" placeholder="Untitled">
+      <div class="page-content" id="pageContent" contenteditable="true" data-placeholder="Start writing..."></div>
+      <div class="notes-footer">
+        <button class="btn danger" id="deletePageBtn">Delete Page</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="modalDateLabel"></h3>
+    <div class="modal-body">
+      <div id="modalHolidaysSection" class="hidden">
+        <h3 class="modal-label">Holidays</h3>
+        <ul class="modal-events" id="modalHolidayList"></ul>
+      </div>
+
+      <h3 class="modal-label" style="margin-top:16px;">Events</h3>
+      <ul class="modal-events" id="modalEventList"></ul>
+      <button class="btn secondary" id="modalAddEventBtn" style="width:100%;">+ Add Event</button>
+
+      <div id="modalTasksSection">
+        <h3 class="modal-label" style="margin-top:18px;">Tasks due this day</h3>
+        <ul class="modal-tasks" id="modalTaskList"></ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn secondary" id="modalCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="fullSchedOverlay">
+  <div class="modal modal-wide" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3 style="margin:0;">Full Schedule</h3>
+      <button class="icon-btn" id="fullSchedCloseBtn" title="Close" aria-label="Close">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="week-scroll"><div id="weekGrid"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="classModalOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="classModalTitle">Add Class</h3>
+    <div class="modal-body">
+      <div class="modal-label">Subject</div>
+      <input class="field" id="classSubjectInput" type="text" placeholder="e.g. Mathematics 1" style="width:100%;margin-bottom:14px;">
+
+      <div class="form-2col">
+        <div>
+          <div class="modal-label">Section</div>
+          <input class="field" id="classSectionInput" type="text" placeholder="e.g. K" style="width:100%;">
+        </div>
+        <div>
+          <div class="modal-label">Room / Facility</div>
+          <input class="field" id="classRoomInput" type="text" placeholder="e.g. Room 101" style="width:100%;">
+        </div>
+      </div>
+
+      <div class="modal-label" style="margin-top:16px;">Colour</div>
+      <div class="swatch-row" id="classColorRow"></div>
+
+      <div class="modal-label" style="margin-top:16px;">Days</div>
+      <div class="day-toggle" id="classDayToggle"></div>
+
+      <div class="form-2col" style="margin-top:16px;">
+        <div>
+          <div class="modal-label">Start</div>
+          <input class="field" id="classStartInput" type="time" style="width:100%;">
+        </div>
+        <div>
+          <div class="modal-label">End</div>
+          <input class="field" id="classEndInput" type="time" style="width:100%;">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn danger hidden" id="classDeleteBtn">Delete</button>
+      <div class="row">
+        <button class="btn secondary" id="classCancelBtn">Cancel</button>
+        <button class="btn" id="classSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="eventModalOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="eventModalTitle">New Event</h3>
+    <div class="modal-body">
+      <input class="field" id="eventTitleInput" type="text" placeholder="Event title..." style="width:100%;margin-bottom:14px;">
+
+      <div class="modal-label">Dates</div>
+      <div class="modal-add-row">
+        <input class="field" id="eventDateInput" type="date" title="Start date">
+        <span style="color:var(--text-3);font-size:var(--fs-body-s);">to</span>
+        <input class="field" id="eventDateEndInput" type="date" title="End date (optional)">
+        <button class="btn secondary" id="eventAddDateBtn">Add</button>
+      </div>
+      <div class="hint-text">Leave &ldquo;to&rdquo; blank to add just one date. Add multiple times for separate ranges.</div>
+      <div class="date-chip-list" id="eventDatesList"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn danger hidden" id="eventDeleteBtn">Delete Event</button>
+      <div class="row">
+        <button class="btn secondary" id="eventCancelBtn">Cancel</button>
+        <button class="btn" id="eventSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

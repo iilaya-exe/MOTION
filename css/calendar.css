@@ -1,0 +1,186 @@
+/* Month grid. Each week is its own grid: day boxes span the full week height on
+   row 1, while event bars occupy explicit 26px lane rows above them. */
+
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.cal-header h2 {
+  font-size: var(--fs-h3);
+  margin: 0;
+  font-weight: 640;
+  letter-spacing: -0.015em;
+}
+
+.cal-nav { display: flex; gap: 5px; align-items: center; }
+
+.cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); }
+
+.cal-dow {
+  text-align: center;
+  font-size: var(--fs-tiny);
+  font-weight: 650;
+  color: var(--text-3);
+  padding-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+/* Marked with explicit classes rather than :first-of-type / :last-of-type: the
+   day-of-week header is also a div and sits first, so :first-of-type never
+   matched a week and only the bottom corners were ever rounded. */
+.cal-week.is-first {
+  border-top-left-radius: var(--r-md);
+  border-top-right-radius: var(--r-md);
+}
+
+.cal-week.is-last {
+  border-bottom-left-radius: var(--r-md);
+  border-bottom-right-radius: var(--r-md);
+}
+
+.cal-week:not(.is-first) { margin-top: -1px; }
+
+.cal-daybox {
+  grid-row: 1 / -1;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.13s var(--ease);
+}
+
+.cal-daybox:hover { background: var(--hover-subtle); }
+.cal-daybox.blank { cursor: default; background: var(--surface-2); }
+.cal-daybox.today { background: var(--accent-soft); }
+
+.cal-dayhead {
+  grid-row: 1;
+  padding: 7px 8px 2px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  z-index: 1;
+}
+
+.cal-dayhead-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.cal-daynum {
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: -0.01em;
+}
+
+.cal-dayhead.today .cal-daynum {
+  background: var(--accent-fill);
+  color: #fff;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-mini);
+  font-weight: 650;
+  box-shadow: 0 1px 4px -1px var(--accent-glow);
+}
+
+.cal-task-indicator {
+  font-size: var(--fs-tiny);
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  font-weight: 550;
+}
+
+.cal-task-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
+}
+
+.cal-holiday-chip {
+  font-size: var(--fs-micro);
+  font-weight: 650;
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.cal-holiday-chip.regular { background: var(--danger-soft); color: var(--danger); }
+.cal-holiday-chip.special { background: var(--amber-soft); color: var(--amber); }
+
+.cal-event-bar {
+  background: var(--accent-fill);
+  color: #fff;
+  font-size: var(--fs-mini);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  line-height: 1;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  z-index: 1;
+  transition: background 0.13s var(--ease);
+}
+
+.cal-event-bar:hover { background: var(--accent-fill-hover); }
+
+.cal-event-bar.cap-start {
+  border-top-left-radius: 11px;
+  border-bottom-left-radius: 11px;
+  margin-left: 4px;
+}
+
+.cal-event-bar.cap-end {
+  border-top-right-radius: 11px;
+  border-bottom-right-radius: 11px;
+  margin-right: 4px;
+}
+
+.cal-more-events {
+  font-size: var(--fs-tiny);
+  color: var(--text-3);
+  font-weight: 550;
+  padding: 0 8px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 1;
+}

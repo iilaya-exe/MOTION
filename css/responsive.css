@@ -1,0 +1,162 @@
+/* Breakpoints, smallest last. Below 768px the sidebar becomes a drawer and the
+   modals become bottom sheets. */
+
+/* ---------------- Tablet ---------------- */
+@media (max-width: 860px) {
+  .sidebar { width: 210px; min-width: 210px; }
+  .content { padding: 28px 24px 56px; }
+}
+
+/* ---------------- Phone / small tablet: drawer nav ---------------- */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body.nav-open { overflow: hidden; }
+
+  .topbar { display: flex; }
+  .sidebar-backdrop { display: block; pointer-events: none; }
+  .sidebar-backdrop.show { pointer-events: auto; }
+
+  .app {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: block;
+    overflow: visible;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 120;
+    width: 272px;
+    min-width: 272px;
+    max-width: 84vw;
+    transform: translateX(-100%);
+    transition: transform 0.24s var(--ease);
+    padding: calc(14px + env(safe-area-inset-top)) 10px calc(14px + env(safe-area-inset-bottom));
+    overscroll-behavior: contain;
+  }
+
+  .sidebar.open { transform: none; box-shadow: var(--shadow-lg); }
+
+  .content {
+    padding: calc(54px + env(safe-area-inset-top) + 22px) 18px calc(48px + env(safe-area-inset-bottom));
+    overflow: visible;
+    height: auto;
+  }
+
+  .view .subtitle { margin-bottom: 20px; }
+
+  /* Calendar keeps its true proportions and scrolls instead of squashing. */
+  .cal-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -2px;
+    padding: 0 2px 4px;
+  }
+
+  .cal-inner { min-width: 520px; }
+
+  /* Must stay a literal 16px: below that iOS zooms the page on focus. */
+  input,
+  select,
+  textarea,
+  .field { font-size: 16px; }
+
+  .page-content { font-size: 16px; min-height: 280px; }
+
+  .field { padding: 10px 12px; }
+  .btn { padding: 10px 15px; min-height: 42px; }
+  .icon-btn { width: 32px; height: 32px; }
+  .icon-btn .icon { width: 17px; height: 17px; }
+
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 9px; margin-bottom: 22px; }
+  .stat-card { padding: 13px; }
+  .stat-top { margin-bottom: 7px; }
+
+  .task-form { gap: 8px; }
+  .field.grow { min-width: 100%; }
+  .task-form .field.task-due { flex: 1; min-width: 145px; }
+  .task-form select.field { flex: 1; min-width: 110px; }
+  .task-form .btn { flex: 1 0 100%; }
+
+  .dash-columns { gap: 24px; }
+  .dash-col { min-width: 100%; }
+
+  .checklist-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  .form-2col { grid-template-columns: 1fr; }
+  .sched-actions { flex: 1 0 100%; }
+  .sched-actions .btn { flex: 1; }
+  .modal.modal-wide { width: 100%; max-height: 92vh; max-height: 92dvh; }
+  .sched-bar { gap: 10px; }
+  .day-picker { flex: 1; justify-content: space-between; }
+  .add-class-btn { flex: 1 0 100%; }
+  .class-where { min-width: 0; }
+  .cl-items li .icon-btn { opacity: 1; }
+
+  .cal-header { gap: 10px; }
+  .cal-header h2 { order: -1; flex: 1 0 100%; }
+  .cal-nav { flex: 1; }
+  .cal-nav .btn { flex: 1; }
+  .new-event-btn { flex: 1 0 100%; }
+
+  .notes-toolbar { width: 100%; justify-content: flex-start; }
+  .notes-toolbar button { height: 34px; min-width: 36px; }
+
+  /* Modals become bottom sheets; raised above the fixed topbar/drawer. */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+    z-index: 150;
+    overscroll-behavior: contain;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+    animation: sheetIn 0.24s var(--ease);
+  }
+
+  @keyframes sheetIn {
+    from { transform: translateY(100%); }
+    to { transform: none; }
+  }
+
+  .modal-footer { margin-top: 16px; }
+  .modal-footer .btn { flex: 1; }
+  .modal-footer .row { flex: 1; display: flex; gap: 8px; }
+  .modal-add-row input { min-width: 100%; }
+  .modal-add-row .btn { flex: 1; }
+}
+
+/* ---------------- Small phones ---------------- */
+@media (max-width: 400px) {
+  .content { padding-left: 14px; padding-right: 14px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .filter-tab { padding: 5px 10px; }
+}
+
+/* Touch devices only (never a trackpad laptop): no hover-reveal, bigger targets. */
+@media (hover: none) and (max-width: 1024px) {
+  .cl-items li .icon-btn { opacity: 1; }
+  .task-item input[type="checkbox"] { width: 20px; height: 20px; }
+  .task-item input[type="checkbox"]:checked::after {
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+  }
+}

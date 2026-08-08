@@ -1,0 +1,142 @@
+/* ============================================================================
+   Design tokens
+   ----------------------------------------------------------------------------
+   Every colour, radius, shadow and font size in the app resolves through one of
+   these custom properties, so the dark theme is a single attribute swap on
+   <html> rather than a parallel set of rules.
+   ========================================================================== */
+
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #fafafb;
+  --sidebar-bg: #fbfbfc;
+  --border: #ebebf0;
+  --border-strong: #dededf;
+  --text: #17171c;
+  --text-2: #57575f;
+  --text-3: #8b8b96;
+  --accent: #5b5bd6;
+  --accent-hover: #4a4ac4;
+  --accent-soft: #f0f0fe;
+  --accent-border: #d9dafb;
+  --danger: #d92d20;
+  --danger-soft: #fef3f2;
+  --danger-border: #fbd5d1;
+  --success: #079455;
+  --success-soft: #ecfdf3;
+  --amber: #b54708;
+  --amber-soft: #fffaeb;
+  --amber-border: #fde68a;
+  --grad: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  --r-sm: 6px;
+  --r-md: 9px;
+  --r-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(16, 18, 27, 0.05);
+  --shadow-md: 0 4px 14px -3px rgba(16, 18, 27, 0.09), 0 2px 5px -2px rgba(16, 18, 27, 0.05);
+  --shadow-lg: 0 24px 56px -12px rgba(16, 18, 27, 0.22), 0 6px 16px -6px rgba(16, 18, 27, 0.1);
+  --ring: 0 0 0 3px rgba(91, 91, 214, 0.15);
+  --hover-subtle: rgba(23, 23, 28, 0.028);
+  --hover: rgba(23, 23, 28, 0.055);
+  --hover-strong: rgba(23, 23, 28, 0.08);
+  --control-border: #c6c6d0;
+  --border-hover: #cfcfd6;
+  --placeholder: #c9c9d2;
+  --track: #eeeef2;
+  --topbar-bg: rgba(255, 255, 255, 0.86);
+  --accent-fill: #5b5bd6;
+  --accent-fill-hover: #4a4ac4;
+  --accent-ghost: rgba(91, 91, 214, 0.16);
+  --accent-glow: rgba(91, 91, 214, 0.5);
+  --overlay: rgba(16, 18, 27, 0.42);
+  --danger-hover: #b42318;
+  --success-border: #abefc6;
+  --selection: rgba(91, 91, 214, 0.16);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Fluid type scale — every size interpolates with the viewport between a
+     phone-width floor and an ultrawide ceiling, so nothing is hard-coded. */
+  --fs-micro: clamp(9.5px, 0.079vw + 9.2px, 12px);
+  --fs-tiny: clamp(10.5px, 0.087vw + 10.17px, 13px);
+  --fs-mini: clamp(11px, 0.095vw + 10.64px, 13.5px);
+  --fs-caption: clamp(12px, 0.095vw + 11.64px, 15px);
+  --fs-body-s: clamp(12.8px, 0.111vw + 12.38px, 16px);
+  --fs-body: clamp(13.5px, 0.119vw + 13.05px, 17px);
+  --fs-body-l: clamp(14.5px, 0.119vw + 14.05px, 18px);
+  --fs-h3: clamp(15.5px, 0.159vw + 14.91px, 20px);
+  --fs-h2: clamp(17px, 0.357vw + 15.66px, 24px);
+  --fs-stat: clamp(20px, 0.396vw + 18.51px, 28px);
+  --fs-h1: clamp(20px, 0.555vw + 17.92px, 31px);
+  --fs-display: clamp(23px, 0.634vw + 20.62px, 36px);
+}
+
+:root {
+  color-scheme: light;
+}
+
+/* ---------------- Dark theme ---------------- */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e0e11;
+  --surface: #16161a;
+  --surface-2: #1c1c21;
+  --sidebar-bg: #121215;
+  --border: #26262d;
+  --border-strong: #33333c;
+  --text: #f1f1f4;
+  --text-2: #b2b2be;
+  --text-3: #80808d;
+  --accent: #7b7bf0;
+  --accent-hover: #8d8df5;
+  --accent-soft: #20204a;
+  --accent-border: #3a3a6e;
+  --danger: #f97066;
+  --danger-soft: #331a19;
+  --danger-border: #5c2723;
+  --danger-hover: #fda29b;
+  --success: #47cd89;
+  --success-soft: #10281d;
+  --success-border: #1f4d38;
+  --amber: #f5b544;
+  --amber-soft: #2b2113;
+  --amber-border: #4a381a;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.34);
+  --shadow-md: 0 4px 14px -3px rgba(0, 0, 0, 0.5), 0 2px 5px -2px rgba(0, 0, 0, 0.34);
+  --shadow-lg: 0 24px 56px -12px rgba(0, 0, 0, 0.66), 0 6px 16px -6px rgba(0, 0, 0, 0.45);
+  --ring: 0 0 0 3px rgba(123, 123, 240, 0.28);
+  --hover-subtle: rgba(255, 255, 255, 0.035);
+  --hover: rgba(255, 255, 255, 0.065);
+  --hover-strong: rgba(255, 255, 255, 0.1);
+  --control-border: #3f3f4a;
+  --border-hover: #4a4a56;
+  --placeholder: #5b5b68;
+  --track: #292930;
+  --topbar-bg: rgba(18, 18, 21, 0.86);
+  --accent-fill: #5b5bd6;
+  --accent-fill-hover: #635cdd;
+  --accent-ghost: rgba(123, 123, 240, 0.24);
+  --accent-glow: rgba(123, 123, 240, 0.5);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --selection: rgba(123, 123, 240, 0.3);
+}
+
+/* ---------------- Class colour palette ----------------
+   Each class carries a colour key; the class sets --cc / --cc-soft locally so
+   every part of the row (edge, icon, tag, live card) picks it up. */
+.c-indigo { --cc: #5b5bd6; --cc-soft: #eef0fe; }
+.c-violet { --cc: #7c3aed; --cc-soft: #f6f1ff; }
+.c-blue   { --cc: #2563eb; --cc-soft: #eff4ff; }
+.c-teal   { --cc: #0f766e; --cc-soft: #e9faf7; }
+.c-green  { --cc: #15803d; --cc-soft: #ecfdf3; }
+.c-amber  { --cc: #b45309; --cc-soft: #fffaeb; }
+.c-rose   { --cc: #be123c; --cc-soft: #fff1f3; }
+.c-slate  { --cc: #475569; --cc-soft: #f1f5f9; }
+
+:root[data-theme="dark"] .c-indigo { --cc: #9a9af7; --cc-soft: #20204a; }
+:root[data-theme="dark"] .c-violet { --cc: #bb9bff; --cc-soft: #2a1d4d; }
+:root[data-theme="dark"] .c-blue   { --cc: #7fa8ff; --cc-soft: #152549; }
+:root[data-theme="dark"] .c-teal   { --cc: #4fd1c5; --cc-soft: #0f2f2c; }
+:root[data-theme="dark"] .c-green  { --cc: #5cd98d; --cc-soft: #10291d; }
+:root[data-theme="dark"] .c-amber  { --cc: #f5b544; --cc-soft: #2b2113; }
+:root[data-theme="dark"] .c-rose   { --cc: #fb7185; --cc-soft: #39161f; }
+:root[data-theme="dark"] .c-slate  { --cc: #9aa8bd; --cc-soft: #1e2633; }
