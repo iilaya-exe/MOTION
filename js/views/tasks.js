@@ -18,6 +18,19 @@ const view = {
 const PRIORITIES = ["low", "medium", "high"];
 const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
 
+/* Mirrors the Status column of a Notion database. `complete` is kept in sync
+   with the checkbox both ways, so the two can never disagree. */
+export const STATUSES = [
+  { id: "todo", label: "To do" },
+  { id: "progress", label: "In progress" },
+  { id: "review", label: "In review" },
+  { id: "stuck", label: "Stuck" },
+  { id: "hold", label: "On hold" },
+  { id: "complete", label: "Complete" },
+];
+
+const statusLabel = (id) => STATUSES.find((s) => s.id === id)?.label || "To do";
+
 /** Shared with the dashboard's quick-add box. */
 export function addTask(text, due, priority) {
   const trimmed = (text || "").trim();
@@ -29,6 +42,7 @@ export function addTask(text, due, priority) {
     done: false,
     due: due || null,
     priority: priority || "medium",
+    status: "todo",
     createdAt: Date.now(),
   });
   store.save();
@@ -45,6 +59,9 @@ function dayOffset(key) {
 
 /** Which bucket a task falls into, given the current groupBy. */
 function bucketOf(task) {
+  // Grouping by status uses the task's own status, including "complete" — a
+  // separate Completed bucket would duplicate it.
+  if (view.groupBy === "status") return task.status;
   if (task.done) return "done";
 
   if (view.groupBy === "priority") return task.priority;
@@ -71,11 +88,13 @@ const BUCKET_LABELS = {
   low: "Low priority",
   all: "All tasks",
   done: "Completed",
+  ...Object.fromEntries(STATUSES.map((st) => [st.id, st.label])),
 };
 
 const BUCKET_ORDER = {
   due: ["overdue", "today", "tomorrow", "week", "later", "none", "done"],
   priority: ["high", "medium", "low", "done"],
+  status: STATUSES.map((st) => st.id),
   none: ["all", "done"],
 };
 
@@ -146,6 +165,19 @@ function priorityCell(task) {
   );
 }
 
+function statusCell(task) {
+  const options = STATUSES.map(
+    (st) => `<option value="${st.id}"${st.id === task.status ? " selected" : ""}>${st.label}</option>`
+  ).join("");
+
+  return (
+    `<span class="prop-cell">` +
+    `<span class="badge status-${esc(task.status)}">${esc(statusLabel(task.status))}</span>` +
+    `<select class="prop-input" data-action="set-status" data-id="${esc(task.id)}" ` +
+    `aria-label="Status for ${esc(task.text)}">${options}</select></span>`
+  );
+}
+
 function textCell(task) {
   if (view.editingId === task.id) {
     return `<input class="task-edit" data-action="commit-edit" data-id="${esc(task.id)}" value="${esc(task.text)}">`;
@@ -170,11 +202,12 @@ function deleteButton(task) {
 function taskRow(task) {
   const overdue = !task.done && task.due && task.due < todayKey();
   return (
-    `<li class="task-item${task.done ? " done" : ""}${overdue ? " is-overdue" : ""}">` +
-    checkbox(task) +
-    textCell(task) +
-    `<span class="task-props">${dueCell(task)}${priorityCell(task)}</span>` +
-    deleteButton(task) +
+    `<li class="task-row${task.done ? " done" : ""}${overdue ? " is-overdue" : ""}">` +
+    `<div class="cell-name">${checkbox(task)}${textCell(task)}</div>` +
+    `<div class="cell">${priorityCell(task)}</div>` +
+    `<div class="cell">${dueCell(task)}</div>` +
+    `<div class="cell">${statusCell(task)}</div>` +
+    `<div class="cell">${deleteButton(task)}</div>` +
     "</li>"
   );
 }
@@ -183,7 +216,7 @@ function taskCard(task) {
   return (
     `<li class="board-card${task.done ? " done" : ""}">` +
     `<div class="board-card-top">${checkbox(task)}${textCell(task)}</div>` +
-    `<div class="board-card-foot">${dueCell(task)}${priorityCell(task)}${deleteButton(task)}</div>` +
+    `<div class="board-card-foot">${dueCell(task)}${priorityCell(task)}${statusCell(task)}${deleteButton(task)}</div>` +
     "</li>"
   );
 }
@@ -217,25 +250,30 @@ function renderSummary() {
     (done ? '<button class="link-btn" data-action="clear-done">Clear completed</button>' : "");
 }
 
+const TABLE_HEAD =
+  '<div class="task-head">' +
+  '<span class="col-name">Name</span><span>Priority</span><span>Date</span>' +
+  '<span>Status</span><span></span></div>';
+
+const NEW_ROW =
+  `<button class="task-new-row" data-action="focus-composer">${icon("plus")}New</button>`;
+
 function renderList(groups) {
-  const host = $("taskList");
+  const body = groups.length
+    ? groups
+        .map((g) => {
+          const collapsed = view.collapsed.has(g.key);
+          return (
+            `<section class="task-group g-${esc(g.key)}${collapsed ? " collapsed" : ""}">` +
+            groupHead(g, true) +
+            `<ul class="task-list">${g.tasks.map(taskRow).join("")}</ul>` +
+            "</section>"
+          );
+        })
+        .join("")
+    : `<div class="task-empty">${emptyMessage()}</div>`;
 
-  if (!groups.length) {
-    host.innerHTML = `<ul class="task-list"><li class="task-empty">${emptyMessage()}</li></ul>`;
-    return;
-  }
-
-  host.innerHTML = groups
-    .map((g) => {
-      const collapsed = view.collapsed.has(g.key);
-      return (
-        `<section class="task-group g-${esc(g.key)}${collapsed ? " collapsed" : ""}">` +
-        groupHead(g, true) +
-        `<ul class="task-list">${g.tasks.map(taskRow).join("")}</ul>` +
-        "</section>"
-      );
-    })
-    .join("");
+  $("taskList").innerHTML = `<div class="task-table">${TABLE_HEAD}${body}${NEW_ROW}</div>`;
 }
 
 function renderBoard(groups) {
@@ -324,6 +362,8 @@ function wireItemEvents(host) {
     } else if (action === "toggle-group") {
       view.collapsed.has(key) ? view.collapsed.delete(key) : view.collapsed.add(key);
       render();
+    } else if (action === "focus-composer") {
+      $("taskTextInput").focus();
     } else if (action === "set-due") {
       // The invisible input covers the chip; ask the browser for its picker.
       try {
@@ -341,10 +381,20 @@ function wireItemEvents(host) {
     const task = byId(el.dataset.id);
     if (!task) return;
 
-    if (el.dataset.action === "toggle-task") task.done = el.checked;
-    else if (el.dataset.action === "set-priority") task.priority = el.value;
-    else if (el.dataset.action === "set-due") task.due = el.value || null;
-    else return;
+    if (el.dataset.action === "toggle-task") {
+      task.done = el.checked;
+      // Keep Status honest: ticking completes it, unticking sends a previously
+      // complete task back to To do but leaves any other status alone.
+      if (el.checked) task.status = "complete";
+      else if (task.status === "complete") task.status = "todo";
+    } else if (el.dataset.action === "set-status") {
+      task.status = el.value;
+      task.done = el.value === "complete";
+    } else if (el.dataset.action === "set-priority") {
+      task.priority = el.value;
+    } else if (el.dataset.action === "set-due") {
+      task.due = el.value || null;
+    } else return;
 
     store.save();
     render();

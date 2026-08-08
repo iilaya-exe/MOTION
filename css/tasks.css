@@ -1,11 +1,11 @@
 /* ============================================================================
    Tasks
    ----------------------------------------------------------------------------
-   Two presentations of the same data. The list groups tasks into labelled
-   sections and is capped at a readable measure; the board turns those same
-   groups into columns and deliberately uses the full width.
+   Two presentations of the same data. The list is a full-width property table
+   grouped into labelled sections; the board turns those same groups into
+   columns. Neither is width-capped — the columns are what use the space.
 
-   Properties (due date, priority) are edited in place: each chip has a real
+   Properties (date, priority, status) are edited in place: each chip has a real
    native control stretched invisibly over it, so a click opens the browser's own
    date picker or select menu with no custom popup to build or keyboard-trap.
    ========================================================================== */
@@ -175,23 +175,54 @@
 
 .link-btn:hover { background: var(--accent-soft); }
 
-/* ---------------- Grouped list ---------------- */
-/* Capped so a task line stays a readable measure instead of stretching the
-   full width of an ultrawide window. The board view is the one that fills. */
-.task-groups {
-  max-width: 940px;
+/* ---------------- Grouped table ----------------
+   Laid out with CSS grid rather than a <table>: the same column template is
+   applied to the header and to every row in every group, so columns line up
+   across group boundaries — something a real table cannot do once rows are
+   split into separate <tbody> sections. It also lets the whole thing become a
+   stacked flex layout on a phone, which a table would fight. */
+
+.task-table {
+  /* Name takes the slack; the property columns are fixed so chips align. */
+  --cols: minmax(0, 1fr) 116px 132px 142px 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
-.task-group + .task-group {
-  margin-top: 22px;
+.task-head,
+.task-row {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
 }
+
+.task-head {
+  height: 34px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-mini);
+  font-weight: 650;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.task-head .col-name { padding-left: 27px; }
+
+.task-group + .task-group .group-head { border-top: 1px solid var(--border); }
 
 .group-head {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 4px 2px 8px;
+  padding: 9px 12px;
+  background: var(--surface-2);
   text-align: left;
   color: var(--text-3);
   transition: color 0.13s var(--ease);
@@ -227,7 +258,7 @@
   font-size: var(--fs-mini);
   font-weight: 650;
   color: var(--text-3);
-  background: var(--surface-2);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 1px 7px;
@@ -243,36 +274,40 @@
 .g-week { --gc: var(--success); }
 .g-later { --gc: var(--text-3); }
 .g-none { --gc: var(--border-strong); }
-.g-done { --gc: var(--success); }
-.g-high { --gc: var(--danger); }
-.g-medium { --gc: var(--amber); }
+.g-done, .g-complete { --gc: var(--success); }
+.g-high, .g-stuck { --gc: var(--danger); }
+.g-medium, .g-hold { --gc: var(--amber); }
 .g-low { --gc: var(--success); }
+.g-todo { --gc: var(--text-3); }
+.g-progress { --gc: var(--accent); }
+.g-review { --gc: #a855f7; }
 
 /* ---------------- Task row ---------------- */
 .task-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
 }
 
-.task-item {
+.task-row {
+  min-height: 40px;
+  border-top: 1px solid var(--border);
+  transition: background 0.13s var(--ease);
+}
+
+.task-row:hover { background: var(--hover-subtle); }
+
+/* inset rather than border-left so the grid columns stay aligned */
+.task-row.is-overdue { box-shadow: inset 3px 0 0 var(--danger); }
+
+.cell-name {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 10px 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.16s var(--ease), border-color 0.16s var(--ease);
+  min-width: 0;
 }
 
-.task-item:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); }
-
-.task-item input[type="checkbox"] {
+.task-row input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
   width: 17px;
@@ -286,10 +321,10 @@
   transition: background 0.13s var(--ease), border-color 0.13s var(--ease);
 }
 
-.task-item input[type="checkbox"]:hover { border-color: var(--accent); }
-.task-item input[type="checkbox"]:checked { background: var(--accent-fill); border-color: var(--accent-fill); }
+.task-row input[type="checkbox"]:hover { border-color: var(--accent); }
+.task-row input[type="checkbox"]:checked { background: var(--accent-fill); border-color: var(--accent-fill); }
 
-.task-item input[type="checkbox"]:checked::after {
+.task-row input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
   left: 5px;
@@ -301,31 +336,29 @@
   transform: rotate(45deg);
 }
 
-.task-item.is-overdue { border-left: 3px solid var(--danger); }
-
 /* Click-to-edit, so the padding/margin pair keeps the hover target generous
    without shifting the text when it swaps to an input. */
-.task-item .task-text {
+.task-row .task-text {
   flex: 1;
-  font-size: var(--fs-body);
+  min-width: 0;
+  font-size: var(--fs-body-s);
   word-break: break-word;
   cursor: text;
   border-radius: 5px;
-  padding: 2px 5px;
-  margin: -2px -5px;
+  padding: 3px 5px;
+  margin: -3px -5px;
   transition: background 0.13s var(--ease);
 }
 
-.task-item.done .task-text { text-decoration: line-through; color: var(--text-3); }
-
-.task-item .task-text:hover { background: var(--hover); }
+.task-row .task-text:hover { background: var(--hover); }
+.task-row.done .task-text { text-decoration: line-through; color: var(--text-3); }
 
 .task-edit {
   flex: 1;
   min-width: 0;
-  font-size: var(--fs-body);
-  padding: 2px 5px;
-  margin: -2px -5px;
+  font-size: var(--fs-body-s);
+  padding: 3px 5px;
+  margin: -3px -5px;
   border: none;
   outline: none;
   background: var(--surface);
@@ -334,18 +367,11 @@
   color: var(--text);
 }
 
-/* Properties sit together at the trailing edge so rows align into columns. */
-.task-props {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
 /* A chip with a real control laid invisibly on top of it. */
 .prop-cell {
   position: relative;
   display: inline-flex;
+  max-width: 100%;
   border-radius: 20px;
 }
 
@@ -364,6 +390,7 @@
   appearance: none;
 }
 
+.prop-cell .badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .prop-cell:hover .badge { border-color: var(--border-hover); }
 .prop-cell:focus-within { box-shadow: var(--ring); }
 
@@ -376,22 +403,50 @@
 
 .prop-cell:hover .badge.ghost { color: var(--text-2); }
 
-.task-item .icon-btn {
+/* Status chips */
+.badge.status-todo { background: var(--surface-2); color: var(--text-2); border-color: var(--border-strong); }
+.badge.status-progress { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+.badge.status-review { background: color-mix(in srgb, #a855f7 12%, transparent); color: #8b3fd9; border-color: color-mix(in srgb, #a855f7 28%, transparent); }
+.badge.status-stuck { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-border); }
+.badge.status-hold { background: var(--amber-soft); color: var(--amber); border-color: var(--amber-border); }
+.badge.status-complete { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+
+:root[data-theme="dark"] .badge.status-review { color: #c9a2ff; }
+
+.task-row .icon-btn {
   opacity: 0;
+  width: 24px;
+  height: 24px;
   transition: opacity 0.13s var(--ease), background 0.13s var(--ease), color 0.13s var(--ease);
 }
 
-.task-item:hover .icon-btn,
-.task-item:focus-within .icon-btn { opacity: 1; }
+.task-row:hover .icon-btn,
+.task-row:focus-within .icon-btn { opacity: 1; }
+
+/* Notion's "+ New" affordance: sends focus to the composer at the top. */
+.task-new-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-body-s);
+  font-weight: 550;
+  color: var(--text-3);
+  text-align: left;
+  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+}
+
+.task-new-row .icon { width: 14px; height: 14px; }
+.task-new-row:hover { background: var(--hover-subtle); color: var(--text-2); }
 
 .task-empty {
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--r-md);
-  box-shadow: none;
-  padding: 26px;
+  padding: 30px;
   text-align: center;
   color: var(--text-3);
   font-size: var(--fs-body-s);
+  border-top: 1px solid var(--border);
   list-style: none;
 }
 

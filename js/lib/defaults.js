@@ -40,6 +40,7 @@ function sanitizeClasses(parsed) {
 }
 
 const PRIORITIES = ["low", "medium", "high"];
+const STATUS_IDS = ["todo", "progress", "review", "stuck", "hold", "complete"];
 
 function sanitizeTasks(parsed) {
   if (!Array.isArray(parsed.tasks)) return [];
@@ -52,6 +53,9 @@ function sanitizeTasks(parsed) {
       done: Boolean(t.done),
       due: /^\d{4}-\d{2}-\d{2}$/.test(t.due) ? t.due : null,
       priority: PRIORITIES.includes(t.priority) ? t.priority : "medium",
+      // Backfilled from `done` for tasks saved before Status existed, so the
+      // checkbox and the chip agree from the very first render.
+      status: STATUS_IDS.includes(t.status) ? t.status : t.done ? "complete" : "todo",
       // Backfilled for tasks saved before ordering was stored, so the list has a
       // stable tiebreak instead of shuffling on every render.
       createdAt: typeof t.createdAt === "number" ? t.createdAt : 0,

@@ -103,8 +103,21 @@
   /* Columns stay a usable width and the board scrolls sideways. */
   .board-col { flex: 0 0 82vw; max-width: 82vw; }
 
-  .task-groups { max-width: none; }
-  .task-props { gap: 5px; }
+  /* The column grid stops making sense at phone width: drop the header and let
+     the name take a full line with the property chips wrapping under it. */
+  .task-head { display: none; }
+
+  .task-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .task-row .cell-name { flex: 1 0 100%; }
+  .task-row .cell { display: inline-flex; }
+  .task-row .cell:last-child { margin-left: auto; }
   .task-item .icon-btn,
   .board-card .icon-btn,
   .cl-actions .icon-btn { opacity: 1; }
