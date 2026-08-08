@@ -84,14 +84,36 @@
 
   .task-form { gap: 8px; }
   .field.grow { min-width: 100%; }
-  .task-form .field.task-due { flex: 1; min-width: 145px; }
-  .task-form select.field { flex: 1; min-width: 110px; }
-  .task-form .btn { flex: 1 0 100%; }
+
+  /* Composer wraps to two rows: text on top, then date + priority side by side
+     with the button on its own full-width line. */
+  .composer { gap: 8px; }
+  .composer .field.grow { min-width: 100%; }
+  .composer .field.task-due { flex: 1; min-width: 145px; }
+  .composer select.field { flex: 1; min-width: 110px; }
+  .composer .btn { flex: 1 0 100%; }
+
+  .list-toolbar { gap: 10px; }
+  .list-toolbar .filter-tabs { flex: 1 0 100%; }
+  .toolbar-end { flex: 1 0 100%; }
+  .search-field { flex: 1; }
+  .search-field input { width: 100%; }
+  .select-wrap { flex: 1; justify-content: space-between; }
+
+  /* Columns stay a usable width and the board scrolls sideways. */
+  .board-col { flex: 0 0 82vw; max-width: 82vw; }
+
+  .task-groups { max-width: none; }
+  .task-props { gap: 5px; }
+  .task-item .icon-btn,
+  .board-card .icon-btn,
+  .cl-actions .icon-btn { opacity: 1; }
 
   .dash-columns { gap: 24px; }
   .dash-col { min-width: 100%; }
 
   .checklist-grid { grid-template-columns: 1fr; gap: 12px; }
+  .cl-items { max-height: none; }
 
   .form-2col { grid-template-columns: 1fr; }
   .sched-actions { flex: 1 0 100%; }
@@ -151,7 +173,10 @@
 
 /* Touch devices only (never a trackpad laptop): no hover-reveal, bigger targets. */
 @media (hover: none) and (max-width: 1024px) {
-  .cl-items li .icon-btn { opacity: 1; }
+  .cl-items li .icon-btn,
+  .cl-actions .icon-btn,
+  .task-item .icon-btn,
+  .board-card .icon-btn { opacity: 1; }
   .task-item input[type="checkbox"] { width: 20px; height: 20px; }
   .task-item input[type="checkbox"]:checked::after {
     left: 6px;

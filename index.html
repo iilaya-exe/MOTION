@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/calendar.css">
+<link rel="stylesheet" href="css/tasks.css">
+<link rel="stylesheet" href="css/checklists.css">
 <link rel="stylesheet" href="css/schedule.css">
 <link rel="stylesheet" href="css/notes.css">
 <link rel="stylesheet" href="css/responsive.css">
@@ -148,7 +150,7 @@
       <h1>Tasks</h1>
       <p class="subtitle">Everything you need to get done.</p>
 
-      <div class="row task-form">
+      <div class="composer" id="taskComposer">
         <input class="field grow" id="taskTextInput" type="text" placeholder="What needs to be done?">
         <input class="field task-due" id="taskDueInput" type="date">
         <select class="field" id="taskPriorityInput">
@@ -159,13 +161,43 @@
         <button class="btn" id="addTaskBtn">Add Task</button>
       </div>
 
-      <div class="filter-tabs">
-        <button class="filter-tab active" data-filter="all">All</button>
-        <button class="filter-tab" data-filter="active">Active</button>
-        <button class="filter-tab" data-filter="done">Completed</button>
+      <div class="list-toolbar">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="active">Active</button>
+          <button class="filter-tab" data-filter="done">Completed</button>
+        </div>
+
+        <div class="toolbar-end">
+          <div class="search-field">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+            <input type="search" id="taskSearch" placeholder="Search tasks...">
+          </div>
+
+          <label class="select-wrap">
+            <span>Group</span>
+            <select id="taskGroupBy">
+              <option value="due" selected>Due date</option>
+              <option value="priority">Priority</option>
+              <option value="none">None</option>
+            </select>
+          </label>
+
+          <div class="seg" id="taskViewToggle" role="group" aria-label="View">
+            <button class="seg-btn active" data-view-mode="list" title="List view" aria-label="List view">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+            </button>
+            <button class="seg-btn" data-view-mode="board" title="Board view" aria-label="Board view">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="5.5" height="16" rx="1.6"/><rect x="9.75" y="4" width="5.5" height="11" rx="1.6"/><rect x="16.5" y="4" width="4.5" height="16" rx="1.6"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
 
-      <ul class="task-list" id="taskList"></ul>
+      <div class="list-summary" id="taskSummary"></div>
+
+      <div class="task-groups" id="taskList"></div>
+      <div class="task-board hidden" id="taskBoard"></div>
     </section>
 
     <section id="view-calendar" class="view hidden">
@@ -225,9 +257,20 @@
       <h1>Checklists</h1>
       <p class="subtitle">Keep track of anything in list form.</p>
 
-      <div class="row" style="margin-bottom:20px;">
-        <input class="field grow" id="newChecklistInput" type="text" placeholder="New checklist name (e.g. Packing List)" style="max-width:46ch;">
+      <div class="composer">
+        <input class="field grow" id="newChecklistInput" type="text" placeholder="New checklist name (e.g. Packing List)">
         <button class="btn" id="addChecklistBtn">Create Checklist</button>
+      </div>
+
+      <div class="list-toolbar">
+        <div class="list-summary" id="checklistSummary"></div>
+        <div class="toolbar-end">
+          <div class="search-field">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+            <input type="search" id="checklistSearch" placeholder="Search checklists...">
+          </div>
+          <button class="btn secondary" id="checklistCollapseAll">Collapse all</button>
+        </div>
       </div>
 
       <div class="checklist-grid" id="checklistGrid"></div>

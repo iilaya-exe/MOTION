@@ -39,6 +39,42 @@ function sanitizeClasses(parsed) {
     }));
 }
 
+const PRIORITIES = ["low", "medium", "high"];
+
+function sanitizeTasks(parsed) {
+  if (!Array.isArray(parsed.tasks)) return [];
+
+  return parsed.tasks
+    .filter((t) => t && typeof t.text === "string")
+    .map((t) => ({
+      id: t.id || uid(),
+      text: t.text,
+      done: Boolean(t.done),
+      due: /^\d{4}-\d{2}-\d{2}$/.test(t.due) ? t.due : null,
+      priority: PRIORITIES.includes(t.priority) ? t.priority : "medium",
+      // Backfilled for tasks saved before ordering was stored, so the list has a
+      // stable tiebreak instead of shuffling on every render.
+      createdAt: typeof t.createdAt === "number" ? t.createdAt : 0,
+    }));
+}
+
+function sanitizeChecklists(parsed) {
+  if (!Array.isArray(parsed.checklists)) return [];
+
+  return parsed.checklists
+    .filter((c) => c && typeof c.name === "string")
+    .map((c) => ({
+      id: c.id || uid(),
+      name: c.name,
+      collapsed: Boolean(c.collapsed),
+      items: Array.isArray(c.items)
+        ? c.items
+            .filter((i) => i && typeof i.text === "string")
+            .map((i) => ({ id: i.id || uid(), text: i.text, done: Boolean(i.done) }))
+        : [],
+    }));
+}
+
 function sanitizeEvents(parsed) {
   if (Array.isArray(parsed.eventsList)) {
     return parsed.eventsList
@@ -82,9 +118,9 @@ export function sanitizeState(parsed) {
   }
 
   return {
-    tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+    tasks: sanitizeTasks(parsed),
     eventsList: sanitizeEvents(parsed),
-    checklists: Array.isArray(parsed.checklists) ? parsed.checklists : [],
+    checklists: sanitizeChecklists(parsed),
     classes: sanitizeClasses(parsed),
     pages,
     currentPageId,

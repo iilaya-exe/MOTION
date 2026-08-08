@@ -1,0 +1,253 @@
+/* ============================================================================
+   Checklists
+   ----------------------------------------------------------------------------
+   Cards in an auto-filling grid. Each card collapses, renames in place, and
+   shows its progress as both a bar and a count — so a wall of checklists can be
+   skimmed without opening any of them.
+   ========================================================================== */
+
+.checklist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+/* The empty-state message is a grid item like any card, so without an explicit
+   span it sits in the first ~300px track and wraps there — looking cramped while
+   the rest of the row sits empty. 1 / -1 makes it use the full width. */
+.checklist-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 30px;
+  text-align: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  color: var(--text-3);
+  font-size: var(--fs-body-s);
+}
+
+.checklist-card {
+  gap: 9px;
+  padding: 14px 15px;
+}
+
+.checklist-card.collapsed { gap: 10px; }
+.checklist-card.collapsed .cl-body { display: none; }
+
+.cl-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.cl-collapse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  color: var(--text-3);
+  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+}
+
+.cl-collapse .icon {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.15s var(--ease);
+}
+
+.cl-collapse:hover { background: var(--hover-strong); color: var(--text); }
+.checklist-card.collapsed .cl-collapse .icon { transform: rotate(-90deg); }
+
+.checklist-card .cl-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 640;
+  font-size: var(--fs-body-l);
+  letter-spacing: -0.01em;
+  cursor: text;
+  text-align: left;
+  border-radius: 5px;
+  padding: 2px 5px;
+  margin: -2px -5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background 0.13s var(--ease);
+}
+
+.checklist-card .cl-title:hover { background: var(--hover); }
+
+.cl-title-edit {
+  flex: 1;
+  min-width: 0;
+  font-weight: 640;
+  font-size: var(--fs-body-l);
+  letter-spacing: -0.01em;
+  padding: 2px 5px;
+  margin: -2px -5px;
+  border: none;
+  outline: none;
+  border-radius: 5px;
+  background: var(--surface);
+  box-shadow: 0 0 0 2px var(--accent-ghost);
+  color: var(--text);
+}
+
+.cl-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.cl-actions .icon-btn {
+  opacity: 0;
+  transition: opacity 0.13s var(--ease), background 0.13s var(--ease), color 0.13s var(--ease);
+}
+
+.checklist-card:hover .cl-actions .icon-btn,
+.checklist-card:focus-within .cl-actions .icon-btn { opacity: 1; }
+
+.cl-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-mini);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cl-meta .cl-pct { font-weight: 650; }
+.checklist-card.is-complete .cl-meta .cl-pct { color: var(--success); }
+
+.progress-bar {
+  height: 5px;
+  border-radius: 99px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.progress-bar .fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 99px;
+  transition: width 0.25s var(--ease);
+}
+
+.cl-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.cl-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.cl-items li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: var(--fs-body-s);
+  padding: 5px 5px;
+  border-radius: 5px;
+  transition: background 0.13s var(--ease);
+}
+
+.cl-items li:hover { background: var(--surface-2); }
+
+.cl-items li .cl-item-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  cursor: text;
+  text-align: left;
+  border-radius: 4px;
+  padding: 1px 4px;
+  margin: -1px -4px;
+}
+
+.cl-items li.done .cl-item-text { text-decoration: line-through; color: var(--text-3); }
+
+.cl-item-edit {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-body-s);
+  padding: 1px 4px;
+  margin: -1px -4px;
+  border: none;
+  outline: none;
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 0 0 2px var(--accent-ghost);
+  color: var(--text);
+}
+
+.cl-items input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 1.6px solid var(--control-border);
+  border-radius: 4px;
+  background: var(--surface);
+  position: relative;
+  transition: background 0.13s var(--ease), border-color 0.13s var(--ease);
+}
+
+.cl-items input[type="checkbox"]:hover { border-color: var(--success); }
+.cl-items input[type="checkbox"]:checked { background: var(--success); border-color: var(--success); }
+
+.cl-items input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.3px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.cl-items li .icon-btn {
+  opacity: 0;
+  width: 22px;
+  height: 22px;
+  transition: opacity 0.13s var(--ease), background 0.13s var(--ease), color 0.13s var(--ease);
+}
+
+.cl-items li:hover .icon-btn,
+.cl-items li:focus-within .icon-btn { opacity: 1; }
+
+.cl-items-empty {
+  padding: 8px 5px;
+  color: var(--text-3);
+  font-size: var(--fs-caption);
+}
+
+.cl-add-row {
+  display: flex;
+  gap: 6px;
+}
+
+.cl-add-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 9px;
+  font-size: var(--fs-body-s);
+}
