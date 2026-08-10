@@ -1,4 +1,5 @@
 import { $, $$ } from "../dom.js";
+import * as router from "./router.js";
 
 /* View switching and the mobile drawer. The view modules register their render
    functions here rather than nav importing all six, which would create an import
@@ -47,7 +48,9 @@ export function switchView(name) {
 export function mount() {
   $$(".nav-item[data-view]").forEach((el) => {
     el.addEventListener("click", () => {
-      switchView(el.dataset.view);
+      // Setting the hash is what switches the view; if it is already correct
+      // no hashchange fires, so re-render explicitly.
+      if (!router.go(el.dataset.view)) switchView(el.dataset.view);
       if (isMobile()) closeNav();
     });
   });

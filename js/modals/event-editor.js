@@ -1,6 +1,8 @@
 import { store } from "../store.js";
 import { $, esc, isHidden } from "../dom.js";
 import { icon } from "../icons.js";
+import * as modal from "../ui/modal.js";
+import * as undo from "../ui/undo.js";
 import { uid } from "../lib/id.js";
 import { dateKey, formatShortDate, parseDateKey } from "../lib/dates.js";
 import { render as renderCalendar } from "../views/calendar.js";
@@ -18,9 +20,8 @@ export const isEventEditorOpen = () => !isHidden($("eventModalOverlay"));
 function showEditor() {
   cameFromDayModal = isDayModalOpen();
   hideDayModal();
-  $("eventModalOverlay").classList.remove("hidden");
+  modal.open("eventModalOverlay", "eventTitleInput");
   renderEditor();
-  $("eventTitleInput").focus();
 }
 
 export function openNewEvent(dateKeyOrNull) {
@@ -36,7 +37,7 @@ export function openEditEvent(id) {
 }
 
 export function closeEventEditor() {
-  $("eventModalOverlay").classList.add("hidden");
+  modal.close("eventModalOverlay");
   draft = null;
   if (cameFromDayModal) reopenDayModal();
   cameFromDayModal = false;
@@ -130,15 +131,19 @@ export function mount() {
   $("eventDeleteBtn").addEventListener("click", () => {
     if (!draft?.id) return;
     const ev = store.state.eventsList.find((e) => e.id === draft.id);
-    const label = ev ? ev.title : "this event";
-    const count = ev ? ev.dates.length : 0;
+    if (!ev) return;
 
-    if (!confirm(`Delete "${label}"? This removes it from all ${count} scheduled date(s).`)) return;
-
-    store.state.eventsList = store.state.eventsList.filter((e) => e.id !== draft.id);
+    const index = store.state.eventsList.indexOf(ev);
+    store.state.eventsList.splice(index, 1);
     store.save();
     renderCalendar();
     closeEventEditor();
+
+    undo.offer(`Deleted "${ev.title}"`, () => {
+      store.state.eventsList.splice(index, 0, ev);
+      store.save();
+      renderCalendar();
+    });
   });
 
   $("eventCancelBtn").addEventListener("click", closeEventEditor);

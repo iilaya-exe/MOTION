@@ -2,6 +2,7 @@ import { store } from "../store.js";
 import { $, esc } from "../dom.js";
 import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
+import * as undo from "../ui/undo.js";
 
 /* Transient view state. `collapsed` lives on the checklist itself because a
    folded-away list should stay folded between sessions; search and which row is
@@ -220,9 +221,19 @@ export function mount() {
     if (action === "add-item") {
       addItem(clId);
     } else if (action === "delete-item") {
-      cl.items = cl.items.filter((i) => i.id !== itemId);
+      const item = getItem(cl, itemId);
+      const index = cl.items.indexOf(item);
+      if (index === -1) return;
+
+      cl.items.splice(index, 1);
       store.save();
       render();
+
+      undo.offer(`Removed "${item.text}"`, () => {
+        cl.items.splice(index, 0, item);
+        store.save();
+        render();
+      });
     } else if (action === "edit-item") {
       view.editingItem = itemId;
       view.editingChecklist = null;
@@ -236,16 +247,28 @@ export function mount() {
       store.save();
       render();
     } else if (action === "clear-done") {
+      const snapshot = [...cl.items];
       const n = cl.items.filter((i) => i.done).length;
-      if (!confirm(`Remove ${n} completed item(s) from "${cl.name}"?`)) return;
       cl.items = cl.items.filter((i) => !i.done);
       store.save();
       render();
+
+      undo.offer(`Cleared ${n} completed item${n === 1 ? "" : "s"}`, () => {
+        cl.items = snapshot;
+        store.save();
+        render();
+      });
     } else if (action === "delete-checklist") {
-      if (!confirm(`Delete the checklist "${cl.name}"? This cannot be undone.`)) return;
-      store.state.checklists = store.state.checklists.filter((c) => c.id !== clId);
+      const index = store.state.checklists.indexOf(cl);
+      store.state.checklists.splice(index, 1);
       store.save();
       render();
+
+      undo.offer(`Deleted "${cl.name}"`, () => {
+        store.state.checklists.splice(index, 0, cl);
+        store.save();
+        render();
+      });
     }
   });
 

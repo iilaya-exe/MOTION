@@ -1,4 +1,6 @@
 import { store } from "../store.js";
+import * as modal from "../ui/modal.js";
+import * as undo from "../ui/undo.js";
 import { $, isHidden } from "../dom.js";
 import { uid } from "../lib/id.js";
 import { DAY_ABBR } from "../lib/dates.js";
@@ -52,12 +54,11 @@ function showEditor() {
   renderDayToggle();
   renderColorRow();
 
-  $("classModalOverlay").classList.remove("hidden");
-  $("classSubjectInput").focus();
+  modal.open("classModalOverlay", "classSubjectInput");
 }
 
 export function closeClassEditor() {
-  $("classModalOverlay").classList.add("hidden");
+  modal.close("classModalOverlay");
   draft = null;
 }
 
@@ -137,11 +138,18 @@ export function mount() {
   $("classDeleteBtn").addEventListener("click", () => {
     if (!draft?.id) return;
     const c = store.state.classes.find((x) => x.id === draft.id);
-    if (!confirm(`Delete "${c ? c.subject : "this class"}"? This cannot be undone.`)) return;
+    if (!c) return;
 
-    store.state.classes = store.state.classes.filter((x) => x.id !== draft.id);
+    const index = store.state.classes.indexOf(c);
+    store.state.classes.splice(index, 1);
     store.save();
     closeClassEditor();
     renderSchedule();
+
+    undo.offer(`Deleted "${c.subject}"`, () => {
+      store.state.classes.splice(index, 0, c);
+      store.save();
+      renderSchedule();
+    });
   });
 }

@@ -591,3 +591,91 @@ select.field { cursor: pointer; }
 .date-chip button:hover { background: var(--accent-ghost); }
 
 .hint-text { font-size: var(--fs-caption); color: var(--text-3); margin: 5px 0 2px; }
+
+/* ---------------- Undo toast ----------------
+   Every delete offers a way back, which is why there are no confirm() dialogs
+   on single-item deletes. Sits above the modals so it stays reachable. */
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 10px 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.18s var(--ease);
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.undo-text {
+  font-size: var(--fs-body-s);
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-btn {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: var(--fs-body-s);
+  font-weight: 650;
+  color: #fff;
+  background: var(--accent-fill);
+  transition: background 0.13s var(--ease);
+}
+
+.undo-btn:hover { background: var(--accent-fill-hover); }
+
+.undo-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: var(--fs-body-l);
+  line-height: 1;
+  color: var(--text-3);
+  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+}
+
+.undo-close:hover { background: var(--hover-strong); color: var(--text); }
+
+/* ---------------- Sidebar note search ---------------- */
+.nav-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 2px 6px;
+  padding: 0 8px;
+  height: 30px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  transition: border-color 0.13s var(--ease), box-shadow 0.13s var(--ease);
+}
+
+.nav-search:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
+.nav-search .icon { width: 13px; height: 13px; color: var(--text-3); }
+
+.nav-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: var(--fs-caption);
+}
+
+.nav-search input::placeholder { color: var(--text-3); }

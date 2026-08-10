@@ -93,6 +93,9 @@
   .composer select.field { flex: 1; min-width: 110px; }
   .composer .btn { flex: 1 0 100%; }
 
+  .undo-toast { left: 12px; right: 12px; max-width: none; transform: none; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
   .list-toolbar { gap: 10px; }
   .list-toolbar .filter-tabs { flex: 1 0 100%; }
   .toolbar-end { flex: 1 0 100%; }
@@ -118,7 +121,7 @@
   .task-row .cell-name { flex: 1 0 100%; }
   .task-row .cell { display: inline-flex; }
   .task-row .cell:last-child { margin-left: auto; }
-  .task-item .icon-btn,
+  .task-row .icon-btn,
   .board-card .icon-btn,
   .cl-actions .icon-btn { opacity: 1; }
 
@@ -188,10 +191,10 @@
 @media (hover: none) and (max-width: 1024px) {
   .cl-items li .icon-btn,
   .cl-actions .icon-btn,
-  .task-item .icon-btn,
+  .task-row .icon-btn,
   .board-card .icon-btn { opacity: 1; }
-  .task-item input[type="checkbox"] { width: 20px; height: 20px; }
-  .task-item input[type="checkbox"]:checked::after {
+  .task-row input[type="checkbox"] { width: 20px; height: 20px; }
+  .task-row input[type="checkbox"]:checked::after {
     left: 6px;
     top: 2px;
     width: 5px;

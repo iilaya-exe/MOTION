@@ -184,7 +184,7 @@
 
 .task-table {
   /* Name takes the slack; the property columns are fixed so chips align. */
-  --cols: minmax(0, 1fr) 116px 132px 142px 30px;
+  --cols: minmax(0, 1fr) 112px 128px 112px 138px 30px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--surface);
@@ -404,6 +404,8 @@
 .prop-cell:hover .badge.ghost { color: var(--text-2); }
 
 /* Status chips */
+.badge.repeat-on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+
 .badge.status-todo { background: var(--surface-2); color: var(--text-2); border-color: var(--border-strong); }
 .badge.status-progress { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
 .badge.status-review { background: color-mix(in srgb, #a855f7 12%, transparent); color: #8b3fd9; border-color: color-mix(in srgb, #a855f7 28%, transparent); }

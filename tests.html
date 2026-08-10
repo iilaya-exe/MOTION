@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motion — tests</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<style>
+  /* Self-contained: the suite is a dev tool, not part of the app's design system. */
+  body { padding: 28px 32px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  h1 { font-size: 20px; margin: 0 0 4px; font-family: system-ui, sans-serif; }
+  .sub { color: var(--text-3); font-size: 13px; margin: 0 0 20px; font-family: system-ui, sans-serif; }
+  #summary { font-size: 15px; font-weight: 700; padding: 12px 16px; border-radius: 9px; margin-bottom: 16px; }
+  #summary.pass { background: var(--success-soft); color: var(--success); }
+  #summary.fail { background: var(--danger-soft); color: var(--danger); }
+  #summary.running { background: var(--surface-2); color: var(--text-2); }
+  ol { margin: 0; padding-left: 0; list-style: none; font-size: 12.5px; line-height: 1.7; }
+  li { display: flex; gap: 10px; padding: 1px 0; }
+  .tag { flex-shrink: 0; font-weight: 700; width: 42px; }
+  .ok .tag { color: var(--success); }
+  .no { background: var(--danger-soft); border-radius: 5px; padding: 3px 6px; margin: 2px -6px; }
+  .no .tag { color: var(--danger); }
+  .why { color: var(--text-3); }
+  .group { margin: 16px 0 4px; font-weight: 700; color: var(--text-2); font-size: 12px;
+           text-transform: uppercase; letter-spacing: .07em; }
+  /* The app under test runs for real, just parked off to the side. */
+  #stage { position: fixed; right: 0; bottom: 0; width: 1280px; height: 900px;
+           border: 0; opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+  <h1>Motion test suite</h1>
+  <p class="sub">
+    Drives a real copy of the app in an iframe. It runs against <code>?e2e=1</code>,
+    which uses a separate IndexedDB — your own notes are never touched.
+  </p>
+
+  <div id="summary" class="running">Running…</div>
+  <ol id="results"></ol>
+
+  <iframe id="stage" src="index.html?e2e=1" title="app under test"></iframe>
+
+  <script type="module" src="tests/run.js"></script>
+</body>
+</html>

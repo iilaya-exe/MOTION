@@ -104,3 +104,11 @@
 .page-content > *:first-child { margin-top: 0; }
 
 .notes-footer { display: flex; justify-content: flex-end; margin-top: 26px; }
+
+/* "Edited 5 min ago" — small enough to ignore, present enough to reassure. */
+.page-meta {
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  margin: -4px 0 14px;
+  min-height: 1em;
+}

@@ -17,7 +17,7 @@ export function defaultState() {
     eventsList: [],
     checklists: [],
     classes: [],
-    pages: [{ id: welcomeId, title: "Welcome", content: WELCOME_CONTENT }],
+    pages: [{ id: welcomeId, title: "Welcome", content: WELCOME_CONTENT, updatedAt: Date.now() }],
     currentPageId: welcomeId,
   };
 }
@@ -41,6 +41,7 @@ function sanitizeClasses(parsed) {
 
 const PRIORITIES = ["low", "medium", "high"];
 const STATUS_IDS = ["todo", "progress", "review", "stuck", "hold", "complete"];
+const REPEATS = ["daily", "weekly", "monthly"];
 
 function sanitizeTasks(parsed) {
   if (!Array.isArray(parsed.tasks)) return [];
@@ -59,6 +60,9 @@ function sanitizeTasks(parsed) {
       // Backfilled for tasks saved before ordering was stored, so the list has a
       // stable tiebreak instead of shuffling on every render.
       createdAt: typeof t.createdAt === "number" ? t.createdAt : 0,
+      // null means "does not repeat"; a repeat without a due date is meaningless
+      // so it is dropped rather than kept as a rule that can never fire.
+      repeat: t.due && REPEATS.includes(t.repeat) ? t.repeat : null,
     }));
 }
 
@@ -76,6 +80,19 @@ function sanitizeChecklists(parsed) {
             .filter((i) => i && typeof i.text === "string")
             .map((i) => ({ id: i.id || uid(), text: i.text, done: Boolean(i.done) }))
         : [],
+    }));
+}
+
+function sanitizePages(parsed) {
+  if (!Array.isArray(parsed.pages)) return null;
+
+  return parsed.pages
+    .filter((p) => p && typeof p.id === "string")
+    .map((p) => ({
+      id: p.id,
+      title: typeof p.title === "string" ? p.title : "",
+      content: typeof p.content === "string" ? p.content : "",
+      updatedAt: typeof p.updatedAt === "number" ? p.updatedAt : 0,
     }));
 }
 
@@ -112,7 +129,7 @@ export function sanitizeState(parsed) {
   const fallback = defaultState();
   if (!parsed || typeof parsed !== "object") return fallback;
 
-  const pages = Array.isArray(parsed.pages) ? parsed.pages : fallback.pages;
+  const pages = sanitizePages(parsed) || fallback.pages;
 
   let currentPageId = parsed.currentPageId;
   if (!pages.length) {

@@ -2,7 +2,8 @@ import { store } from "../store.js";
 import { $, $$, esc } from "../dom.js";
 import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
-import { formatShortDate, parseDateKey, todayKey } from "../lib/dates.js";
+import * as undo from "../ui/undo.js";
+import { advanceDateKey, formatShortDate, parseDateKey, todayKey } from "../lib/dates.js";
 
 /* View state. Deliberately not persisted: filters and grouping are how you are
    looking at the list right now, not part of the workspace. */
@@ -31,6 +32,15 @@ export const STATUSES = [
 
 const statusLabel = (id) => STATUSES.find((s) => s.id === id)?.label || "To do";
 
+export const REPEATS = [
+  { id: "", label: "Once" },
+  { id: "daily", label: "Daily" },
+  { id: "weekly", label: "Weekly" },
+  { id: "monthly", label: "Monthly" },
+];
+
+const repeatLabel = (id) => REPEATS.find((r) => r.id === (id || ""))?.label || "Once";
+
 /** Shared with the dashboard's quick-add box. */
 export function addTask(text, due, priority) {
   const trimmed = (text || "").trim();
@@ -43,6 +53,7 @@ export function addTask(text, due, priority) {
     due: due || null,
     priority: priority || "medium",
     status: "todo",
+    repeat: null,
     createdAt: Date.now(),
   });
   store.save();
@@ -178,6 +189,22 @@ function statusCell(task) {
   );
 }
 
+function repeatCell(task) {
+  const options = REPEATS.map(
+    (r) => `<option value="${r.id}"${r.id === (task.repeat || "") ? " selected" : ""}>${r.label}</option>`
+  ).join("");
+
+  const chip = task.repeat
+    ? `<span class="badge repeat-on">${icon("repeat")}${esc(repeatLabel(task.repeat))}</span>`
+    : `<span class="badge ghost">${icon("repeat")}Once</span>`;
+
+  return (
+    `<span class="prop-cell">${chip}` +
+    `<select class="prop-input" data-action="set-repeat" data-id="${esc(task.id)}" ` +
+    `aria-label="Repeat for ${esc(task.text)}">${options}</select></span>`
+  );
+}
+
 function textCell(task) {
   if (view.editingId === task.id) {
     return `<input class="task-edit" data-action="commit-edit" data-id="${esc(task.id)}" value="${esc(task.text)}">`;
@@ -206,6 +233,7 @@ function taskRow(task) {
     `<div class="cell-name">${checkbox(task)}${textCell(task)}</div>` +
     `<div class="cell">${priorityCell(task)}</div>` +
     `<div class="cell">${dueCell(task)}</div>` +
+    `<div class="cell">${repeatCell(task)}</div>` +
     `<div class="cell">${statusCell(task)}</div>` +
     `<div class="cell">${deleteButton(task)}</div>` +
     "</li>"
@@ -216,7 +244,8 @@ function taskCard(task) {
   return (
     `<li class="board-card${task.done ? " done" : ""}">` +
     `<div class="board-card-top">${checkbox(task)}${textCell(task)}</div>` +
-    `<div class="board-card-foot">${dueCell(task)}${priorityCell(task)}${statusCell(task)}${deleteButton(task)}</div>` +
+    `<div class="board-card-foot">${dueCell(task)}${priorityCell(task)}${repeatCell(task)}` +
+    `${statusCell(task)}${deleteButton(task)}</div>` +
     "</li>"
   );
 }
@@ -253,7 +282,7 @@ function renderSummary() {
 const TABLE_HEAD =
   '<div class="task-head">' +
   '<span class="col-name">Name</span><span>Priority</span><span>Date</span>' +
-  '<span>Status</span><span></span></div>';
+  '<span>Repeat</span><span>Status</span><span></span></div>';
 
 const NEW_ROW =
   `<button class="task-new-row" data-action="focus-composer">${icon("plus")}New</button>`;
@@ -353,9 +382,19 @@ function wireItemEvents(host) {
     const { action, id, key } = el.dataset;
 
     if (action === "delete-task") {
-      store.state.tasks = store.state.tasks.filter((t) => t.id !== id);
+      const task = byId(id);
+      const index = store.state.tasks.indexOf(task);
+      if (index === -1) return;
+
+      store.state.tasks.splice(index, 1);
       store.save();
       render();
+
+      undo.offer(`Deleted "${task.text}"`, () => {
+        store.state.tasks.splice(index, 0, task);
+        store.save();
+        render();
+      });
     } else if (action === "edit-task") {
       view.editingId = id;
       render();
@@ -382,6 +421,17 @@ function wireItemEvents(host) {
     if (!task) return;
 
     if (el.dataset.action === "toggle-task") {
+      // A repeating task is never "finished" — completing it rolls the due date
+      // forward to the next occurrence and leaves it open.
+      if (el.checked && task.repeat && task.due) {
+        task.due = advanceDateKey(task.due, task.repeat);
+        task.done = false;
+        task.status = "todo";
+        store.save();
+        render();
+        return;
+      }
+
       task.done = el.checked;
       // Keep Status honest: ticking completes it, unticking sends a previously
       // complete task back to To do but leaves any other status alone.
@@ -394,6 +444,15 @@ function wireItemEvents(host) {
       task.priority = el.value;
     } else if (el.dataset.action === "set-due") {
       task.due = el.value || null;
+      // A repeat rule with nothing to advance would never fire again.
+      if (!task.due) task.repeat = null;
+    } else if (el.dataset.action === "set-repeat") {
+      if (el.value && !task.due) {
+        alert("Give the task a date first — a repeat needs somewhere to start.");
+        render();
+        return;
+      }
+      task.repeat = el.value || null;
     } else return;
 
     store.save();
@@ -470,11 +529,19 @@ export function mount() {
 
   $("taskSummary").addEventListener("click", (e) => {
     if (!e.target.closest('[data-action="clear-done"]')) return;
-    const done = store.state.tasks.filter((t) => t.done).length;
-    if (!confirm(`Delete ${done} completed task(s)? This cannot be undone.`)) return;
+    const removed = store.state.tasks.filter((t) => t.done);
+    if (!removed.length) return;
+
+    const snapshot = [...store.state.tasks];
     store.state.tasks = store.state.tasks.filter((t) => !t.done);
     store.save();
     render();
+
+    undo.offer(`Cleared ${removed.length} completed task${removed.length === 1 ? "" : "s"}`, () => {
+      store.state.tasks = snapshot;
+      store.save();
+      render();
+    });
   });
 
   wireItemEvents($("taskList"));

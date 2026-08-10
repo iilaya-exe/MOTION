@@ -5,8 +5,12 @@ import { defaultState, sanitizeState } from "./defaults.js";
    IndexedDB is blocked. Data from the original single-file version of the app
    lives under LS_KEY and is migrated across on first run. */
 
-const LS_KEY = "myNotionCloneData_v1";
-const DB_NAME = "MyNotionCloneDB";
+/* tests.html loads the app with ?e2e=1 so the suite gets its own database and
+   can never touch real notes. Nothing else reads this flag. */
+const E2E = new URLSearchParams(window.location.search).has("e2e");
+
+const LS_KEY = E2E ? "motionE2E" : "myNotionCloneData_v1";
+const DB_NAME = E2E ? "MotionDB_e2e" : "MyNotionCloneDB";
 const DB_VERSION = 1;
 const STORE_NAME = "appState";
 const STATE_KEY = "state";
@@ -80,6 +84,7 @@ export function loadState() {
 
       // First run on IndexedDB: migrate any data from the old localStorage build.
       let legacyRaw = null;
+      if (E2E) return idbSet(STATE_KEY, defaultState()).then(() => defaultState());
       try {
         legacyRaw = localStorage.getItem(LS_KEY);
       } catch {

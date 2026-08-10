@@ -2,6 +2,9 @@ import { store } from "./store.js";
 import { $ } from "./dom.js";
 
 import * as nav from "./ui/nav.js";
+import * as router from "./ui/router.js";
+import * as modal from "./ui/modal.js";
+import * as undo from "./ui/undo.js";
 import * as theme from "./ui/theme.js";
 
 import * as dashboard from "./views/dashboard.js";
@@ -25,6 +28,7 @@ function handleEscape(e) {
   else if (eventEditor.isEventEditorOpen()) eventEditor.closeEventEditor();
   else if (dayModal.isDayModalOpen()) dayModal.closeDayModal();
   else if (nav.isNavOpen()) nav.closeNav();
+  else undo.dismiss();
 }
 
 async function boot() {
@@ -41,14 +45,23 @@ async function boot() {
   nav.setAfterSwitch(notes.renderPageList);
 
   [
-    nav, theme,
+    nav, theme, modal, undo,
     dashboard, tasks, calendar, schedule, checklists, notes,
     dayModal, eventEditor, classEditor, fullSchedule,
   ].forEach((module) => module.mount());
 
   document.addEventListener("keydown", handleEscape);
 
-  nav.switchView("dashboard");
+  // The hash decides the first view, so a reload, a bookmark and the back
+  // button all land where the user expects instead of on the dashboard.
+  router.start(({ view, pageId }) => {
+    if (pageId && store.state.pages.some((p) => p.id === pageId)) {
+      store.state.currentPageId = pageId;
+    }
+    nav.switchView(view);
+    nav.closeNav();
+  });
+
   calendar.render(); // pre-render so the month is ready before it is first shown
 
   $("loadingOverlay").classList.add("hidden");

@@ -55,13 +55,6 @@ textarea {
   stroke-width: 1.75;
 }
 
-.icon-sm {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-  stroke-width: 1.9;
-}
-
 .app {
   display: flex;
   height: 100vh;

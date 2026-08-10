@@ -2,7 +2,10 @@ import { store } from "../store.js";
 import { $, $$, esc, isHidden } from "../dom.js";
 import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
+import { relativeTime } from "../lib/dates.js";
+import * as undo from "../ui/undo.js";
 import { closeNav, isMobile, switchView } from "../ui/nav.js";
+import * as router from "../ui/router.js";
 
 /* Rich text is produced by document.execCommand. It is deprecated but remains
    the only cross-browser way to get bold/lists/headings inside a contenteditable
@@ -11,13 +14,39 @@ import { closeNav, isMobile, switchView } from "../ui/nav.js";
 const currentPage = () =>
   store.state.pages.find((p) => p.id === store.state.currentPageId) || null;
 
+/** Sidebar search term. */
+let search = "";
+
+/** Strips tags so a content search matches what the reader sees, not markup. */
+const plainText = (html) => html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ");
+
+function matchingPages() {
+  const needle = search.trim().toLowerCase();
+  if (!needle) return store.state.pages;
+
+  return store.state.pages.filter(
+    (p) =>
+      p.title.toLowerCase().includes(needle) ||
+      plainText(p.content).toLowerCase().includes(needle)
+  );
+}
+
+/** Marks a page edited; every write goes through here so the stamp stays true. */
+function touch(page) {
+  page.updatedAt = Date.now();
+  store.save();
+}
+
 /** The sidebar page list — rendered here because it mirrors notes state. */
 export function renderPageList() {
   const list = $("pageList");
-  const { pages, currentPageId } = store.state;
+  const { currentPageId } = store.state;
+  const pages = matchingPages();
 
   if (!pages.length) {
-    list.innerHTML = '<div class="empty-hint">No pages yet — click + to add one.</div>';
+    list.innerHTML = `<div class="empty-hint">${
+      search.trim() ? "No notes match that search." : "No pages yet — click + to add one."
+    }</div>`;
     return;
   }
 
@@ -47,6 +76,7 @@ export function render() {
     contentEl.contentEditable = "false";
     contentEl.setAttribute("data-placeholder", "Create a page from the sidebar to get started.");
     deleteBtn.classList.add("hidden");
+    $("pageMeta").textContent = "";
     updateToolbar();
     return;
   }
@@ -57,6 +87,7 @@ export function render() {
   contentEl.innerHTML = page.content;
   contentEl.setAttribute("data-placeholder", "Start writing...");
   deleteBtn.classList.remove("hidden");
+  $("pageMeta").textContent = page.updatedAt ? `Edited ${relativeTime(page.updatedAt)}` : "";
   updateToolbar();
 }
 
@@ -64,7 +95,7 @@ function savePageContent() {
   const page = currentPage();
   if (!page) return;
   page.content = $("pageContent").innerHTML;
-  store.save();
+  touch(page);
 }
 
 function currentBlockTag() {
@@ -137,16 +168,16 @@ export function mount() {
     if (!item) return;
     store.state.currentPageId = item.dataset.id;
     store.save();
-    switchView("notes");
+    if (!router.go("notes", item.dataset.id)) switchView("notes");
     if (isMobile()) closeNav();
   });
 
   $("newPageBtn").addEventListener("click", () => {
-    const page = { id: uid(), title: "", content: "" };
+    const page = { id: uid(), title: "", content: "", updatedAt: Date.now() };
     store.state.pages.push(page);
     store.state.currentPageId = page.id;
     store.save();
-    switchView("notes");
+    if (!router.go("notes", page.id)) switchView("notes");
     if (isMobile()) closeNav();
     // Focusing immediately on mobile fights the closing drawer animation.
     else $("pageTitleInput").focus();
@@ -156,7 +187,7 @@ export function mount() {
     const page = currentPage();
     if (!page) return;
     page.title = this.value;
-    store.save();
+    touch(page);
     renderPageList();
   });
 
@@ -192,15 +223,28 @@ export function mount() {
 
   document.addEventListener("selectionchange", updateToolbar);
 
+  $("pageSearch").addEventListener("input", (e) => {
+    search = e.target.value;
+    renderPageList();
+  });
+
   $("deletePageBtn").addEventListener("click", () => {
     const page = currentPage();
     if (!page) return;
-    if (!confirm(`Delete the page "${page.title || "Untitled"}"? This cannot be undone.`)) return;
 
-    store.state.pages = store.state.pages.filter((p) => p.id !== page.id);
+    const index = store.state.pages.indexOf(page);
+    store.state.pages.splice(index, 1);
     store.state.currentPageId = store.state.pages.length ? store.state.pages[0].id : null;
     store.save();
     renderPageList();
     render();
+
+    undo.offer(`Deleted "${page.title || "Untitled"}"`, () => {
+      store.state.pages.splice(index, 0, page);
+      store.state.currentPageId = page.id;
+      store.save();
+      renderPageList();
+      render();
+    });
   });
 }

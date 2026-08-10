@@ -1,6 +1,7 @@
 import { store } from "../store.js";
 import { $, esc, isHidden, show } from "../dom.js";
 import { icon } from "../icons.js";
+import * as modal from "../ui/modal.js";
 import { formatDateLabel } from "../lib/dates.js";
 import { getHolidaysForYear } from "../lib/holidays.js";
 import { openNewEvent, openEditEvent } from "./event-editor.js";
@@ -14,24 +15,24 @@ export const isDayModalOpen = () => !isHidden($("modalOverlay"));
 
 export function openDayModal(key) {
   dateKey = key;
-  $("modalOverlay").classList.remove("hidden");
+  modal.open("modalOverlay");
   renderDayModal();
 }
 
 export function closeDayModal() {
-  $("modalOverlay").classList.add("hidden");
+  modal.close("modalOverlay");
   dateKey = null;
 }
 
 /** Re-shows the modal after the event editor closes on top of it. */
 export function reopenDayModal() {
   if (!dateKey) return;
-  $("modalOverlay").classList.remove("hidden");
+  modal.open("modalOverlay");
   renderDayModal();
 }
 
 export function hideDayModal() {
-  $("modalOverlay").classList.add("hidden");
+  modal.close("modalOverlay");
 }
 
 export function renderDayModal() {

@@ -1,4 +1,5 @@
 import { store } from "../store.js";
+import * as modal from "../ui/modal.js";
 import { $, esc, isHidden } from "../dom.js";
 import { DAY_FULL } from "../lib/dates.js";
 import {
@@ -106,11 +107,11 @@ function renderWeekGrid() {
 
 export function openFullSchedule() {
   renderWeekGrid();
-  $("fullSchedOverlay").classList.remove("hidden");
+  modal.open("fullSchedOverlay");
 }
 
 export function closeFullSchedule() {
-  $("fullSchedOverlay").classList.add("hidden");
+  modal.close("fullSchedOverlay");
 }
 
 export function mount() {
