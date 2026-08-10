@@ -125,3 +125,36 @@ textarea {
   color: var(--text-3);
   font-size: var(--fs-body-s);
 }
+
+/* Shown in place of the spinner when the app cannot start at all. */
+.boot-error {
+  max-width: 460px;
+  padding: 0 24px;
+  text-align: left;
+  color: var(--text-2);
+  font-size: var(--fs-body-s);
+  line-height: 1.6;
+}
+
+.boot-error h2 {
+  margin: 0 0 10px;
+  font-size: var(--fs-h3);
+  font-weight: 650;
+  color: var(--text);
+}
+
+.boot-error p { margin: 0 0 10px; }
+
+.boot-error pre,
+.boot-error code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-caption);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.boot-error code { padding: 1px 5px; }
+.boot-error pre { padding: 10px 12px; margin: 0 0 10px; overflow-x: auto; }
+.boot-error a { color: var(--accent); }
+.boot-error .muted-note { color: var(--text-3); font-size: var(--fs-caption); }

@@ -32,6 +32,26 @@
 })();
 </script>
 
+<script>
+// ES modules cannot be fetched over file://, so double-clicking this file leaves
+// the loader on screen forever with nothing in the console to explain it. Catch
+// that case here, in a plain inline script that does still run.
+if (location.protocol === "file:") {
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("loadingOverlay").innerHTML =
+      '<div class="boot-error">' +
+      '<h2>Motion needs a web server</h2>' +
+      '<p>This page was opened straight from the file system, and browsers block ' +
+      'JavaScript modules over <code>file://</code> for security. Nothing is broken.</p>' +
+      '<p>Serve the folder instead — in Terminal, from this folder:</p>' +
+      '<pre>python3 -m http.server 8000</pre>' +
+      '<p>then open <a href="http://localhost:8000">http://localhost:8000</a>.</p>' +
+      '<p class="muted-note">On GitHub Pages this never applies — it is served over https.</p>' +
+      '</div>';
+  });
+}
+</script>
+
 <script type="module" src="js/main.js"></script>
 </head>
 <body>
@@ -56,6 +76,8 @@
 </header>
 
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="undo-toast hidden" id="undoToast" role="status" aria-live="polite"></div>
 
 <div class="app">
   <nav class="sidebar" id="sidebar">
@@ -93,6 +115,10 @@
         <button id="newPageBtn" title="New page" aria-label="New page">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
+      </div>
+      <div class="nav-search">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+        <input type="search" id="pageSearch" placeholder="Search notes...">
       </div>
       <div id="pageList"></div>
     </div>
@@ -299,6 +325,7 @@
         </button>
       </div>
       <input type="text" class="page-title-input" id="pageTitleInput" placeholder="Untitled">
+      <div class="page-meta" id="pageMeta"></div>
       <div class="page-content" id="pageContent" contenteditable="true" data-placeholder="Start writing..."></div>
       <div class="notes-footer">
         <button class="btn danger" id="deletePageBtn">Delete Page</button>

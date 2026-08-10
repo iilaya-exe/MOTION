@@ -67,4 +67,23 @@ async function boot() {
   $("loadingOverlay").classList.add("hidden");
 }
 
-boot();
+boot().catch((err) => {
+  // Anything unhandled here would otherwise leave the loading overlay up with
+  // no explanation, which reads as "the app is broken" rather than "look here".
+  console.error("Motion failed to start.", err);
+  const overlay = $("loadingOverlay");
+  if (!overlay) return;
+
+  overlay.classList.remove("hidden");
+  overlay.innerHTML =
+    '<div class="boot-error">' +
+    "<h2>Motion could not start</h2>" +
+    "<p>Something went wrong while loading your workspace. Your saved data has " +
+    "not been touched.</p>" +
+    "<pre>" +
+    String(err && err.message ? err.message : err).replace(/[<>&]/g, "") +
+    "</pre>" +
+    "<p>Reloading the page usually clears it. If it persists, check the browser " +
+    "console for the full error.</p>" +
+    "</div>";
+});

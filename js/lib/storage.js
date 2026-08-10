@@ -18,6 +18,9 @@ const STATE_KEY = "state";
 let usingIndexedDB = true;
 let dbPromise = null;
 
+/** Nothing in the boot path may hang: a stuck promise means an eternal spinner. */
+const OPEN_TIMEOUT_MS = 4000;
+
 function openDB() {
   if (dbPromise) return dbPromise;
 
@@ -26,10 +29,21 @@ function openDB() {
       reject(new Error("IndexedDB not supported"));
       return;
     }
+
     const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+    // Fires instead of onsuccess/onerror when another tab holds an older version
+    // of the database open. Without this the request settles neither way.
+    req.onblocked = () =>
+      reject(new Error("IndexedDB is blocked by another open tab of this app"));
+
     req.onupgradeneeded = () => req.result.createObjectStore(STORE_NAME);
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
+
+    // Belt and braces: some browsers (private modes especially) can leave an
+    // open request silent forever. Falling back beats never starting.
+    setTimeout(() => reject(new Error("IndexedDB did not respond in time")), OPEN_TIMEOUT_MS);
   });
 
   return dbPromise;
