@@ -50,10 +50,10 @@ const THEME_FALLBACK = {
   "--text-2": "#4a4a55",
   "--text-3": "#74747f",
   "--border": "#e7e7ee",
-  "--accent": "#5b5bd6",
+  "--accent": "#115e59",
 };
 
-const CLASS_FALLBACK = { "--cc": "#5b5bd6", "--cc-soft": "#eef0fe" };
+const CLASS_FALLBACK = { "--cc": "#115e59", "--cc-soft": "#e6f4f1" };
 
 function roundRect(ctx, x, y, w, h, r) {
   if (ctx.roundRect) {
