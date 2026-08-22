@@ -8,6 +8,7 @@ import * as undo from "./ui/undo.js";
 import * as pwa from "./ui/pwa.js";
 import * as classTimer from "./ui/class-timer.js";
 import * as confirmDialog from "./ui/confirm.js";
+import * as backup from "./ui/backup.js";
 import * as theme from "./ui/theme.js";
 
 import * as dashboard from "./views/dashboard.js";
@@ -50,7 +51,7 @@ async function boot() {
   nav.setAfterSwitch(notes.renderPageList);
 
   [
-    nav, theme, modal, undo, pwa, classTimer, confirmDialog,
+    nav, theme, modal, undo, pwa, classTimer, confirmDialog, backup,
     dashboard, tasks, calendar, schedule, checklists, notes,
     dayModal, eventEditor, classEditor, fullSchedule,
   ].forEach((module) => module.mount());
@@ -83,12 +84,14 @@ boot().catch((err) => {
   overlay.innerHTML =
     '<div class="boot-error">' +
     "<h2>Motion could not start</h2>" +
-    "<p>Something went wrong while loading your workspace. Your saved data has " +
-    "not been touched.</p>" +
+    "<p>Your workspace could not be opened. <b>Your data has not been " +
+    "touched</b> — it is still stored in this browser.</p>" +
     "<pre>" +
     String(err && err.message ? err.message : err).replace(/[<>&]/g, "") +
     "</pre>" +
-    "<p>Reloading the page usually clears it. If it persists, check the browser " +
-    "console for the full error.</p>" +
+    '<p><button class="btn" onclick="location.reload()">Try again</button></p>' +
+    "<p class=\"muted-note\">This is almost always a slow or busy database. " +
+    "Reloading fixes it. Do not clear site data — that would delete the " +
+    "workspace this page failed to read.</p>" +
     "</div>";
 });

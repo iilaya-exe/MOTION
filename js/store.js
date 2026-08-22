@@ -1,4 +1,4 @@
-import { loadState, saveState } from "./lib/storage.js";
+import { IDB_TIMEOUT, loadState, saveState } from "./lib/storage.js";
 import { defaultState } from "./lib/defaults.js";
 
 /**
@@ -16,8 +16,11 @@ export const store = {
     try {
       store.state = await loadState();
     } catch (err) {
+      // Never start an empty workspace over a slow database — that reads as
+      // "my data is gone" and, worse, invites edits that go somewhere else.
+      if (err?.code === IDB_TIMEOUT) throw err;
+
       console.error("Fatal: could not load any saved data.", err);
-      alert("Could not load your saved data. Starting with an empty workspace.");
       store.state = defaultState();
     }
   },

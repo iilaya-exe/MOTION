@@ -482,6 +482,78 @@ export async function suite(win) {
   check("focus returns to the button that opened it", d.doc.activeElement === addClassBtn,
     d.doc.activeElement?.id);
 
+  // ------------------------------------------------------------ export/import ---
+  group("Backup: export & import");
+  check("export and import controls exist", q("#exportDataBtn") && q("#importDataInput"));
+
+  // Earlier groups delete their tasks, so seed one to make the round-trip real.
+  d.nav("Tasks");
+  await settle();
+  setValue(q("#taskTextInput"), "Backup me");
+  click(q("#addTaskBtn"));
+  await settle();
+
+  // Capture the bkBlob file instead of downloading it.
+  let bkBlob = null;
+  const bkCreate = win.URL.createObjectURL;
+  win.URL.createObjectURL = (blob) => { bkBlob = blob; return "blob:test"; };
+  win.URL.revokeObjectURL = () => {};
+  const bkAnchorClick = win.HTMLAnchorElement.prototype.click;
+  let bkName = "";
+  win.HTMLAnchorElement.prototype.click = function () { bkName = this.download; };
+
+  click(q("#exportDataBtn"));
+  await settle(200);
+
+  check("export produced a file", !!bkBlob, "no blob");
+  check("filename is dated", /^motion-backup-\d{4}-\d{2}-\d{2}\.json$/.test(bkName), bkName);
+
+  const bkText = await bkBlob.text();
+  const bkParsed = JSON.parse(bkText);
+  check("file is tagged as a Motion backup", bkParsed.format === "motion-backup", bkParsed.format);
+  check("it records the origin it came from", typeof bkParsed.origin === "string", bkParsed.origin);
+  check("it carries the whole workspace",
+    Array.isArray(bkParsed.state.tasks) && Array.isArray(bkParsed.state.pages) &&
+    Array.isArray(bkParsed.state.classes) && Array.isArray(bkParsed.state.checklists),
+    Object.keys(bkParsed.state).join(","));
+
+  const bkTasks = bkParsed.state.tasks.length;
+  const bkNotes = bkParsed.state.pages.length;
+  check("the export is not empty", bkTasks > 0 && bkNotes > 0, `${bkTasks} tasks, ${bkNotes} notes`);
+  check("the seeded task is inside the file",
+    bkParsed.state.tasks.some((t) => t.text === "Backup me"),
+    bkParsed.state.tasks.map((t) => t.text).join(" | "));
+  check("class list travels too", Array.isArray(bkParsed.state.classes), typeof bkParsed.state.classes);
+
+  win.URL.createObjectURL = bkCreate;
+  win.HTMLAnchorElement.prototype.click = bkAnchorClick;
+
+  // Importing a bkForeign backup must ask before replacing anything.
+  const bkForeign = JSON.stringify({
+    format: "motion-backup", version: 1,
+    state: { tasks: [{ id: "imp1", text: "Imported task", done: false, due: null, priority: "high" }],
+             eventsList: [], checklists: [], classes: [],
+             pages: [{ id: "impp", title: "Imported note", content: "<p>hi</p>" }], currentPageId: "impp" },
+  });
+  const bkFile = new win.File([bkForeign], "backup.json", { type: "application/json" });
+  Object.defineProperty(q("#importDataInput"), "files", { value: [bkFile], configurable: true });
+  q("#importDataInput").dispatchEvent(new win.Event("change", { bubbles: true }));
+  await settle(200);
+
+  check("import asks before replacing", !q("#confirmOverlay").classList.contains("hidden"),
+    q("#confirmOverlay").className);
+  check("it says what is in the file",
+    q("#confirmMessage").textContent.includes("1 task") && q("#confirmMessage").textContent.includes("1 note"),
+    q("#confirmMessage").textContent);
+  check("it warns the current workspace is replaced",
+    q("#confirmMessage").textContent.includes("replace"), q("#confirmMessage").textContent);
+
+  click(q("#confirmCancelBtn"));
+  await settle();
+  check("cancelling leaves the workspace alone",
+    !qa(".task-row .task-text").some((t) => t.textContent === "Imported task"),
+    "imported anyway");
+
   // ------------------------------------------------------------- overdue days ---
   group("Overdue day count");
   d.nav("Tasks");

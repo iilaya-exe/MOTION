@@ -742,3 +742,31 @@ body.is-offline .app { padding-top: 30px; }
 }
 
 .modal.modal-confirm .modal-footer .btn { min-width: 108px; }
+
+/* ---------------- Backup row ----------------
+   Sits with the theme toggle rather than behind a settings screen: the whole
+   point is that it is found before it is needed. */
+.backup-row {
+  display: flex;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-1);
+}
+
+.backup-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  padding: 7px 8px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-caption);
+  font-weight: 550;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.backup-btn .icon { width: 14px; height: 14px; color: var(--text-3); }
+.backup-btn:hover { background: var(--hover); color: var(--text); }
+.backup-btn:hover .icon { color: var(--text-2); }

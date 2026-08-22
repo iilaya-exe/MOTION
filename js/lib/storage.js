@@ -18,8 +18,15 @@ const STATE_KEY = "state";
 let usingIndexedDB = true;
 let dbPromise = null;
 
-/** Nothing in the boot path may hang: a stuck promise means an eternal spinner. */
-const OPEN_TIMEOUT_MS = 4000;
+/* Nothing in the boot path may hang — but a timeout that is too eager is worse
+   than a hang, because falling back to an empty localStorage shows the user a
+   blank workspace while their real data sits untouched in IndexedDB, and any
+   edits they then make are written to the *other* store. Ten seconds, and a
+   timeout is reported as a failure rather than quietly guessing. */
+const OPEN_TIMEOUT_MS = 10000;
+
+/** Marks the "IndexedDB should work but did not answer" case specifically. */
+export const IDB_TIMEOUT = "IDB_TIMEOUT";
 
 function openDB() {
   if (dbPromise) return dbPromise;
@@ -32,18 +39,30 @@ function openDB() {
 
     const req = indexedDB.open(DB_NAME, DB_VERSION);
 
+    // Guard against a late success arriving after the timeout has already
+    // rejected: without it the connection opens fine but nobody is listening,
+    // and the app spends the session writing to the wrong store.
+    let settled = false;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      fn(value);
+    };
+
     // Fires instead of onsuccess/onerror when another tab holds an older version
     // of the database open. Without this the request settles neither way.
     req.onblocked = () =>
-      reject(new Error("IndexedDB is blocked by another open tab of this app"));
+      finish(reject, new Error("IndexedDB is blocked by another open tab of this app"));
 
     req.onupgradeneeded = () => req.result.createObjectStore(STORE_NAME);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onsuccess = () => finish(resolve, req.result);
+    req.onerror = () => finish(reject, req.error);
 
-    // Belt and braces: some browsers (private modes especially) can leave an
-    // open request silent forever. Falling back beats never starting.
-    setTimeout(() => reject(new Error("IndexedDB did not respond in time")), OPEN_TIMEOUT_MS);
+    setTimeout(() => {
+      const err = new Error("IndexedDB did not respond in time");
+      err.code = IDB_TIMEOUT;
+      finish(reject, err);
+    }, OPEN_TIMEOUT_MS);
   });
 
   return dbPromise;
@@ -119,6 +138,11 @@ export function loadState() {
       });
     })
     .catch((err) => {
+      // A timeout means the database is probably fine and just slow. Loading an
+      // empty workspace here would look exactly like data loss, so refuse to
+      // guess and let the caller surface a real error instead.
+      if (err?.code === IDB_TIMEOUT) throw err;
+
       console.warn("IndexedDB unavailable, falling back to localStorage.", err);
       usingIndexedDB = false;
       return loadFromLocalStorage();

@@ -6,7 +6,7 @@
    which is what makes a deploy actually reach people instead of being masked by
    a stale cache forever. */
 
-const CACHE = "motion-v5";
+const CACHE = "motion-v7";
 
 const ASSETS = [
   "./",
@@ -50,6 +50,7 @@ const ASSETS = [
   "./js/ui/pwa.js",
   "./js/ui/class-timer.js",
   "./js/ui/confirm.js",
+  "./js/ui/backup.js",
   "./js/views/dashboard.js",
   "./js/views/tasks.js",
   "./js/views/calendar.js",

@@ -138,6 +138,17 @@ if (location.protocol === "file:") {
     </div>
 
     <div class="sidebar-footer">
+      <div class="backup-row">
+        <button class="backup-btn" id="exportDataBtn" title="Download a backup of everything in this workspace">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 17.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/></svg>
+          Export
+        </button>
+        <label class="backup-btn" for="importDataInput" title="Restore a workspace from a backup file">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7.5 7.5 4.5-4.5 4.5 4.5"/><path d="M4 17.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/></svg>
+          Import
+        </label>
+        <input type="file" id="importDataInput" accept="application/json,.json" hidden>
+      </div>
       <button class="theme-toggle" id="themeToggle"></button>
     </div>
   </nav>
