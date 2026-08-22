@@ -1,7 +1,7 @@
 import { store } from "../store.js";
 import { $, esc } from "../dom.js";
 import { icon } from "../icons.js";
-import { dateKey, formatDateSpan, formatShortDate, todayKey } from "../lib/dates.js";
+import { dateKey, formatDateSpan, overdueLabel, todayKey } from "../lib/dates.js";
 import { getHolidaysForYear } from "../lib/holidays.js";
 import {
   classStatus, classesOnDay, colorClass, formatTime, minutesUntil, nowMinutes, toMinutes,
@@ -147,18 +147,21 @@ function renderHomeTimer() {
 
 // --------------------------------------------------------------- timeline --
 
-function taskChip(task) {
+function taskChip(task, today) {
+  const overdue = !task.done && task.due && task.due < today;
+
   return (
-    `<li class="tl-task${task.done ? " done" : ""}">` +
+    `<li class="tl-task${task.done ? " done" : ""}${overdue ? " is-overdue" : ""}">` +
     `<input type="checkbox" data-action="toggle-task" data-id="${esc(task.id)}"` +
     `${task.done ? " checked" : ""} aria-label="${esc(task.text)}">` +
     `<span class="tl-task-text">${esc(task.text)}</span>` +
+    (overdue ? `<span class="badge overdue">${icon("clock")}${esc(overdueLabel(task.due))}</span>` : "") +
     `<span class="badge priority-${esc(task.priority)}">${esc(task.priority)}</span>` +
     "</li>"
   );
 }
 
-function classBlock(c, tasks, nowM) {
+function classBlock(c, tasks, nowM, today) {
   const isNow = toMinutes(c.start) <= nowM && nowM < toMinutes(c.end);
   const isPast = toMinutes(c.end) <= nowM;
 
@@ -174,12 +177,12 @@ function classBlock(c, tasks, nowM) {
     (isNow ? ' <span class="now-pill">Now</span>' : "") +
     "</div>" +
     (c.room ? `<div class="tl-meta">${icon("pin")}${esc(c.room)}</div>` : "") +
-    (tasks.length ? `<ul class="tl-tasks">${tasks.map(taskChip).join("")}</ul>` : "") +
+    (tasks.length ? `<ul class="tl-tasks">${tasks.map((t) => taskChip(t, today)).join("")}</ul>` : "") +
     "</li>"
   );
 }
 
-function renderTimeline(classesToday, tasksToday, holidays, eventsToday) {
+function renderTimeline(classesToday, tasksToday, holidays, eventsToday, today) {
   const host = $("todayTimeline");
   const nowM = nowMinutes();
 
@@ -204,7 +207,7 @@ function renderTimeline(classesToday, tasksToday, holidays, eventsToday) {
       items += '<li class="tl-now"><span>Now</span></li>';
       nowPlaced = true;
     }
-    items += classBlock(c, byClass.get(c.id), nowM);
+    items += classBlock(c, byClass.get(c.id), nowM, today);
   });
 
   if (classesToday.length && !nowPlaced) items += '<li class="tl-now"><span>Now</span></li>';
@@ -212,7 +215,7 @@ function renderTimeline(classesToday, tasksToday, holidays, eventsToday) {
   const looseBlock = loose.length
     ? '<div class="tl-loose"><div class="tl-loose-head">' +
       (classesToday.length ? "Not tied to a class" : "Due today") +
-      `</div><ul class="tl-tasks">${loose.map(taskChip).join("")}</ul></div>`
+      `</div><ul class="tl-tasks">${loose.map((t) => taskChip(t, today)).join("")}</ul></div>`
     : "";
 
   if (!classesToday.length && !loose.length && !banners) {
@@ -266,7 +269,8 @@ export function render() {
     // Overdue work is today's problem too, so it appears alongside what is due.
     [...overdue, ...dueToday],
     getHolidaysForYear(now.getFullYear())[today] || [],
-    state.eventsList.filter((ev) => ev.dates.includes(today))
+    state.eventsList.filter((ev) => ev.dates.includes(today)),
+    today
   );
 
   $("todayMeta").textContent = [

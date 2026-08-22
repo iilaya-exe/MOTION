@@ -4,6 +4,7 @@ import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
 import { relativeTime } from "../lib/dates.js";
 import * as undo from "../ui/undo.js";
+import { ask } from "../ui/confirm.js";
 import { closeNav, isMobile, switchView } from "../ui/nav.js";
 import * as router from "../ui/router.js";
 
@@ -228,9 +229,15 @@ export function mount() {
     renderPageList();
   });
 
-  $("deletePageBtn").addEventListener("click", () => {
+  $("deletePageBtn").addEventListener("click", async () => {
     const page = currentPage();
     if (!page) return;
+
+    const ok = await ask({
+      title: `Delete "${page.title || "Untitled"}"?`,
+      message: "This note and everything written in it will be removed.",
+    });
+    if (!ok) return;
 
     const index = store.state.pages.indexOf(page);
     store.state.pages.splice(index, 1);

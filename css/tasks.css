@@ -175,6 +175,10 @@
 
 .link-btn:hover { background: var(--accent-soft); }
 
+/* The list scrolls horizontally rather than compressing past the point of
+   legibility. With the column drops below, this rarely engages. */
+#taskList { overflow-x: auto; }
+
 /* ---------------- Grouped table ----------------
    Laid out with CSS grid rather than a <table>: the same column template is
    applied to the header and to every row in every group, so columns line up
@@ -183,8 +187,11 @@
    stacked flex layout on a phone, which a table would fight. */
 
 .task-table {
-  /* Name takes the slack; the property columns are fixed so chips align. */
-  --cols: minmax(0, 1fr) 130px 106px 124px 108px 132px 30px;
+  /* Name takes the slack, but never below 170px — a minmax(0,1fr) track will
+     collapse to zero before any fixed column yields, which wraps the title one
+     character per line and slides the headers over each other. */
+  --cols: minmax(170px, 1fr) 128px 104px 148px 106px 128px 30px;
+  min-width: 620px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--surface);
@@ -198,7 +205,8 @@
   grid-template-columns: var(--cols);
   align-items: center;
   gap: 10px;
-  padding: 0 12px;
+  /* Extra on the left so the 3px priority stripe never crowds the checkbox. */
+  padding: 0 12px 0 16px;
 }
 
 .task-head {
@@ -213,6 +221,14 @@
 }
 
 .task-head .col-name { padding-left: 27px; }
+
+/* Grid children default to min-width:auto, which lets a long chip push the
+   track wider than its declared size and skew every column after it. */
+.col-subject,
+.col-priority,
+.col-date,
+.col-repeat,
+.col-status { min-width: 0; }
 
 .task-group + .task-group .group-head { border-top: 1px solid var(--border); }
 
@@ -298,8 +314,11 @@
 
 .task-row:hover { background: var(--hover-subtle); }
 
-/* inset rather than border-left so the grid columns stay aligned */
-.task-row.is-overdue { box-shadow: inset 3px 0 0 var(--danger); }
+/* Overdue is a row tint, not a left bar: the left edge already carries the
+   priority stripe, and two indicators stacked in the same 3px just overpaint
+   each other. The red "N days overdue" chip does the explicit work. */
+.task-row.is-overdue { background: color-mix(in srgb, var(--danger-soft) 40%, transparent); }
+.task-row.is-overdue:hover { background: color-mix(in srgb, var(--danger-soft) 68%, transparent); }
 
 .cell-name {
   display: flex;
@@ -343,7 +362,9 @@
   flex: 1;
   min-width: 0;
   font-size: var(--fs-body-s);
-  word-break: break-word;
+  /* anywhere, not break-word: break-word will split mid-word even when the line
+     could simply wrap, which is what produced one letter per row. */
+  overflow-wrap: anywhere;
   cursor: text;
   border-radius: 5px;
   padding: 3px 5px;

@@ -12,6 +12,7 @@ import {
   weekDaysShown,
 } from "../lib/schedule.js";
 import { openEditClass } from "./class-editor.js";
+import { exportSchedule } from "../lib/schedule-export.js";
 
 const HOUR_H = 58;
 
@@ -107,6 +108,7 @@ function renderWeekGrid() {
 
 export function openFullSchedule() {
   renderWeekGrid();
+  syncExportButtons();
   modal.open("fullSchedOverlay");
 }
 
@@ -114,7 +116,35 @@ export function closeFullSchedule() {
   modal.close("fullSchedOverlay");
 }
 
+/** Disabled with no classes, since there would be nothing on the image. */
+function syncExportButtons() {
+  const empty = !store.state.classes.length;
+  $("exportPngBtn").disabled = empty;
+  $("exportJpgBtn").disabled = empty;
+}
+
+async function runExport(format, btn) {
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  try {
+    const ok = await exportSchedule(store.state.classes, format);
+    btn.textContent = ok ? "Saved" : "Unavailable";
+  } catch (err) {
+    console.error("Schedule export failed.", err);
+    btn.textContent = "Failed";
+  }
+
+  setTimeout(() => {
+    btn.textContent = original;
+    syncExportButtons();
+  }, 1400);
+}
+
 export function mount() {
+  $("exportPngBtn").addEventListener("click", (e) => runExport("png", e.currentTarget));
+  $("exportJpgBtn").addEventListener("click", (e) => runExport("jpeg", e.currentTarget));
   $("fullSchedCloseBtn").addEventListener("click", closeFullSchedule);
 
   $("fullSchedOverlay").addEventListener("click", (e) => {

@@ -3,6 +3,7 @@ import { $, esc, isHidden } from "../dom.js";
 import { icon } from "../icons.js";
 import * as modal from "../ui/modal.js";
 import * as undo from "../ui/undo.js";
+import { ask } from "../ui/confirm.js";
 import { uid } from "../lib/id.js";
 import { dateKey, formatShortDate, parseDateKey } from "../lib/dates.js";
 import { render as renderCalendar } from "../views/calendar.js";
@@ -128,10 +129,16 @@ export function mount() {
     closeEventEditor();
   });
 
-  $("eventDeleteBtn").addEventListener("click", () => {
+  $("eventDeleteBtn").addEventListener("click", async () => {
     if (!draft?.id) return;
     const ev = store.state.eventsList.find((e) => e.id === draft.id);
     if (!ev) return;
+
+    const ok = await ask({
+      title: `Delete "${ev.title}"?`,
+      message: `This removes it from all ${ev.dates.length} scheduled date${ev.dates.length === 1 ? "" : "s"}.`,
+    });
+    if (!ok) return;
 
     const index = store.state.eventsList.indexOf(ev);
     store.state.eventsList.splice(index, 1);

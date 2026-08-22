@@ -483,3 +483,15 @@
 }
 
 .class-row.is-now::before { width: 6px; }
+
+/* Export buttons in the Full Schedule header. */
+.export-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: var(--sp-2);
+}
+
+.export-actions .btn { padding: 6px 11px; }
+.export-actions .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.export-actions .btn:disabled:hover { background: var(--surface); color: var(--text-2); border-color: var(--border-strong); }

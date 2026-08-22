@@ -266,3 +266,12 @@
 
 .stat-icon.violet { background: var(--accent-soft); color: #7c3aed; }
 :root[data-theme="dark"] .stat-icon.violet { color: #bb9bff; }
+
+/* Overdue work on the timeline gets the same red treatment as the task table,
+   so the two views agree at a glance. */
+.tl-task.is-overdue {
+  background: color-mix(in srgb, var(--danger-soft) 55%, transparent);
+  border-color: var(--danger-border);
+}
+
+.tl-task .badge.overdue { flex-shrink: 0; }

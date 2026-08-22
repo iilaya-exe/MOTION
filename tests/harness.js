@@ -60,8 +60,18 @@ export function makeDom(win) {
     el.dispatchEvent(new win.Event("change", { bubbles: true }));
   };
 
+  /** Clicks through the app's confirmation dialog; `false` cancels instead. */
+  const confirmDialog = async (accept = true) => {
+    await new Promise((r) => setTimeout(r, 40));
+    const overlay = doc.getElementById("confirmOverlay");
+    if (!overlay || overlay.classList.contains("hidden")) return false;
+    click(doc.getElementById(accept ? "confirmOkBtn" : "confirmCancelBtn"));
+    await new Promise((r) => setTimeout(r, 40));
+    return true;
+  };
+
   return {
-    doc, q, qa, click, setValue, key, tick,
+    doc, q, qa, click, setValue, key, tick, confirmDialog,
     openModal: () => q(".modal-overlay:not(.hidden)"),
     view: () => q(".view:not(.hidden)"),
     nav: (label) => click(qa(".nav-item").find((b) => b.textContent.trim() === label)),

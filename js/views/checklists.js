@@ -3,6 +3,7 @@ import { $, esc } from "../dom.js";
 import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
 import * as undo from "../ui/undo.js";
+import { ask } from "../ui/confirm.js";
 
 /* Transient view state. `collapsed` lives on the checklist itself because a
    folded-away list should stay folded between sessions; search and which row is
@@ -215,7 +216,7 @@ export function mount() {
 
   const grid = $("checklistGrid");
 
-  grid.addEventListener("click", (e) => {
+  grid.addEventListener("click", async (e) => {
     const el = e.target.closest("[data-action]");
     if (!el) return;
 
@@ -227,6 +228,14 @@ export function mount() {
       addItem(clId);
     } else if (action === "delete-item") {
       const item = getItem(cl, itemId);
+      if (!item) return;
+
+      const ok = await ask({
+        title: "Delete this item?",
+        message: `"${item.text}" will be removed from ${cl.name}.`,
+      });
+      if (!ok) return;
+
       const index = cl.items.indexOf(item);
       if (index === -1) return;
 
@@ -252,8 +261,16 @@ export function mount() {
       store.save();
       render();
     } else if (action === "clear-done") {
-      const snapshot = [...cl.items];
       const n = cl.items.filter((i) => i.done).length;
+
+      const ok = await ask({
+        title: `Clear ${n} completed item${n === 1 ? "" : "s"}?`,
+        message: `They will be removed from ${cl.name}.`,
+        confirmLabel: "Clear",
+      });
+      if (!ok) return;
+
+      const snapshot = [...cl.items];
       cl.items = cl.items.filter((i) => !i.done);
       store.save();
       render();
@@ -264,6 +281,14 @@ export function mount() {
         render();
       });
     } else if (action === "delete-checklist") {
+      const ok = await ask({
+        title: `Delete "${cl.name}"?`,
+        message: cl.items.length
+          ? `This checklist and its ${cl.items.length} item${cl.items.length === 1 ? "" : "s"} will be removed.`
+          : "This checklist will be removed.",
+      });
+      if (!ok) return;
+
       const index = store.state.checklists.indexOf(cl);
       store.state.checklists.splice(index, 1);
       store.save();

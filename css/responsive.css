@@ -1,6 +1,56 @@
 /* Breakpoints, smallest last. Below 768px the sidebar becomes a drawer and the
    modals become bottom sheets. */
 
+/* ---------------- Task table ----------------
+   Thresholds are derived from real content width (viewport minus the 252px
+   sidebar and 96px of padding), not guessed: the full table needs ~892px of
+   content, so it can only survive above roughly 1240px of viewport. Below each
+   threshold the least load-bearing column is dropped rather than letting every
+   column shrink, and below 900px the grid is abandoned entirely. */
+@media (max-width: 1240px) {
+  .task-table {
+    --cols: minmax(170px, 1fr) 128px 104px 148px 128px 30px;
+    min-width: 0;
+  }
+  .col-repeat { display: none; }
+}
+
+@media (max-width: 1120px) {
+  .task-table { --cols: minmax(160px, 1fr) 104px 148px 128px 30px; }
+  .col-subject { display: none; }
+}
+
+/* Priority is the last to go: it is duplicated by the left-edge stripe, so
+   losing the chip costs the least information of anything remaining. */
+@media (max-width: 1000px) {
+  .task-table { --cols: minmax(150px, 1fr) 148px 128px 30px; }
+  .col-priority { display: none; }
+}
+
+/* Stacking the table is a layout decision of its own — deliberately not tied to
+   the 768px nav drawer, which would leave a broken band in between. */
+@media (max-width: 900px) {
+  .task-head { display: none; }
+
+  .task-table { min-width: 0; }
+  #taskList { overflow-x: visible; }
+  .col-repeat,
+  .col-subject,
+  .col-priority { display: inline-flex; }
+
+  .task-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px 10px 16px;
+  }
+
+  .task-row .cell-name { flex: 1 0 100%; }
+  .task-row .cell { display: inline-flex; }
+  .task-row .col-actions { margin-left: auto; }
+}
+
 /* ---------------- Tablet ---------------- */
 @media (max-width: 860px) {
   .sidebar { width: 210px; min-width: 210px; }
@@ -111,21 +161,7 @@
   /* Columns stay a usable width and the board scrolls sideways. */
   .board-col { flex: 0 0 82vw; max-width: 82vw; }
 
-  /* The column grid stops making sense at phone width: drop the header and let
-     the name take a full line with the property chips wrapping under it. */
-  .task-head { display: none; }
-
-  .task-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 12px;
-  }
-
-  .task-row .cell-name { flex: 1 0 100%; }
-  .task-row .cell { display: inline-flex; }
-  .task-row .cell:last-child { margin-left: auto; }
+  /* The task table stacks at 900px, above — nothing more needed here. */
   .task-row .icon-btn,
   .board-card .icon-btn,
   .cl-actions .icon-btn { opacity: 1; }

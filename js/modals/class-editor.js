@@ -1,6 +1,7 @@
 import { store } from "../store.js";
 import * as modal from "../ui/modal.js";
 import * as undo from "../ui/undo.js";
+import { ask } from "../ui/confirm.js";
 import { $, isHidden } from "../dom.js";
 import { uid } from "../lib/id.js";
 import { DAY_ABBR } from "../lib/dates.js";
@@ -162,10 +163,19 @@ export function mount() {
     renderSchedule();
   });
 
-  $("classDeleteBtn").addEventListener("click", () => {
+  $("classDeleteBtn").addEventListener("click", async () => {
     if (!draft?.id) return;
     const c = store.state.classes.find((x) => x.id === draft.id);
     if (!c) return;
+
+    const linked = store.state.tasks.filter((t) => t.subjectId === c.id).length;
+    const ok = await ask({
+      title: `Delete "${c.subject}"?`,
+      message: linked
+        ? `This class will be removed. ${linked} task${linked === 1 ? "" : "s"} linked to it will lose their subject.`
+        : "This class will be removed from your schedule.",
+    });
+    if (!ok) return;
 
     const index = store.state.classes.indexOf(c);
     store.state.classes.splice(index, 1);

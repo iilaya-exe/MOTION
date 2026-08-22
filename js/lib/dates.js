@@ -48,6 +48,18 @@ export function formatDateSpan(sortedDates) {
   return spanDays === sortedDates.length ? label : `${label} (${sortedDates.length} days)`;
 }
 
+/** Whole days from today to `key`; negative once the date has passed. */
+export function daysFromToday(key) {
+  return Math.round((parseDateKey(key) - parseDateKey(todayKey())) / 86400000);
+}
+
+/** "3 days overdue" / "1 day overdue" — the count is what a student acts on. */
+export function overdueLabel(key) {
+  const days = -daysFromToday(key);
+  if (days <= 0) return "Due today";
+  return `${days} day${days === 1 ? "" : "s"} overdue`;
+}
+
 export const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",

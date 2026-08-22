@@ -3,7 +3,10 @@ import { $, $$, esc } from "../dom.js";
 import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
 import * as undo from "../ui/undo.js";
-import { advanceDateKey, formatShortDate, parseDateKey, todayKey } from "../lib/dates.js";
+import { ask } from "../ui/confirm.js";
+import {
+  advanceDateKey, daysFromToday, formatDateLabel, formatShortDate, overdueLabel, todayKey,
+} from "../lib/dates.js";
 import { colorClass } from "../lib/schedule.js";
 
 /* View state. Deliberately not persisted: filters and grouping are how you are
@@ -94,10 +97,7 @@ export function toggleTaskDone(id, checked) {
 
 // ---------------------------------------------------------------- grouping --
 
-function dayOffset(key) {
-  const diff = parseDateKey(key) - parseDateKey(todayKey());
-  return Math.round(diff / 86400000);
-}
+const dayOffset = daysFromToday;
 
 /** Which bucket a task falls into, given the current groupBy. */
 function bucketOf(task) {
@@ -206,10 +206,12 @@ function buildGroups() {
 function dueCell(task) {
   const overdue = !task.done && task.due && task.due < todayKey();
 
+  // Overdue shows how long it has been late — the date alone makes you do the
+  // arithmetic. The exact date stays in the tooltip.
   const chip = task.due
-    ? `<span class="badge ${overdue ? "overdue" : "due"}">` +
+    ? `<span class="badge ${overdue ? "overdue" : "due"}" title="${esc(formatDateLabel(task.due))}">` +
       icon(overdue ? "clock" : "calendarSm") +
-      `${overdue ? "Overdue " : ""}${esc(formatShortDate(task.due))}</span>`
+      `${overdue ? esc(overdueLabel(task.due)) : esc(formatShortDate(task.due))}</span>`
     : `<span class="badge ghost">${icon("calendarSm")}Date</span>`;
 
   return (
@@ -320,12 +322,12 @@ function taskRow(task) {
   return (
     `<li class="task-row ${rowState(task)} p-${esc(task.priority)}${overdue ? " is-overdue" : ""}">` +
     `<div class="cell-name">${checkbox(task)}${textCell(task)}</div>` +
-    `<div class="cell">${subjectCell(task)}</div>` +
-    `<div class="cell">${priorityCell(task)}</div>` +
-    `<div class="cell">${dueCell(task)}</div>` +
-    `<div class="cell">${repeatCell(task)}</div>` +
-    `<div class="cell">${statusCell(task)}</div>` +
-    `<div class="cell">${deleteButton(task)}</div>` +
+    `<div class="cell col-subject">${subjectCell(task)}</div>` +
+    `<div class="cell col-priority">${priorityCell(task)}</div>` +
+    `<div class="cell col-date">${dueCell(task)}</div>` +
+    `<div class="cell col-repeat">${repeatCell(task)}</div>` +
+    `<div class="cell col-status">${statusCell(task)}</div>` +
+    `<div class="cell col-actions">${deleteButton(task)}</div>` +
     "</li>"
   );
 }
@@ -371,8 +373,10 @@ function renderSummary() {
 
 const TABLE_HEAD =
   '<div class="task-head">' +
-  '<span class="col-name">Name</span><span>Subject</span><span>Priority</span>' +
-  '<span>Date</span><span>Repeat</span><span>Status</span><span></span></div>';
+  '<span class="col-name">Name</span><span class="col-subject">Subject</span>' +
+  '<span class="col-priority">Priority</span><span class="col-date">Date</span>' +
+  '<span class="col-repeat">Repeat</span><span class="col-status">Status</span>' +
+  '<span class="col-actions"></span></div>';
 
 const NEW_ROW =
   `<button class="task-new-row" data-action="focus-composer">${icon("plus")}New</button>`;
@@ -476,7 +480,7 @@ function commitEdit(input) {
 
 /** Delegated handlers, bound once to each container. */
 function wireItemEvents(host) {
-  host.addEventListener("click", (e) => {
+  host.addEventListener("click", async (e) => {
     const el = e.target.closest("[data-action]");
     if (!el) return;
 
@@ -484,6 +488,14 @@ function wireItemEvents(host) {
 
     if (action === "delete-task") {
       const task = byId(id);
+      if (!task) return;
+
+      const ok = await ask({
+        title: "Delete this task?",
+        message: `"${task.text}" will be removed.`,
+      });
+      if (!ok) return;
+
       const index = store.state.tasks.indexOf(task);
       if (index === -1) return;
 
@@ -617,10 +629,17 @@ export function mount() {
     render();
   });
 
-  $("taskSummary").addEventListener("click", (e) => {
+  $("taskSummary").addEventListener("click", async (e) => {
     if (!e.target.closest('[data-action="clear-done"]')) return;
     const removed = store.state.tasks.filter((t) => t.done);
     if (!removed.length) return;
+
+    const ok = await ask({
+      title: `Clear ${removed.length} completed task${removed.length === 1 ? "" : "s"}?`,
+      message: "They will be removed from your list.",
+      confirmLabel: "Clear",
+    });
+    if (!ok) return;
 
     const snapshot = [...store.state.tasks];
     store.state.tasks = store.state.tasks.filter((t) => !t.done);

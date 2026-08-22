@@ -7,6 +7,7 @@ import * as modal from "./ui/modal.js";
 import * as undo from "./ui/undo.js";
 import * as pwa from "./ui/pwa.js";
 import * as classTimer from "./ui/class-timer.js";
+import * as confirmDialog from "./ui/confirm.js";
 import * as theme from "./ui/theme.js";
 
 import * as dashboard from "./views/dashboard.js";
@@ -25,7 +26,9 @@ import * as fullSchedule from "./modals/full-schedule.js";
 function handleEscape(e) {
   if (e.key !== "Escape") return;
 
-  if (classEditor.isClassEditorOpen()) classEditor.closeClassEditor();
+  // The confirmation sits above every other layer, so it unwinds first.
+  if (confirmDialog.isConfirmOpen()) confirmDialog.cancel();
+  else if (classEditor.isClassEditorOpen()) classEditor.closeClassEditor();
   else if (fullSchedule.isFullScheduleOpen()) fullSchedule.closeFullSchedule();
   else if (eventEditor.isEventEditorOpen()) eventEditor.closeEventEditor();
   else if (dayModal.isDayModalOpen()) dayModal.closeDayModal();
@@ -47,7 +50,7 @@ async function boot() {
   nav.setAfterSwitch(notes.renderPageList);
 
   [
-    nav, theme, modal, undo, pwa, classTimer,
+    nav, theme, modal, undo, pwa, classTimer, confirmDialog,
     dashboard, tasks, calendar, schedule, checklists, notes,
     dayModal, eventEditor, classEditor, fullSchedule,
   ].forEach((module) => module.mount());

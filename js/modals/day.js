@@ -2,6 +2,7 @@ import { store } from "../store.js";
 import { $, esc, isHidden, show } from "../dom.js";
 import { icon } from "../icons.js";
 import * as modal from "../ui/modal.js";
+import { ask } from "../ui/confirm.js";
 import { formatDateLabel } from "../lib/dates.js";
 import { getHolidaysForYear } from "../lib/holidays.js";
 import { openNewEvent, openEditEvent } from "./event-editor.js";
@@ -90,7 +91,7 @@ export function mount() {
     if (dateKey) openNewEvent(dateKey);
   });
 
-  $("modalEventList").addEventListener("click", (e) => {
+  $("modalEventList").addEventListener("click", async (e) => {
     const editEl = e.target.closest('[data-action="edit-event"]');
     if (editEl) {
       openEditEvent(editEl.dataset.id);
@@ -102,6 +103,17 @@ export function mount() {
 
     const ev = store.state.eventsList.find((x) => x.id === rmBtn.dataset.id);
     if (!ev) return;
+
+    // Removing the only remaining date deletes the event outright, so say so.
+    const isLast = ev.dates.length === 1;
+    const ok = await ask({
+      title: isLast ? `Delete "${ev.title}"?` : "Remove from this day?",
+      message: isLast
+        ? "This is its only date, so the event will be deleted."
+        : `"${ev.title}" will stay on its other ${ev.dates.length - 1} date(s).`,
+      confirmLabel: isLast ? "Delete" : "Remove",
+    });
+    if (!ok) return;
 
     ev.dates = ev.dates.filter((d) => d !== dateKey);
     // An event with no dates left has nowhere to live.

@@ -701,3 +701,44 @@ select.field { cursor: pointer; }
 
 body.is-offline .offline-bar { display: block; }
 body.is-offline .app { padding-top: 30px; }
+
+/* ---------------- Confirmation dialog ---------------- */
+.modal.modal-confirm {
+  width: 400px;
+  text-align: center;
+  padding: var(--sp-5) var(--sp-5) var(--sp-4);
+}
+
+.modal.modal-confirm h3 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-h3);
+}
+
+.confirm-icon {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto var(--sp-3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+}
+
+.confirm-icon .icon { width: 22px; height: 22px; }
+
+.confirm-message {
+  margin: 0;
+  font-size: var(--fs-body-s);
+  color: var(--text-2);
+  line-height: 1.55;
+}
+
+.modal.modal-confirm .modal-footer {
+  justify-content: center;
+  margin-top: var(--sp-5);
+}
+
+.modal.modal-confirm .modal-footer .btn { min-width: 108px; }

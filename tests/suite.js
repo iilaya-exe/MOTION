@@ -5,9 +5,21 @@ import { check, group, makeDom, settle } from "./harness.js";
    Everything goes through the DOM — clicking, typing, reading what is rendered
    — so it stays honest about what a user would actually get. */
 
+/** The stylesheets as text, for assertions about layout rules themselves. */
+async function loadCss(win) {
+  const links = [...win.document.querySelectorAll('link[rel="stylesheet"]')];
+  const parts = await Promise.all(
+    links.map((l) => fetch(l.getAttribute("href")).then((r) => r.text()).catch(() => ""))
+  );
+  const fetched = parts.join("\n");
+  // join() of empty strings is still truthy, so test for real content.
+  return fetched.trim() ? fetched : globalThis.cssText || "";
+}
+
 export async function suite(win) {
+  const cssText = await loadCss(win);
   const d = makeDom(win);
-  const { q, qa, click, setValue, key, tick } = d;
+  const { q, qa, click, setValue, key, tick, confirmDialog } = d;
 
 
   
@@ -140,6 +152,84 @@ export async function suite(win) {
   check("the class now shows its open task count", q(".class-row .task-count"),
     q("#dayClassList").textContent);
 
+  // ------------------------------------------------------------- confirmation ---
+  group("Delete confirmation");
+  d.nav("Tasks");
+  await settle();
+  setValue(q("#taskTextInput"), "Cancel me");
+  click(q("#addTaskBtn"));
+  await settle();
+  const beforeCancel = qa(".task-row").length;
+
+  click(qa('[data-action="delete-task"]').at(-1));
+  await settle(60);
+  check("confirmation dialog opens", !q("#confirmOverlay").classList.contains("hidden"),
+    q("#confirmOverlay").className);
+  check("dialog names what is being deleted",
+    q("#confirmMessage").textContent.includes("Cancel me"), q("#confirmMessage").textContent);
+  check("focus starts on Cancel, not Delete", d.doc.activeElement?.id === "confirmCancelBtn",
+    d.doc.activeElement?.id);
+
+  click(q("#confirmCancelBtn"));
+  await settle();
+  check("cancelling keeps the task", qa(".task-row").length === beforeCancel,
+    `${qa(".task-row").length} vs ${beforeCancel}`);
+  check("dialog closed on cancel", q("#confirmOverlay").classList.contains("hidden"));
+
+  click(qa('[data-action="delete-task"]').at(-1));
+  await settle(60);
+  key(d.doc.activeElement || d.doc.body, "Escape");
+  await settle();
+  check("escape also cancels", q("#confirmOverlay").classList.contains("hidden") &&
+    qa(".task-row").length === beforeCancel, String(qa(".task-row").length));
+
+  click(qa('[data-action="delete-task"]').at(-1));
+  await confirmDialog(true);
+  await settle();
+  check("confirming deletes", qa(".task-row").length === beforeCancel - 1,
+    `${qa(".task-row").length} vs ${beforeCancel - 1}`);
+  check("undo is still offered after confirming",
+    !q("#undoToast").classList.contains("hidden"), q("#undoToast").textContent);
+  click(q('#undoToast [data-action="undo"]'));
+  await settle();
+  check("undo still restores it", qa(".task-row").length === beforeCancel,
+    String(qa(".task-row").length));
+  click(qa('[data-action="delete-task"]').at(-1));
+  await confirmDialog(true);
+  await settle();
+
+  // ---------------------------------------------------------- image export ---
+  group("Schedule image export");
+  d.nav("Schedule");
+  await settle();
+  click(q("#fullSchedBtn"));
+  await settle();
+  check("export buttons present", q("#exportPngBtn") && q("#exportJpgBtn"));
+  check("export enabled when classes exist", !q("#exportPngBtn").disabled);
+
+  // Intercept the download so the suite can inspect what would be saved.
+  const saved = [];
+  const realCreate = win.URL.createObjectURL;
+  win.URL.createObjectURL = (blob) => { saved.push(blob); return "blob:test"; };
+  win.URL.revokeObjectURL = () => {};
+  const realClick = win.HTMLAnchorElement.prototype.click;
+  let downloadName = "";
+  win.HTMLAnchorElement.prototype.click = function () { downloadName = this.download; };
+
+  click(q("#exportPngBtn"));
+  await settle(400);
+
+  check("export produced a file", saved.length === 1, `${saved.length} blobs`);
+  check("it is a PNG", saved[0]?.type === "image/png", saved[0]?.type);
+  check("the image has bytes", (saved[0]?.size ?? 0) > 1000, `${saved[0]?.size} bytes`);
+  check("filename is dated and typed", /^motion-schedule-\d{4}-\d{2}-\d{2}\.png$/.test(downloadName),
+    downloadName);
+
+  win.URL.createObjectURL = realCreate;
+  win.HTMLAnchorElement.prototype.click = realClick;
+  key(d.doc.body, "Escape");
+  await settle();
+
   // ------------------------------------------------------- UI refresh + timer ---
   group("Class timer & visuals");
 
@@ -268,27 +358,32 @@ export async function suite(win) {
   // Read the date from the Tasks view, which only re-renders when switched to —
   // so hop over, read, come back, tick, and hop over again.
   d.nav("Tasks"); await settle();
-  const dueBefore = q("input[data-action=set-due]")?.value;
+  // Target this task specifically — other rows may now sort ahead of it.
+  const rowFor = (text) =>
+    qa(".task-row").find((r) => r.querySelector(".task-text")?.textContent === text);
+  const dueOf = (text) => rowFor(text)?.querySelector("input[data-action=set-due]")?.value;
+  const dueBefore = dueOf("Weekly reading");
 
   d.nav("Home"); await settle();
   tick(q(".tl-item .tl-task input[type=checkbox]"));
   await settle();
 
   d.nav("Tasks"); await settle();
-  const dueAfter = q("input[data-action=set-due]")?.value;
+  const dueAfter = dueOf("Weekly reading");
   check("ticking a repeating task from the timeline rolls it forward",
     dueAfter && dueAfter !== dueBefore, `${dueBefore} -> ${dueAfter}`);
   check("…by exactly one week",
     Math.round((new Date(dueAfter) - new Date(dueBefore)) / 86400000) === 7,
     `${dueBefore} -> ${dueAfter}`);
-  check("…and it is still open", !q(".task-row.done"), "row marked done");
+  check("…and it is still open", !rowFor("Weekly reading")?.classList.contains("done"), "row marked done");
   d.nav("Home"); await settle();
 
   // ----------------------------------------------------------------- undo ---
   group("Undo (#5)");
   click(q('[data-action="delete-task"]'));
+  check("a confirmation appears before deleting", await confirmDialog(true), "no dialog shown");
   await settle();
-  check("task deleted without a confirm dialog", !q(".task-row"), q("#taskList").textContent);
+  check("task deleted after confirming", !q(".task-row"), q("#taskList").textContent);
   check("undo toast shown", !q("#undoToast").classList.contains("hidden"));
   check("toast names what was deleted", q("#undoToast").textContent.includes("Weekly reading"),
     q("#undoToast").textContent);
@@ -300,6 +395,7 @@ export async function suite(win) {
   check("toast hides after undo", q("#undoToast").classList.contains("hidden"));
 
   click(q('[data-action="delete-task"]'));
+  await confirmDialog(true);
   await settle();
   click(q('#undoToast [data-action="dismiss"]'));
   await settle();
@@ -349,6 +445,7 @@ export async function suite(win) {
   await settle();
 
   click(q("#deletePageBtn"));
+  await confirmDialog(true);
   await settle();
   check("deleting a page offers undo", !q("#undoToast").classList.contains("hidden"),
     q("#undoToast").textContent);
@@ -384,6 +481,62 @@ export async function suite(win) {
   check("escape closes the dialog", !d.openModal());
   check("focus returns to the button that opened it", d.doc.activeElement === addClassBtn,
     d.doc.activeElement?.id);
+
+  // ------------------------------------------------------------- overdue days ---
+  group("Overdue day count");
+  d.nav("Tasks");
+  await settle();
+
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const daysAgo = (n) => {
+    const t = new Date();
+    t.setDate(t.getDate() - n);
+    return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
+  };
+
+  setValue(q("#taskTextInput"), "Late essay");
+  setValue(q("#taskDueInput"), daysAgo(3));
+  click(q("#addTaskBtn"));
+  await settle();
+
+  const overdueChip = qa(".task-row .badge.overdue").at(-1);
+  check("overdue chip says how many days", overdueChip?.textContent.trim() === "3 days overdue",
+    overdueChip?.textContent);
+  check("exact date kept in the tooltip", (overdueChip?.getAttribute("title") || "").length > 8,
+    overdueChip?.getAttribute("title"));
+
+  // singular, not "1 days"
+  setValue(q("#taskTextInput"), "Yesterday thing");
+  setValue(q("#taskDueInput"), daysAgo(1));
+  click(q("#addTaskBtn"));
+  await settle();
+  check("one day reads as singular",
+    qa(".task-row .badge.overdue").some((b) => b.textContent.trim() === "1 day overdue"),
+    qa(".task-row .badge.overdue").map((b) => b.textContent.trim()).join(" | "));
+
+  check("overdue rows are tinted, not double-striped",
+    !(q(".task-row.is-overdue")?.style.boxShadow || "").includes("inset"),
+    q(".task-row.is-overdue")?.style.boxShadow);
+
+  d.nav("Home");
+  await settle();
+  check("timeline shows the day count too",
+    qa("#todayTimeline .badge.overdue").some((b) => /days? overdue/.test(b.textContent)),
+    qa("#todayTimeline .badge.overdue").map((b) => b.textContent).join(" | "));
+  d.nav("Tasks");
+  await settle();
+
+  // ---- layout: the table must never collapse its name column ----
+  group("Task table layout");
+  check("name track has a floor, not minmax(0,1fr)",
+    /--cols:\s*minmax\(1[0-9]{2}px/.test(cssText), "name column can still collapse to zero");
+  check("column-drop tiers defined", (cssText.match(/col-(repeat|subject|priority)\s*\{\s*display:\s*none/g) || []).length === 3,
+    String((cssText.match(/col-\w+\s*\{\s*display:\s*none/g) || []).length));
+  check("table stacks independently of the nav drawer",
+    /@media \(max-width: 900px\)/.test(cssText), "no 900px stacking block");
+  check("header and rows share one column template",
+    /\.task-head,\s*\n\.task-row \{[^}]*grid-template-columns: var\(--cols\)/.test(cssText),
+    "header/row templates diverged");
 
   // ------------------------------------------------------------ persistence ---
   group("Persistence");
