@@ -32,6 +32,8 @@ function sanitizeClasses(parsed) {
       subject: c.subject,
       section: typeof c.section === "string" ? c.section : "",
       room: typeof c.room === "string" ? c.room : "",
+      // A single grapheme; anything longer is almost certainly pasted junk.
+      emoji: typeof c.emoji === "string" ? [...c.emoji].slice(0, 2).join("") : "",
       days: c.days.filter((d) => typeof d === "number" && d >= 0 && d <= 6),
       start: /^\d{2}:\d{2}$/.test(c.start) ? c.start : "08:00",
       end: /^\d{2}:\d{2}$/.test(c.end) ? c.end : "09:00",
@@ -43,7 +45,7 @@ const PRIORITIES = ["low", "medium", "high"];
 const STATUS_IDS = ["todo", "progress", "review", "stuck", "hold", "complete"];
 const REPEATS = ["daily", "weekly", "monthly"];
 
-function sanitizeTasks(parsed) {
+function sanitizeTasks(parsed, classIds) {
   if (!Array.isArray(parsed.tasks)) return [];
 
   return parsed.tasks
@@ -63,6 +65,9 @@ function sanitizeTasks(parsed) {
       // null means "does not repeat"; a repeat without a due date is meaningless
       // so it is dropped rather than kept as a rule that can never fire.
       repeat: t.due && REPEATS.includes(t.repeat) ? t.repeat : null,
+      // Points at a class. A reference to a class that no longer exists is
+      // dropped rather than kept as a link that can never resolve.
+      subjectId: classIds.has(t.subjectId) ? t.subjectId : null,
     }));
 }
 
@@ -138,11 +143,15 @@ export function sanitizeState(parsed) {
     currentPageId = pages[0].id;
   }
 
+  // Classes first: tasks reference them, and a dangling reference has to go.
+  const classes = sanitizeClasses(parsed);
+  const classIds = new Set(classes.map((c) => c.id));
+
   return {
-    tasks: sanitizeTasks(parsed),
+    tasks: sanitizeTasks(parsed, classIds),
     eventsList: sanitizeEvents(parsed),
     checklists: sanitizeChecklists(parsed),
-    classes: sanitizeClasses(parsed),
+    classes,
     pages,
     currentPageId,
   };

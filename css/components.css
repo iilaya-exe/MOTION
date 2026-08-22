@@ -679,3 +679,25 @@ select.field { cursor: pointer; }
 }
 
 .nav-search input::placeholder { color: var(--text-3); }
+
+/* ---------------- Offline notice ----------------
+   Local-first means offline is a normal state, not an error — so this informs
+   rather than warns, and only appears when the connection actually drops. */
+.offline-bar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 130;
+  padding: 7px 16px;
+  text-align: center;
+  font-size: var(--fs-caption);
+  font-weight: 550;
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-bottom: 1px solid var(--amber-border);
+}
+
+body.is-offline .offline-bar { display: block; }
+body.is-offline .app { padding-top: 30px; }

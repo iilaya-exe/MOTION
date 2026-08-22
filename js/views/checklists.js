@@ -71,8 +71,13 @@ function card(cl) {
     `<button class="icon-btn danger-hover" data-action="delete-checklist" data-cl="${esc(cl.id)}" ` +
     `title="Delete checklist" aria-label="Delete ${esc(cl.name)}">${icon("trash")}</button>` +
     "</div></div>" +
+    '<div class="cl-progress">' +
+    `<div class="cl-ring" style="--pct:${pct}"><span>${pct}<small>%</small></span></div>` +
+    '<div class="cl-progress-body">' +
     `<div class="progress-bar"><div class="fill" style="width:${pct}%;"></div></div>` +
-    `<div class="cl-meta"><span>${doneCount} of ${total} complete</span><span class="cl-pct">${pct}%</span></div>` +
+    `<div class="cl-meta"><span><b>${doneCount}</b> of <b>${total}</b> complete</span>` +
+    (total - doneCount ? `<span>${total - doneCount} left</span>` : '<span class="cl-done-flag">Done</span>') +
+    "</div></div></div>" +
     '<div class="cl-body">' +
     `<ul class="cl-items">${items}</ul>` +
     '<div class="cl-add-row">' +

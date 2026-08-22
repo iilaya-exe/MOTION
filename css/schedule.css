@@ -406,3 +406,80 @@
 }
 
 .week-legend span { display: flex; align-items: center; }
+
+/* Open tasks linked to a class — the timetable's half of the subject link. */
+.task-count {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-mini);
+  font-weight: 650;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 20px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+/* ---------------- Subject icon + class status ---------------- */
+.class-emoji {
+  font-size: 1.05em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.cls-status {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.cls-status.s-ongoing { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+.cls-status.s-soon    { background: var(--amber-soft); color: var(--amber); border-color: var(--amber-border); }
+.cls-status.s-upcoming{ background: var(--surface-2); color: var(--text-3); border-color: var(--border); }
+.cls-status.s-done    { background: transparent; color: var(--text-3); border-color: var(--border); }
+
+/* Emoji picker in the class editor. */
+.emoji-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.emoji-opt {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: transform var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.emoji-opt:hover { transform: scale(1.12); border-color: var(--border-hover); }
+.emoji-opt.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: var(--ring); }
+
+/* A gradient header strip on class rows, replacing the flat left border. */
+.class-row { border-left: none; position: relative; overflow: hidden; }
+
+.class-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--cc-grad, var(--cc, var(--accent)));
+}
+
+.class-row.is-now::before { width: 6px; }

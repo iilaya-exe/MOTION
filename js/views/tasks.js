@@ -4,6 +4,7 @@ import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
 import * as undo from "../ui/undo.js";
 import { advanceDateKey, formatShortDate, parseDateKey, todayKey } from "../lib/dates.js";
+import { colorClass } from "../lib/schedule.js";
 
 /* View state. Deliberately not persisted: filters and grouping are how you are
    looking at the list right now, not part of the workspace. */
@@ -54,12 +55,42 @@ export function addTask(text, due, priority) {
     priority: priority || "medium",
     status: "todo",
     repeat: null,
+    subjectId: null,
     createdAt: Date.now(),
   });
   store.save();
 }
 
 const byId = (id) => store.state.tasks.find((t) => t.id === id);
+
+/**
+ * Completing a task, wherever it is ticked from. Exported so the Today timeline
+ * shares this exact behaviour instead of reimplementing the repeat rollover and
+ * the status coupling.
+ *
+ * @returns {boolean} true if anything changed
+ */
+export function toggleTaskDone(id, checked) {
+  const task = byId(id);
+  if (!task) return false;
+
+  // A repeating task is never "finished" — completing it rolls the due date
+  // forward to the next occurrence and leaves it open.
+  if (checked && task.repeat && task.due) {
+    task.due = advanceDateKey(task.due, task.repeat);
+    task.done = false;
+    task.status = "todo";
+  } else {
+    task.done = checked;
+    // Keep Status honest: ticking completes it, unticking sends a previously
+    // complete task back to To do but leaves any other status alone.
+    if (checked) task.status = "complete";
+    else if (task.status === "complete") task.status = "todo";
+  }
+
+  store.save();
+  return true;
+}
 
 // ---------------------------------------------------------------- grouping --
 
@@ -74,6 +105,8 @@ function bucketOf(task) {
   // separate Completed bucket would duplicate it.
   if (view.groupBy === "status") return task.status;
   if (task.done) return "done";
+
+  if (view.groupBy === "subject") return task.subjectId || "nosubject";
 
   if (view.groupBy === "priority") return task.priority;
   if (view.groupBy === "none") return "all";
@@ -109,6 +142,23 @@ const BUCKET_ORDER = {
   none: ["all", "done"],
 };
 
+const classById = (id) => store.state.classes.find((c) => c.id === id) || null;
+
+const classLabel = (c) => c.subject + (c.section ? ` (${c.section})` : "");
+
+/** Subject buckets are whatever classes exist right now, so they are built per render. */
+function bucketOrder() {
+  if (view.groupBy !== "subject") return BUCKET_ORDER[view.groupBy];
+  return [...store.state.classes.map((c) => c.id), "nosubject", "done"];
+}
+
+function bucketLabel(key) {
+  const c = classById(key);
+  if (c) return classLabel(c);
+  if (key === "nosubject") return "No subject";
+  return BUCKET_LABELS[key];
+}
+
 function visibleTasks() {
   const needle = view.search.trim().toLowerCase();
 
@@ -139,9 +189,15 @@ function buildGroups() {
     (buckets[k] ||= []).push(t);
   });
 
-  return BUCKET_ORDER[view.groupBy]
+  return bucketOrder()
     .filter((k) => buckets[k]?.length)
-    .map((k) => ({ key: k, label: BUCKET_LABELS[k], tasks: sortTasks(buckets[k]) }));
+    .map((k) => ({
+      key: k,
+      label: bucketLabel(k),
+      // Subject groups borrow the class colour so the dot matches the timetable.
+      tone: classById(k) ? colorClass(classById(k)) : `g-${k}`,
+      tasks: sortTasks(buckets[k]),
+    }));
 }
 
 // ----------------------------------------------------------------- markup --
@@ -205,6 +261,35 @@ function repeatCell(task) {
   );
 }
 
+function subjectCell(task) {
+  const classes = store.state.classes;
+  const current = classById(task.subjectId);
+
+  const options =
+    '<option value="">No subject</option>' +
+    classes
+      .map(
+        (c) =>
+          `<option value="${esc(c.id)}"${c.id === task.subjectId ? " selected" : ""}>${esc(classLabel(c))}</option>`
+      )
+      .join("");
+
+  const chip = current
+    ? `<span class="badge subject-chip ${colorClass(current)}"><span class="subject-dot"></span>${esc(current.subject)}</span>`
+    : `<span class="badge ghost">${icon("book")}Subject</span>`;
+
+  // With no classes yet there is nothing to pick, so the chip is inert.
+  if (!classes.length) {
+    return `<span class="prop-cell"><span class="badge ghost" title="Add a class in Schedule first">${icon("book")}Subject</span></span>`;
+  }
+
+  return (
+    `<span class="prop-cell">${chip}` +
+    `<select class="prop-input" data-action="set-subject" data-id="${esc(task.id)}" ` +
+    `aria-label="Subject for ${esc(task.text)}">${options}</select></span>`
+  );
+}
+
 function textCell(task) {
   if (view.editingId === task.id) {
     return `<input class="task-edit" data-action="commit-edit" data-id="${esc(task.id)}" value="${esc(task.text)}">`;
@@ -226,11 +311,16 @@ function deleteButton(task) {
   );
 }
 
+/** State drives the row's visual treatment; see the st-* rules in tasks.css. */
+const rowState = (task) =>
+  task.done ? "done" : task.status === "todo" ? "pending" : `active st-${task.status}`;
+
 function taskRow(task) {
   const overdue = !task.done && task.due && task.due < todayKey();
   return (
-    `<li class="task-row${task.done ? " done" : ""}${overdue ? " is-overdue" : ""}">` +
+    `<li class="task-row ${rowState(task)} p-${esc(task.priority)}${overdue ? " is-overdue" : ""}">` +
     `<div class="cell-name">${checkbox(task)}${textCell(task)}</div>` +
+    `<div class="cell">${subjectCell(task)}</div>` +
     `<div class="cell">${priorityCell(task)}</div>` +
     `<div class="cell">${dueCell(task)}</div>` +
     `<div class="cell">${repeatCell(task)}</div>` +
@@ -242,9 +332,9 @@ function taskRow(task) {
 
 function taskCard(task) {
   return (
-    `<li class="board-card${task.done ? " done" : ""}">` +
+    `<li class="board-card ${rowState(task)} p-${esc(task.priority)}">` +
     `<div class="board-card-top">${checkbox(task)}${textCell(task)}</div>` +
-    `<div class="board-card-foot">${dueCell(task)}${priorityCell(task)}${repeatCell(task)}` +
+    `<div class="board-card-foot">${subjectCell(task)}${dueCell(task)}${priorityCell(task)}${repeatCell(task)}` +
     `${statusCell(task)}${deleteButton(task)}</div>` +
     "</li>"
   );
@@ -281,8 +371,8 @@ function renderSummary() {
 
 const TABLE_HEAD =
   '<div class="task-head">' +
-  '<span class="col-name">Name</span><span>Priority</span><span>Date</span>' +
-  '<span>Repeat</span><span>Status</span><span></span></div>';
+  '<span class="col-name">Name</span><span>Subject</span><span>Priority</span>' +
+  '<span>Date</span><span>Repeat</span><span>Status</span><span></span></div>';
 
 const NEW_ROW =
   `<button class="task-new-row" data-action="focus-composer">${icon("plus")}New</button>`;
@@ -293,7 +383,7 @@ function renderList(groups) {
         .map((g) => {
           const collapsed = view.collapsed.has(g.key);
           return (
-            `<section class="task-group g-${esc(g.key)}${collapsed ? " collapsed" : ""}">` +
+            `<section class="task-group ${esc(g.tone)}${collapsed ? " collapsed" : ""}">` +
             groupHead(g, true) +
             `<ul class="task-list">${g.tasks.map(taskRow).join("")}</ul>` +
             "</section>"
@@ -309,17 +399,28 @@ function renderBoard(groups) {
   const host = $("taskBoard");
 
   // A board needs columns, so "no grouping" falls back to priority.
-  const keys = BUCKET_ORDER[view.groupBy === "none" ? "priority" : view.groupBy];
+  const keys =
+    view.groupBy === "none" ? BUCKET_ORDER.priority
+    : view.groupBy === "subject" ? bucketOrder()
+    : BUCKET_ORDER[view.groupBy];
   const found = Object.fromEntries(groups.map((g) => [g.key, g]));
 
   const columns = keys
     .filter((k) => k !== "done" || view.filter !== "active")
-    .map((k) => found[k] || { key: k, label: BUCKET_LABELS[k], tasks: [] });
+    .map(
+      (k) =>
+        found[k] || {
+          key: k,
+          label: bucketLabel(k),
+          tone: classById(k) ? colorClass(classById(k)) : `g-${k}`,
+          tasks: [],
+        }
+    );
 
   host.innerHTML = columns
     .map(
       (g) =>
-        `<section class="board-col g-${esc(g.key)}">` +
+        `<section class="board-col ${esc(g.tone)}">` +
         `<div class="board-col-head">` +
         `<span class="group-dot"></span><span class="group-name">${esc(g.label)}</span>` +
         `<span class="group-count">${g.tasks.length}</span></div>` +
@@ -421,22 +522,9 @@ function wireItemEvents(host) {
     if (!task) return;
 
     if (el.dataset.action === "toggle-task") {
-      // A repeating task is never "finished" — completing it rolls the due date
-      // forward to the next occurrence and leaves it open.
-      if (el.checked && task.repeat && task.due) {
-        task.due = advanceDateKey(task.due, task.repeat);
-        task.done = false;
-        task.status = "todo";
-        store.save();
-        render();
-        return;
-      }
-
-      task.done = el.checked;
-      // Keep Status honest: ticking completes it, unticking sends a previously
-      // complete task back to To do but leaves any other status alone.
-      if (el.checked) task.status = "complete";
-      else if (task.status === "complete") task.status = "todo";
+      toggleTaskDone(el.dataset.id, el.checked);
+      render();
+      return;
     } else if (el.dataset.action === "set-status") {
       task.status = el.value;
       task.done = el.value === "complete";
@@ -446,6 +534,8 @@ function wireItemEvents(host) {
       task.due = el.value || null;
       // A repeat rule with nothing to advance would never fire again.
       if (!task.due) task.repeat = null;
+    } else if (el.dataset.action === "set-subject") {
+      task.subjectId = el.value || null;
     } else if (el.dataset.action === "set-repeat") {
       if (el.value && !task.due) {
         alert("Give the task a date first — a repeat needs somewhere to start.");

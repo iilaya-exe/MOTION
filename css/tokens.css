@@ -11,11 +11,11 @@
   --surface: #ffffff;
   --surface-2: #fafafb;
   --sidebar-bg: #fbfbfc;
-  --border: #ebebf0;
-  --border-strong: #dededf;
-  --text: #17171c;
-  --text-2: #57575f;
-  --text-3: #8b8b96;
+  --border: #e7e7ee;
+  --border-strong: #d5d5de;
+  --text: #101014;
+  --text-2: #4a4a55;
+  --text-3: #74747f;
   --accent: #5b5bd6;
   --accent-hover: #4a4ac4;
   --accent-soft: #f0f0fe;
@@ -32,9 +32,13 @@
   --r-sm: 6px;
   --r-md: 9px;
   --r-lg: 14px;
-  --shadow-sm: 0 1px 2px rgba(16, 18, 27, 0.05);
-  --shadow-md: 0 4px 14px -3px rgba(16, 18, 27, 0.09), 0 2px 5px -2px rgba(16, 18, 27, 0.05);
-  --shadow-lg: 0 24px 56px -12px rgba(16, 18, 27, 0.22), 0 6px 16px -6px rgba(16, 18, 27, 0.1);
+  /* Layered rather than single-drop: a tight contact shadow plus a wider, softer
+     one reads as real elevation instead of a grey smear. */
+  --shadow-xs: 0 1px 1px rgba(16, 18, 27, 0.04);
+  --shadow-sm: 0 1px 2px rgba(16, 18, 27, 0.06), 0 1px 3px -1px rgba(16, 18, 27, 0.05);
+  --shadow-md: 0 2px 4px -2px rgba(16, 18, 27, 0.07), 0 8px 20px -6px rgba(16, 18, 27, 0.12);
+  --shadow-lg: 0 6px 16px -6px rgba(16, 18, 27, 0.12), 0 24px 56px -12px rgba(16, 18, 27, 0.24);
+  --shadow-glow: 0 4px 18px -4px var(--accent-glow);
   --ring: 0 0 0 3px rgba(91, 91, 214, 0.15);
   --hover-subtle: rgba(23, 23, 28, 0.028);
   --hover: rgba(23, 23, 28, 0.055);
@@ -53,6 +57,22 @@
   --success-border: #abefc6;
   --selection: rgba(91, 91, 214, 0.16);
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Slight overshoot; used only where something should feel like it "lands". */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 0.12s;
+  --dur: 0.2s;
+  --dur-slow: 0.32s;
+
+  /* One spacing scale, so padding and gaps stop being ad-hoc pixel guesses. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 22px;
+  --sp-6: 30px;
+  --sp-7: 42px;
+
+  --r-xl: 18px;
 
   /* Fluid type scale — every size interpolates with the viewport between a
      phone-width floor and an ultrawide ceiling, so nothing is hard-coded. */
@@ -83,9 +103,9 @@
   --sidebar-bg: #121215;
   --border: #26262d;
   --border-strong: #33333c;
-  --text: #f1f1f4;
-  --text-2: #b2b2be;
-  --text-3: #80808d;
+  --text: #f5f5f8;
+  --text-2: #bcbcc8;
+  --text-3: #8d8d9b;
   --accent: #7b7bf0;
   --accent-hover: #8d8df5;
   --accent-soft: #20204a;
@@ -131,6 +151,10 @@
 .c-amber  { --cc: #b45309; --cc-soft: #fffaeb; }
 .c-rose   { --cc: #be123c; --cc-soft: #fff1f3; }
 .c-slate  { --cc: #475569; --cc-soft: #f1f5f9; }
+.c-cyan   { --cc: #0e7490; --cc-soft: #ecfeff; }
+.c-orange { --cc: #c2410c; --cc-soft: #fff7ed; }
+.c-pink   { --cc: #be185d; --cc-soft: #fdf2f8; }
+.c-lime   { --cc: #4d7c0f; --cc-soft: #f7fee7; }
 
 :root[data-theme="dark"] .c-indigo { --cc: #9a9af7; --cc-soft: #20204a; }
 :root[data-theme="dark"] .c-violet { --cc: #bb9bff; --cc-soft: #2a1d4d; }
@@ -140,3 +164,13 @@
 :root[data-theme="dark"] .c-amber  { --cc: #f5b544; --cc-soft: #2b2113; }
 :root[data-theme="dark"] .c-rose   { --cc: #fb7185; --cc-soft: #39161f; }
 :root[data-theme="dark"] .c-slate  { --cc: #9aa8bd; --cc-soft: #1e2633; }
+:root[data-theme="dark"] .c-cyan   { --cc: #4dd4e8; --cc-soft: #0c2b33; }
+:root[data-theme="dark"] .c-orange { --cc: #fb923c; --cc-soft: #331c0e; }
+:root[data-theme="dark"] .c-pink   { --cc: #f472b6; --cc-soft: #35162a; }
+:root[data-theme="dark"] .c-lime   { --cc: #a3e635; --cc-soft: #1e2a10; }
+
+/* A gradient per class colour. Derived from --cc so adding a colour above is
+   enough — nothing here needs a matching edit. */
+[class*="c-"] {
+  --cc-grad: linear-gradient(135deg, var(--cc) 0%, color-mix(in srgb, var(--cc) 62%, #a855f7) 100%);
+}

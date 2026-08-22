@@ -1,0 +1,252 @@
+/* ============================================================================
+   Home — widget dashboard
+   ----------------------------------------------------------------------------
+   A responsive widget grid rather than a fixed column count: each widget claims
+   a minimum width and the grid decides how many fit, so the same markup works
+   from a phone to an ultrawide without breakpoints per widget.
+   ========================================================================== */
+
+.home-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+
+.home-hero h1 { margin-bottom: 2px; }
+.home-hero .subtitle { margin: 0; }
+
+.home-motto {
+  font-size: var(--fs-body-s);
+  font-style: italic;
+  color: var(--text-3);
+  padding-left: var(--sp-3);
+  border-left: 3px solid var(--accent-border);
+}
+
+.widgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-6);
+  align-items: start;
+}
+
+/* Two tracks where there is room, one when there is not. */
+.widget.w-wide { grid-column: span 2; }
+@media (max-width: 900px) {
+  .widget.w-wide { grid-column: span 1; }
+}
+
+.widget {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--sp-4);
+  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+
+.widget:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.widget-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+.widget-head h3 {
+  margin: 0;
+  font-size: var(--fs-mini);
+  font-weight: 680;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+}
+
+.widget-meta { font-size: var(--fs-caption); color: var(--text-3); }
+
+.widget-empty {
+  padding: var(--sp-4) 0;
+  color: var(--text-3);
+  font-size: var(--fs-body-s);
+}
+
+.widget .task-form { margin-bottom: 0; }
+
+/* ---------------- Up next ---------------- */
+.next-class {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--cc-soft, var(--surface-2));
+}
+
+.nc-mark {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  color: #fff;
+  background: var(--cc-grad, var(--grad));
+  box-shadow: var(--shadow-sm);
+}
+
+.nc-mark .icon { width: 20px; height: 20px; }
+.nc-body { flex: 1; min-width: 0; }
+
+.nc-name {
+  font-size: var(--fs-body-l);
+  font-weight: 660;
+  letter-spacing: -0.015em;
+}
+
+.nc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin-top: 2px;
+  font-size: var(--fs-caption);
+  color: var(--text-2);
+}
+
+.nc-meta span { display: flex; align-items: center; gap: 5px; }
+.nc-meta .icon { width: 13px; height: 13px; color: var(--text-3); }
+
+/* ---------------- Progress ring ---------------- */
+.progress-ring-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+/* One conic gradient driven by --pct; no SVG, no per-frame maths. */
+.progress-ring {
+  --size: 84px;
+  width: var(--size);
+  height: var(--size);
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background:
+    conic-gradient(var(--success) calc(var(--pct) * 1%), var(--track) 0);
+  transition: background var(--dur-slow) var(--ease);
+}
+
+.progress-ring::before {
+  content: "";
+  position: absolute;
+  width: calc(var(--size) - 18px);
+  height: calc(var(--size) - 18px);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.progress-ring { position: relative; }
+
+.progress-ring span {
+  position: relative;
+  font-size: var(--fs-body-s);
+  font-weight: 700;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-ring.is-complete span { color: var(--success); }
+
+.ring-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+}
+
+.ring-legend b { color: var(--text); font-weight: 680; font-variant-numeric: tabular-nums; }
+.ring-legend .legend-warn b { color: var(--danger); }
+
+/* ---------------- Mini stats ---------------- */
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.ms-num {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ms-label { font-size: var(--fs-micro); color: var(--text-3); line-height: 1.25; }
+.mini-stat.danger .ms-num { color: var(--danger); }
+.mini-stat.success .ms-num { color: var(--success); }
+
+/* ---------------- Quick actions ---------------- */
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.quick-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 20px;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+.quick-action .icon { width: 14px; height: 14px; color: var(--text-3); }
+.quick-action:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-border);
+  transform: translateY(-1px);
+}
+
+.quick-action:hover .icon { color: var(--accent); }
+
+@media (max-width: 560px) {
+  .mini-stats { grid-template-columns: repeat(2, 1fr); }
+  .progress-ring { --size: 70px; }
+  .home-motto { display: none; }
+}

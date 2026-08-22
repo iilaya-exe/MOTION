@@ -5,6 +5,8 @@ import * as nav from "./ui/nav.js";
 import * as router from "./ui/router.js";
 import * as modal from "./ui/modal.js";
 import * as undo from "./ui/undo.js";
+import * as pwa from "./ui/pwa.js";
+import * as classTimer from "./ui/class-timer.js";
 import * as theme from "./ui/theme.js";
 
 import * as dashboard from "./views/dashboard.js";
@@ -45,7 +47,7 @@ async function boot() {
   nav.setAfterSwitch(notes.renderPageList);
 
   [
-    nav, theme, modal, undo,
+    nav, theme, modal, undo, pwa, classTimer,
     dashboard, tasks, calendar, schedule, checklists, notes,
     dayModal, eventEditor, classEditor, fullSchedule,
   ].forEach((module) => module.mount());

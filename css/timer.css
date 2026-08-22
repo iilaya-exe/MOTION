@@ -1,0 +1,192 @@
+/* ============================================================================
+   Class countdown
+   ----------------------------------------------------------------------------
+   Fixed to the viewport so it survives view switches, and colour-escalates as
+   the class approaches: soon → warn (30m) → urgent (15m) → critical (5m).
+   The ring is a conic gradient driven by one custom property, which keeps the
+   per-second update to a single text write.
+   ========================================================================== */
+
+.class-timer {
+  position: fixed;
+  right: var(--sp-5);
+  bottom: var(--sp-5);
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);
+  max-width: min(380px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--cc, var(--accent));
+  border-left: 4px solid var(--cc, var(--accent));
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  animation: timerIn var(--dur-slow) var(--ease-spring);
+}
+
+@keyframes timerIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+.ct-ring {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--cc, var(--accent));
+  box-shadow: 0 0 0 0 var(--cc, var(--accent));
+  animation: ctPulse 2s var(--ease) infinite;
+}
+
+@keyframes ctPulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cc, var(--accent)) 55%, transparent); }
+  70% { box-shadow: 0 0 0 9px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.ct-body { flex-shrink: 0; }
+
+.ct-label {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+
+.ct-count {
+  font-size: var(--fs-h2);
+  font-weight: 720;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--cc, var(--accent));
+  font-variant-numeric: tabular-nums;
+}
+
+.ct-class {
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  padding-left: var(--sp-3);
+}
+
+.ct-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-body-s);
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ct-emoji { font-size: 1.05em; line-height: 1; }
+
+.ct-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: var(--fs-tiny);
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ct-meta .icon { width: 12px; height: 12px; }
+
+.ct-hide {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.ct-hide .icon { width: 12px; height: 12px; }
+.class-timer:hover .ct-hide { opacity: 1; }
+.ct-hide:hover { background: var(--hover-strong); color: var(--text); }
+
+/* Escalation. Each phase overrides --cc so the border, ring and digits all
+   shift together rather than needing three separate rules. */
+.class-timer.phase-warn { --cc: var(--amber); }
+.class-timer.phase-urgent { --cc: #ea580c; }
+.class-timer.phase-critical {
+  --cc: var(--danger);
+  background: var(--danger-soft);
+}
+
+:root[data-theme="dark"] .class-timer.phase-urgent { --cc: #fb923c; }
+
+.class-timer.phase-critical .ct-ring { animation-duration: 1s; }
+
+.class-timer.pulse { animation: ctAttention 0.7s var(--ease) 2; }
+
+@keyframes ctAttention {
+  0%, 100% { transform: none; box-shadow: var(--shadow-lg); }
+  50% { transform: scale(1.035); box-shadow: var(--shadow-lg), 0 0 0 6px color-mix(in srgb, var(--cc) 18%, transparent); }
+}
+
+/* ---------------- In-view panel (Schedule + Home) ---------------- */
+.timer-panel {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--r-lg);
+  background: var(--cc-soft, var(--accent-soft));
+  border: 1px solid var(--cc, var(--accent));
+  border-left: 5px solid var(--cc, var(--accent));
+  margin-bottom: var(--sp-4);
+}
+
+.timer-panel .tp-info { flex: 1; min-width: 0; }
+
+.timer-panel .tp-count {
+  font-size: var(--fs-display);
+  font-weight: 730;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--cc, var(--accent));
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-panel .tp-label {
+  font-size: var(--fs-mini);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--cc, var(--accent));
+  margin-bottom: 3px;
+}
+
+.timer-panel .tp-name {
+  font-size: var(--fs-h3);
+  font-weight: 660;
+  letter-spacing: -0.015em;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.timer-panel .tp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 4px;
+  font-size: var(--fs-body-s);
+  color: var(--text-2);
+}
+
+.timer-panel .tp-meta span { display: flex; align-items: center; gap: 5px; }
+.timer-panel .tp-meta .icon { width: 14px; height: 14px; color: var(--text-3); }

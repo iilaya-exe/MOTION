@@ -251,3 +251,52 @@
   padding: 7px 9px;
   font-size: var(--fs-body-s);
 }
+
+/* ---------------- Progress ---------------- */
+.cl-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.cl-progress-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+
+/* Same conic-gradient technique as the Home ring, at card scale. */
+.cl-ring {
+  --size: 44px;
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--success) calc(var(--pct) * 1%), var(--track) 0);
+  transition: background var(--dur-slow) var(--ease);
+}
+
+.cl-ring::before {
+  content: "";
+  position: absolute;
+  width: calc(var(--size) - 11px);
+  height: calc(var(--size) - 11px);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.cl-ring span {
+  position: relative;
+  font-size: var(--fs-mini);
+  font-weight: 700;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.cl-ring small { font-size: 0.75em; font-weight: 600; }
+.checklist-card.is-complete .cl-ring span { color: var(--success); }
+.cl-meta b { color: var(--text-2); font-weight: 680; }
+.cl-done-flag { color: var(--success); font-weight: 680; }
+
+.checklist-card { transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.checklist-card:hover { transform: translateY(-1px); }
+.checklist-card.is-complete { border-color: var(--success-border); }

@@ -2,6 +2,7 @@ import { pad, DAY_ABBR } from "./dates.js";
 
 export const CLASS_COLORS = [
   "indigo", "violet", "blue", "teal", "green", "amber", "rose", "slate",
+  "cyan", "orange", "pink", "lime",
 ];
 
 export function colorClass(c) {
@@ -46,6 +47,24 @@ export function nextClassToday(classes) {
   const m = nowMinutes();
   return classesOnDay(classes, new Date().getDay()).find((c) => toMinutes(c.start) > m) || null;
 }
+
+/**
+ * Where a class sits relative to now, for the status pill shown on it.
+ * @returns {"ongoing"|"soon"|"upcoming"|"done"} — "soon" means within the hour
+ */
+export function classStatus(c, day = new Date().getDay(), now = nowMinutes()) {
+  if (!c.days.includes(day)) return "upcoming";
+
+  const start = toMinutes(c.start);
+  const end = toMinutes(c.end);
+
+  if (now >= end) return "done";
+  if (now >= start) return "ongoing";
+  return start - now <= 60 ? "soon" : "upcoming";
+}
+
+/** Minutes until a class starts today; negative once it has begun. */
+export const minutesUntil = (c, now = nowMinutes()) => toMinutes(c.start) - now;
 
 export function describeDays(days) {
   return [...days].sort((a, b) => a - b).map((d) => DAY_ABBR[d]).join(" ");

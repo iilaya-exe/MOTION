@@ -5,6 +5,13 @@ import { $, isHidden } from "../dom.js";
 import { uid } from "../lib/id.js";
 import { DAY_ABBR } from "../lib/dates.js";
 import { CLASS_COLORS, toMinutes } from "../lib/schedule.js";
+
+/* A small fixed set beats a full emoji keyboard here: one tap, no search, and
+   the icons stay legible at chip size. */
+const SUBJECT_EMOJI = [
+  "", "📘", "🧪", "🔢", "🧠", "💻", "🎨", "🎵", "🏃", "🌏", "⚖️", "💰",
+  "🔬", "🩺", "🗣️", "📐", "⚙️", "🌱", "🍳", "🎬",
+];
 import { render as renderSchedule } from "../views/schedule.js";
 
 /** Working copy; committed to the store only on Save. */
@@ -22,6 +29,7 @@ export function openNewClass(selectedDay) {
     start: "08:00",
     end: "09:00",
     color: CLASS_COLORS[store.state.classes.length % CLASS_COLORS.length],
+    emoji: "",
   };
   showEditor();
 }
@@ -38,6 +46,7 @@ export function openEditClass(id) {
     start: c.start,
     end: c.end,
     color: CLASS_COLORS.includes(c.color) ? c.color : "indigo",
+    emoji: c.emoji || "",
   };
   showEditor();
 }
@@ -48,6 +57,7 @@ function showEditor() {
   $("classSectionInput").value = draft.section;
   $("classRoomInput").value = draft.room;
   $("classStartInput").value = draft.start;
+  renderEmojiRow();
   $("classEndInput").value = draft.end;
   $("classDeleteBtn").classList.toggle("hidden", !draft.id);
 
@@ -60,6 +70,15 @@ function showEditor() {
 export function closeClassEditor() {
   modal.close("classModalOverlay");
   draft = null;
+}
+
+function renderEmojiRow() {
+  $("classEmojiRow").innerHTML = SUBJECT_EMOJI.map(
+    (e) =>
+      `<button class="emoji-opt${draft.emoji === e ? " on" : ""}" data-emoji="${e}" ` +
+      `title="${e || "No icon"}" aria-label="${e || "No icon"}" aria-pressed="${draft.emoji === e}">` +
+      `${e || "✕"}</button>`
+  ).join("");
 }
 
 function renderColorRow() {
@@ -78,6 +97,13 @@ function renderDayToggle() {
 }
 
 export function mount() {
+  $("classEmojiRow").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-emoji]");
+    if (!btn || !draft) return;
+    draft.emoji = btn.dataset.emoji;
+    renderEmojiRow();
+  });
+
   $("classColorRow").addEventListener("click", (e) => {
     const btn = e.target.closest("[data-color]");
     if (!btn || !draft) return;
@@ -117,6 +143,7 @@ export function mount() {
       subject,
       section: $("classSectionInput").value.trim(),
       room: $("classRoomInput").value.trim(),
+      emoji: draft.emoji,
       days: [...draft.days],
       start,
       end,

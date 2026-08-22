@@ -96,6 +96,11 @@
   .undo-toast { left: 12px; right: 12px; max-width: none; transform: none; }
   @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
+  /* Time column shrinks; the rail keeps the rows aligned. */
+  .tl-item { grid-template-columns: 62px 12px minmax(0, 1fr); padding-left: 8px; }
+  .tl-now { padding-left: 64px; }
+  .tl-time b { font-size: var(--fs-caption); }
+
   .list-toolbar { gap: 10px; }
   .list-toolbar .filter-tabs { flex: 1 0 100%; }
   .toolbar-end { flex: 1 0 100%; }

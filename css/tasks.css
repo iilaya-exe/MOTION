@@ -184,7 +184,7 @@
 
 .task-table {
   /* Name takes the slack; the property columns are fixed so chips align. */
-  --cols: minmax(0, 1fr) 112px 128px 112px 138px 30px;
+  --cols: minmax(0, 1fr) 130px 106px 124px 108px 132px 30px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--surface);
@@ -250,7 +250,8 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--gc, var(--text-3));
+  /* --cc is set by the .c-<colour> class on subject groups; --gc by .g-<key>. */
+  background: var(--cc, var(--gc, var(--text-3)));
   flex-shrink: 0;
 }
 
@@ -404,6 +405,16 @@
 .prop-cell:hover .badge.ghost { color: var(--text-2); }
 
 /* Status chips */
+.badge.subject-chip {
+  background: var(--cc-soft, var(--surface-2));
+  color: var(--cc, var(--text-2));
+  border-color: transparent;
+  font-weight: 650;
+  gap: 5px;
+}
+
+.badge.subject-chip .subject-dot { width: 6px; height: 6px; border-radius: 2px; background: var(--cc); }
+
 .badge.repeat-on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
 
 .badge.status-todo { background: var(--surface-2); color: var(--text-2); border-color: var(--border-strong); }
@@ -563,3 +574,70 @@
   color: var(--text-3);
   font-size: var(--fs-caption);
 }
+
+/* ---------------- Task state treatment ----------------
+   Pending, in-progress and complete need to be tellable apart at a glance and
+   not only by reading the Status chip, so state also drives the row itself. */
+
+/* A priority stripe, subtle enough to scan without shouting. */
+.task-row::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.task-row { position: relative; }
+.task-row.p-high::after { background: var(--danger); opacity: 1; }
+.task-row.p-medium::after { background: var(--amber); opacity: 0.85; }
+.task-row.p-low::after { background: var(--success); opacity: 0.6; }
+
+/* In-progress work gets a tinted rail so it stands out from untouched rows. */
+.task-row.active { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+.task-row.active:hover { background: color-mix(in srgb, var(--accent-soft) 70%, transparent); }
+.task-row.st-stuck { background: color-mix(in srgb, var(--danger-soft) 55%, transparent); }
+.task-row.st-hold { background: color-mix(in srgb, var(--amber-soft) 55%, transparent); }
+
+.task-row.done { opacity: 0.62; }
+.task-row.done::after { opacity: 0.3; }
+
+/* Completion feedback: the row settles and the box pops once. */
+@keyframes taskComplete {
+  0% { transform: none; }
+  35% { transform: scale(0.995); background: color-mix(in srgb, var(--success-soft) 80%, transparent); }
+  100% { transform: none; }
+}
+
+@keyframes checkPop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+.task-row.done { animation: taskComplete var(--dur-slow) var(--ease); }
+.task-row input[type="checkbox"]:checked,
+.board-card input[type="checkbox"]:checked { animation: checkPop var(--dur-slow) var(--ease-spring); }
+
+/* ---------------- Board cards ---------------- */
+.board-card { position: relative; overflow: hidden; }
+
+.board-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+}
+
+.board-card.p-high::before { background: var(--danger); }
+.board-card.p-medium::before { background: var(--amber); }
+.board-card.p-low::before { background: var(--success); }
+.board-card.active { border-color: var(--accent-border); }
+.board-card.done { opacity: 0.62; }
+
+.board-card:hover { transform: translateY(-2px); }
+.board-col { transition: background var(--dur) var(--ease); }

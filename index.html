@@ -6,11 +6,21 @@
 <title>Motion</title>
 <meta name="description" content="Motion — a local-first workspace for tasks, calendar, class schedule, checklists and notes.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5b5bd6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Motion">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/calendar.css">
+<link rel="stylesheet" href="css/timeline.css">
+<link rel="stylesheet" href="css/timer.css">
+<link rel="stylesheet" href="css/home.css">
 <link rel="stylesheet" href="css/tasks.css">
 <link rel="stylesheet" href="css/checklists.css">
 <link rel="stylesheet" href="css/schedule.css">
@@ -77,6 +87,10 @@ if (location.protocol === "file:") {
 
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
+<div class="offline-bar" id="offlineBar" role="status">Offline — your workspace is stored on this device, so everything still works.</div>
+
+<div class="class-timer hidden" id="classTimer" role="status" aria-live="polite"></div>
+
 <div class="undo-toast hidden" id="undoToast" role="status" aria-live="polite"></div>
 
 <div class="app">
@@ -131,45 +145,60 @@ if (location.protocol === "file:") {
   <main class="content">
 
     <section id="view-dashboard" class="view">
-      <h1 id="greeting">Welcome back</h1>
-      <p class="subtitle" id="todayLabel"></p>
-
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-top"><div class="stat-icon indigo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="m8 12.2 2.6 2.6L16 9.4"/></svg></div></div>
-          <div class="num" id="statDueToday">0</div><div class="label">Tasks due today</div>
+      <div class="home-hero">
+        <div>
+          <h1 id="greeting">Welcome back</h1>
+          <p class="subtitle" id="todayLabel"></p>
         </div>
-        <div class="stat-card">
-          <div class="stat-top"><div class="stat-icon red"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.2 2.2"/></svg></div></div>
-          <div class="num" id="statOverdue">0</div><div class="label">Overdue tasks</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-top"><div class="stat-icon green"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3.5"/><path d="M3 10h18M8.5 3v4M15.5 3v4"/></svg></div></div>
-          <div class="num" id="statEvents">0</div><div class="label">Events this week</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-top"><div class="stat-icon amber"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6.5 1.8 1.8L8 5.2M3 16.5l1.8 1.8L8 15.2M11.5 7h9.5M11.5 17h9.5"/></svg></div></div>
-          <div class="num" id="statChecklists">0</div><div class="label">Checklists in progress</div>
-        </div>
+        <div class="home-motto" id="homeMotto"></div>
       </div>
 
-      <div class="card" style="margin-bottom:26px;">
-        <div class="row task-form">
-          <input class="field grow" id="quickTaskInput" type="text" placeholder="Quick add a task and press Enter...">
-          <button class="btn" id="quickTaskBtn">Add Task</button>
-        </div>
+      <div class="timer-panel hidden" id="homeTimer"></div>
+
+      <div class="widgets">
+        <section class="widget w-wide" id="wNext">
+          <div class="widget-head"><h3>Up next</h3><span class="widget-meta" id="nextMeta"></span></div>
+          <div id="nextClass"></div>
+        </section>
+
+        <section class="widget" id="wProgress">
+          <div class="widget-head"><h3>Today&rsquo;s progress</h3></div>
+          <div class="progress-ring-wrap">
+            <div class="progress-ring" id="dayRing" style="--pct:0"><span id="dayRingPct">0%</span></div>
+            <div class="ring-legend" id="dayRingLegend"></div>
+          </div>
+        </section>
+
+        <section class="widget w-wide">
+          <div class="widget-head"><h3>Quick add</h3></div>
+          <div class="row task-form">
+            <input class="field grow" id="quickTaskInput" type="text" placeholder="Add a task for today and press Enter...">
+            <button class="btn" id="quickTaskBtn">Add</button>
+          </div>
+          <div class="quick-actions" id="quickActions"></div>
+        </section>
+
+        <section class="widget">
+          <div class="widget-head"><h3>At a glance</h3></div>
+          <div class="mini-stats">
+            <div class="mini-stat"><span class="ms-num" id="statClasses">0</span><span class="ms-label">Classes today</span></div>
+            <div class="mini-stat"><span class="ms-num" id="statDueToday">0</span><span class="ms-label">Due today</span></div>
+            <div class="mini-stat danger"><span class="ms-num" id="statOverdue">0</span><span class="ms-label">Overdue</span></div>
+            <div class="mini-stat"><span class="ms-num" id="statEvents">0</span><span class="ms-label">Events this week</span></div>
+            <div class="mini-stat"><span class="ms-num" id="statChecklists">0</span><span class="ms-label">Checklists active</span></div>
+            <div class="mini-stat success"><span class="ms-num" id="statDoneToday">0</span><span class="ms-label">Done today</span></div>
+          </div>
+        </section>
       </div>
 
-      <div class="dash-columns">
-        <div class="dash-col">
-          <h3>Due Today</h3>
-          <ul class="simple-list" id="dashDueToday"></ul>
-        </div>
-        <div class="dash-col">
-          <h3>Upcoming Events</h3>
-          <ul class="simple-list" id="dashUpcoming"></ul>
-        </div>
+      <div class="today-head">
+        <h3>Today</h3>
+        <span class="today-meta" id="todayMeta"></span>
       </div>
+      <div class="timeline" id="todayTimeline"></div>
+
+      <h3 class="dash-h">Next 7 days</h3>
+      <ul class="simple-list" id="dashUpcoming"></ul>
     </section>
 
     <section id="view-tasks" class="view hidden">
@@ -204,6 +233,7 @@ if (location.protocol === "file:") {
             <span>Group</span>
             <select id="taskGroupBy">
               <option value="due" selected>Due date</option>
+              <option value="subject">Subject</option>
               <option value="priority">Priority</option>
               <option value="status">Status</option>
               <option value="none">None</option>
@@ -223,7 +253,7 @@ if (location.protocol === "file:") {
 
       <div class="list-summary" id="taskSummary"></div>
 
-      <div class="task-groups" id="taskList"></div>
+      <div id="taskList"></div>
       <div class="task-board hidden" id="taskBoard"></div>
     </section>
 
@@ -257,6 +287,7 @@ if (location.protocol === "file:") {
       <h1>Schedule</h1>
       <p class="subtitle">Your recurring weekly classes, and what&rsquo;s running right now.</p>
 
+      <div class="timer-panel hidden" id="schedTimer"></div>
       <div class="now-card" id="nowCard"></div>
 
       <div class="sched-bar">
@@ -390,6 +421,9 @@ if (location.protocol === "file:") {
           <input class="field" id="classRoomInput" type="text" placeholder="e.g. Room 101" style="width:100%;">
         </div>
       </div>
+
+      <div class="modal-label" style="margin-top:16px;">Icon</div>
+      <div class="emoji-row" id="classEmojiRow"></div>
 
       <div class="modal-label" style="margin-top:16px;">Colour</div>
       <div class="swatch-row" id="classColorRow"></div>

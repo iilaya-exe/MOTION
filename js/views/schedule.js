@@ -4,6 +4,7 @@ import { icon } from "../icons.js";
 import { DAY_CHIPS, DAY_FULL } from "../lib/dates.js";
 import {
   classesOnDay,
+  classStatus,
   colorClass,
   describeDays,
   formatTime,
@@ -13,7 +14,20 @@ import {
   toMinutes,
 } from "../lib/schedule.js";
 import { openEditClass, openNewClass } from "../modals/class-editor.js";
+
 import { openFullSchedule } from "../modals/full-schedule.js";
+import { formatCountdown, timerState } from "../ui/class-timer.js";
+
+const STATUS_LABEL = { ongoing: "Ongoing", soon: "Starting soon", upcoming: "Upcoming", done: "Done" };
+
+/** The class-status pill shown on rows and in the timetable. */
+const statusPill = (status) =>
+  `<span class="cls-status s-${status}">${STATUS_LABEL[status]}</span>`;
+
+/** Open task count per class, so the timetable shows where the work is. */
+const openTaskCount = (classId) =>
+  store.state.tasks.filter((t) => t.subjectId === classId && !t.done).length;
+
 
 let selectedDay = new Date().getDay();
 let ticker = null;
@@ -43,7 +57,9 @@ function renderNowCard() {
   card.className = `now-card live ${colorClass(current)}`;
   card.innerHTML =
     '<div class="now-label"><span class="live-dot"></span>Ongoing Class</div>' +
-    `<div class="now-title">${esc(current.subject)}` +
+    `<div class="now-title">` +
+    (current.emoji ? `<span class="class-emoji">${esc(current.emoji)}</span>` : "") +
+    esc(current.subject) +
     (current.section ? ` <span class="class-section">(${esc(current.section)})</span>` : "") +
     "</div>" +
     '<div class="now-meta">' +
@@ -89,9 +105,14 @@ function renderDayClasses() {
 
       return (
         `<li class="class-row ${colorClass(c)}${isNow ? " is-now" : ""}${isPast ? " is-past" : ""}" data-id="${esc(c.id)}">` +
-        `<span class="class-name">${icon("book")}${esc(c.subject)}` +
+        `<span class="class-name">` +
+        (c.emoji ? `<span class="class-emoji">${esc(c.emoji)}</span>` : icon("book")) +
+        esc(c.subject) +
         (c.section ? ` <span class="class-section">(${esc(c.section)})</span>` : "") +
-        (isNow ? ' <span class="now-pill">Now</span>' : "") +
+        (isToday ? " " + statusPill(classStatus(c, selectedDay, m)) : "") +
+        (openTaskCount(c.id)
+          ? ` <span class="task-count">${openTaskCount(c.id)} task${openTaskCount(c.id) === 1 ? "" : "s"}</span>`
+          : "") +
         "</span>" +
         `<span class="class-when">${icon("clock")}${esc(formatTime(c.start))} – ${esc(formatTime(c.end))}</span>` +
         `<span class="class-where">${c.room ? icon("pin") + esc(c.room) : ""}</span>` +
@@ -118,23 +139,53 @@ function renderAllClasses() {
   });
 
   table.innerHTML =
-    "<thead><tr><th>#</th><th>Subject</th><th>Section</th><th>Schedule</th><th>Facility</th></tr></thead><tbody>" +
+    "<thead><tr><th>#</th><th>Subject</th><th>Section</th><th>Schedule</th><th>Facility</th><th>Tasks</th></tr></thead><tbody>" +
     rows
       .map(
         (c, i) =>
           `<tr data-id="${esc(c.id)}" title="Click to edit">` +
           `<td>${i + 1}</td>` +
-          `<td><span class="subject-tag ${colorClass(c)}"><span class="subject-dot"></span>${esc(c.subject)}</span></td>` +
+          `<td><span class="subject-tag ${colorClass(c)}">` +
+          (c.emoji ? `<span class="class-emoji">${esc(c.emoji)}</span>` : '<span class="subject-dot"></span>') +
+          `${esc(c.subject)}</span></td>` +
           `<td>${esc(c.section || "—")}</td>` +
           `<td>${esc(describeDays(c.days))} (${esc(formatTime(c.start))} – ${esc(formatTime(c.end))})</td>` +
           `<td>${esc(c.room || "—")}</td>` +
+          `<td>${openTaskCount(c.id) ? `<span class="task-count">${openTaskCount(c.id)}</span>` : "—"}</td>` +
           "</tr>"
       )
       .join("") +
     "</tbody>";
 }
 
+function renderTimerPanel() {
+  const host = $("schedTimer");
+  const state = timerState();
+
+  if (!state) {
+    host.classList.add("hidden");
+    return;
+  }
+
+  const { cls, ongoing, phase } = state;
+  host.classList.remove("hidden");
+  host.className = `timer-panel ${colorClass(cls)} phase-${phase}`;
+  host.innerHTML =
+    '<div><div class="tp-label">' +
+    (ongoing ? "Ends in" : "Starts in") +
+    `</div><div class="tp-count" id="schedTimerCount">${formatCountdown(state.secondsLeft)}</div></div>` +
+    '<div class="tp-info">' +
+    `<div class="tp-name">${cls.emoji ? `<span class="class-emoji">${esc(cls.emoji)}</span>` : ""}${esc(cls.subject)}` +
+    (cls.section ? ` <span class="class-section">(${esc(cls.section)})</span>` : "") +
+    "</div>" +
+    '<div class="tp-meta">' +
+    `<span>${icon("clock")}${esc(formatTime(cls.start))} – ${esc(formatTime(cls.end))}</span>` +
+    (cls.room ? `<span>${icon("pin")}${esc(cls.room)}</span>` : "") +
+    "</div></div>";
+}
+
 export function render() {
+  renderTimerPanel();
   renderNowCard();
   renderDayPicker();
   renderDayClasses();
@@ -144,8 +195,18 @@ export function render() {
 /** Keeps the live card and "Now" highlight honest without a full re-render. */
 function startTicker() {
   if (ticker) return;
+  // Digits every second (one text write); the heavier redraw stays on 30s.
+  setInterval(() => {
+    if (isHidden($("view-schedule"))) return;
+    const el = $("schedTimerCount");
+    const state = timerState();
+    if (el && state) el.textContent = formatCountdown(state.secondsLeft);
+    else if (!state) renderTimerPanel();
+  }, 1000);
+
   ticker = setInterval(() => {
     if (isHidden($("view-schedule"))) return;
+    renderTimerPanel();
     renderNowCard();
     renderDayClasses();
   }, 30000);
