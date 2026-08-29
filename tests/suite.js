@@ -566,15 +566,21 @@ export async function suite(win) {
     !/position:\s*absolute/.test(collapsedToggleCss[0]), collapsedToggleCss[0]);
   const collapsedBrandCss =
     cssText.match(/data-sidebar="collapsed"\]\s*\.brand\s*\{[^}]*\}/) || [""];
-  check("collapsed brand stacks the mark and the toggle",
-    /flex-direction:\s*column/.test(collapsedBrandCss[0]), collapsedBrandCss[0]);
+  check("collapsed brand keeps the mark and toggle on one row",
+    !/flex-direction:\s*column/.test(collapsedBrandCss[0]), collapsedBrandCss[0]);
   check("collapsed toggle stays visible without hover",
     !/data-sidebar="collapsed"\][^{]*\.sidebar:hover\s+\.sidebar-toggle/.test(cssText),
     "toggle only appears on hover");
-  const railCss = cssText.match(/data-sidebar="collapsed"\]\s*\.sidebar\s*\{[^}]*\}/) || [""];
-  const railWidth = Number((railCss[0].match(/width:\s*(\d+)px/) || [0, 0])[1]);
-  check("rail is wide enough for a centred icon and its padding", railWidth >= 72,
-    `${railWidth}px`);
+
+  // The rail clips with overflow-x: hidden, so the pair must actually fit.
+  const px = (rule, prop) => Number((rule.match(new RegExp(prop + ":\\s*(\\d+)px")) || [0, 0])[1]);
+  const railCss = (cssText.match(/data-sidebar="collapsed"\]\s*\.sidebar\s*\{[^}]*\}/) || [""])[0];
+  const markCss = (cssText.match(/\.brand-mark\s*\{[^}]*\}/) || [""])[0];
+  const toggleCss = (cssText.match(/\.sidebar-toggle\s*\{[^}]*\}/) || [""])[0];
+  const inner = px(railCss, "width") - px(railCss, "padding-left") - px(railCss, "padding-right");
+  const needed = px(markCss, "width") + px(collapsedBrandCss[0], "gap") + px(toggleCss, "width");
+  check("rail is wide enough to fit the logo and toggle side by side",
+    needed > 0 && inner >= needed, `${inner}px of room, needs ${needed}px`);
 
   // -------------------------------------------------------------- note → PDF ---
   group("Note PDF export");

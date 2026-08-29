@@ -803,9 +803,12 @@ body.is-offline .app { padding-top: 30px; }
       padding var(--dur) var(--ease);
   }
 
+  /* 86px is not arbitrary: the brand mark (26) + gap (8) + toggle (26) is 60,
+     plus 10px padding either side. Any narrower and the pair cannot sit on one
+     row without one of them being clipped by overflow-x: hidden. */
   :root[data-sidebar="collapsed"] .sidebar {
-    width: 76px;
-    min-width: 76px;
+    width: 86px;
+    min-width: 86px;
     padding-left: 10px;
     padding-right: 10px;
     overflow-x: hidden;
@@ -833,16 +836,17 @@ body.is-offline .app { padding-top: 30px; }
     gap: 0;
   }
 
-  /* Stacked, not overlaid: the toggle gets its own row under the mark. Floating
-     it over the corner put it on top of the logo, which read as a rendering
-     bug and made both harder to hit. */
+  /* Side by side, and never overlaid: the rail is sized so both fit on one row.
+     Floating the toggle over the corner put it on top of the logo, which read
+     as a rendering bug and made both harder to hit. */
   :root[data-sidebar="collapsed"] .brand {
-    flex-direction: column;
     justify-content: center;
-    gap: 6px;
-    padding: 2px 0 14px;
+    gap: 8px;
+    padding: 4px 0 16px;
   }
 
+  /* margin-left: auto would shove the toggle to the edge; here the pair is
+     centred in the rail as a unit. */
   :root[data-sidebar="collapsed"] .sidebar-toggle {
     margin-left: 0;
   }
