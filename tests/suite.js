@@ -321,6 +321,38 @@ export async function suite(win) {
   check("mini stats rendered", qa(".mini-stat").length === 6, String(qa(".mini-stat").length));
   check("motto shown", q("#homeMotto").textContent.length > 0, q("#homeMotto").textContent);
 
+  // ---- icons must actually draw ----
+  group("Icons render");
+  d.nav("Home");
+  await settle();
+
+  // The real defect was an <svg> with nothing inside it: valid markup, zero
+  // pixels, no error. So assert on drawn content rather than on element count.
+  const emptySvgs = qa("#view-dashboard svg").filter((s) => s.children.length === 0);
+  check("no empty <svg> anywhere on Home", emptySvgs.length === 0,
+    `${emptySvgs.length} empty: ` + emptySvgs.map((s) => s.parentElement?.textContent?.trim().slice(0, 14)).join(", "));
+
+  const actions = qa("#quickActions .quick-action");
+  check("every quick action has an icon",
+    actions.length === 4 && actions.every((a) => a.querySelector("svg")?.children.length > 0),
+    actions.map((a) => `${a.textContent.trim()}:${a.querySelector("svg")?.children.length ?? 0}`).join(" | "));
+
+  check("the two icons that were missing now draw",
+    actions.filter((a) => /All tasks|Checklists/.test(a.textContent))
+           .every((a) => a.querySelector("svg").children.length > 0),
+    "checkSquare/checklist still empty");
+
+  // ---- "Up next" must survive a narrow widget ----
+  group("Up next layout");
+  check("card wraps instead of crushing its text", /\.next-class \{[^}]*flex-wrap: wrap/.test(cssText),
+    "no flex-wrap on .next-class");
+  check("body has a width floor, not min-width:0",
+    /\.nc-body \{[^}]*min-width: 150px/.test(cssText), "nc-body can still collapse");
+  check("time and room stay on one line",
+    /\.nc-meta span \{[^}]*white-space: nowrap/.test(cssText), "meta can still break mid-phrase");
+  check("status pill cannot be squeezed",
+    /\.next-class \.cls-status \{[^}]*flex-shrink: 0/.test(cssText), "pill still shrinkable");
+
   // ---- Task + checklist state visuals ----
   group("State visuals");
   d.nav("Tasks");
@@ -453,6 +485,57 @@ export async function suite(win) {
   await settle();
   check("undo restores the page", qa("#pageList .page-item").length === 2,
     String(qa("#pageList .page-item").length));
+
+  // -------------------------------------------------------------- note → PDF ---
+  group("Note PDF export");
+  click(q("#pageList .page-item"));
+  await settle();
+  check("export button shown for a real note", !q("#printPageBtn").classList.contains("hidden"));
+
+  // Intercept print so the dialog never opens during a test run.
+  let printed = 0;
+  const realPrint = win.print;
+  const titleBefore = d.doc.title;
+  win.print = () => { printed++; };
+
+  click(q("#printPageBtn"));
+  await settle();
+
+  check("print was invoked", printed === 1, String(printed));
+  check("PDF filename comes from the note title",
+    d.doc.title.startsWith("Welcome") && d.doc.title.includes("Motion"), d.doc.title);
+
+  const sheet = q("#printSheet");
+  check("a separate print sheet is built, not the app view", sheet.querySelector(".ps-doc"),
+    sheet.innerHTML.slice(0, 60));
+  check("masthead present", sheet.querySelector(".ps-brand")?.textContent === "Motion");
+  check("title block present", sheet.querySelector(".ps-title")?.textContent === "Welcome",
+    sheet.querySelector(".ps-title")?.textContent);
+  check("meta line has a word count", /\d+ words?/.test(sheet.querySelector(".ps-meta")?.textContent || ""),
+    sheet.querySelector(".ps-meta")?.textContent);
+  check("the note's rich text is carried over",
+    sheet.querySelector(".ps-body h2") && sheet.querySelector(".ps-body p"),
+    sheet.querySelector(".ps-body")?.innerHTML.slice(0, 60));
+  check("footer repeats the title", sheet.querySelector(".ps-foot")?.textContent === "Welcome");
+
+  win.dispatchEvent(new win.Event("afterprint"));
+  await settle();
+  check("tab title is restored after printing", d.doc.title === titleBefore,
+    `${d.doc.title} vs ${titleBefore}`);
+  win.print = realPrint;
+
+  // The stylesheet is what makes it a document rather than a screenshot.
+  check("print CSS hides the app", /@media print \{[\s\S]*?\.app,[\s\S]*?display: none/.test(cssText),
+    "app not hidden in print");
+  check("page margins declared", /@page \{[^}]*margin:/.test(cssText), "no @page margin");
+  check("headings do not strand at a page foot",
+    /\.ps-title \{[^}]*break-after: avoid-page/.test(cssText), "no break-after on title");
+  check("paragraphs have orphan/widow control",
+    /\.ps-body p \{[^}]*orphans: 3/.test(cssText), "no orphan control");
+  check("print colours are literal so dark mode cannot leak",
+    /\.ps-doc \{[^}]*color: #14161a/.test(cssText), "print colour uses a theme token");
+  check("sheet is invisible on screen",
+    /\.print-sheet \{\s*display: none/.test(cssText), "sheet visible on screen");
 
   // ------------------------------------------------------------ modal a11y ---
   group("Modal focus (#5)");

@@ -7,6 +7,8 @@ const ICON_PATHS = {
   trash: '<path d="M3.5 6h17M9 6V4.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V6M18.5 6l-.9 13a2 2 0 0 1-2 1.9H8.4a2 2 0 0 1-2-1.9L5.5 6"/>',
   checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8.2 12.2 2.5 2.5 5.1-5.4"/>',
   circle: '<circle cx="12" cy="12" r="9"/>',
+  checkSquare: '<rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="m8 12.2 2.6 2.6L16 9.4"/>',
+  checklist: '<path d="m3 6.5 1.8 1.8L8 5.2M3 16.5l1.8 1.8L8 15.2M11.5 7h9.5M11.5 17h9.5"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.2 2.2"/>',
   calendarSm: '<rect x="3" y="5" width="18" height="16" rx="3.5"/><path d="M3 10h18M8.5 3v4M15.5 3v4"/>',
   sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M4.7 4.7l1.5 1.5M17.8 17.8l1.5 1.5M2.6 12h2.1M19.3 12h2.1M4.7 19.3l1.5-1.5M17.8 6.2l1.5-1.5"/>',
@@ -20,10 +22,26 @@ const ICON_PATHS = {
   book: '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v14.5a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18V4.5Z"/><path d="M5 16.5h13.5"/>',
 };
 
-/** @returns {string} an <svg> string ready to drop into an innerHTML template */
+/**
+ * @returns {string} an <svg> string ready to drop into an innerHTML template
+ *
+ * An unknown name used to produce `<svg>undefined</svg>` — a perfectly valid,
+ * completely invisible element. Nothing errored and nothing showed. It now warns
+ * and draws a dashed placeholder, so a missing icon is impossible to miss.
+ */
 export function icon(name, cls = "icon") {
+  const paths = ICON_PATHS[name];
+
+  if (!paths) {
+    console.warn(`icon(): no such icon "${name}"`);
+    return (
+      `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" ` +
+      `stroke-dasharray="3 2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/></svg>`
+    );
+  }
+
   return (
     `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" ` +
-    `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name]}</svg>`
+    `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`
   );
 }

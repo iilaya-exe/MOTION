@@ -84,10 +84,16 @@
 .widget .task-form { margin-bottom: 0; }
 
 /* ---------------- Up next ---------------- */
+.next-class .cls-status { flex-shrink: 0; }
+
 .next-class {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
+  /* The status pill is nowrap and the mark is fixed, so without wrapping the
+     body is the only thing that can give — and it collapses far enough to break
+     "4:00 PM" onto four lines. Letting the pill drop to its own row instead. */
+  flex-wrap: wrap;
   padding: var(--sp-3);
   border-radius: var(--r-md);
   background: var(--cc-soft, var(--surface-2));
@@ -109,12 +115,15 @@
 }
 
 .nc-mark .icon { width: 20px; height: 20px; }
-.nc-body { flex: 1; min-width: 0; }
+/* A floor, not min-width:0: below this the text is no longer readable and the
+   pill should wrap instead. */
+.nc-body { flex: 1 1 150px; min-width: 150px; }
 
 .nc-name {
   font-size: var(--fs-body-l);
   font-weight: 660;
   letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
 }
 
 .nc-meta {
@@ -126,7 +135,9 @@
   color: var(--text-2);
 }
 
-.nc-meta span { display: flex; align-items: center; gap: 5px; }
+/* A time range and a room name are single units — breaking them mid-phrase is
+   what produced "4:00 / PM / – / 5:30 / PM". */
+.nc-meta span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 .nc-meta .icon { width: 13px; height: 13px; color: var(--text-3); }
 
 /* ---------------- Progress ring ---------------- */

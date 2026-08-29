@@ -103,7 +103,12 @@
 .page-content li { margin-bottom: 3px; }
 .page-content > *:first-child { margin-top: 0; }
 
-.notes-footer { display: flex; justify-content: flex-end; margin-top: 26px; }
+.notes-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: 26px;
+}
 
 /* "Edited 5 min ago" — small enough to ignore, present enough to reassure. */
 .page-meta {

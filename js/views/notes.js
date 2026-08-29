@@ -3,6 +3,7 @@ import { $, $$, esc, isHidden } from "../dom.js";
 import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
 import { relativeTime } from "../lib/dates.js";
+import { printNote } from "../lib/note-print.js";
 import * as undo from "../ui/undo.js";
 import { ask } from "../ui/confirm.js";
 import { closeNav, isMobile, switchView } from "../ui/nav.js";
@@ -77,6 +78,7 @@ export function render() {
     contentEl.contentEditable = "false";
     contentEl.setAttribute("data-placeholder", "Create a page from the sidebar to get started.");
     deleteBtn.classList.add("hidden");
+    $("printPageBtn").classList.add("hidden");
     $("pageMeta").textContent = "";
     updateToolbar();
     return;
@@ -88,6 +90,7 @@ export function render() {
   contentEl.innerHTML = page.content;
   contentEl.setAttribute("data-placeholder", "Start writing...");
   deleteBtn.classList.remove("hidden");
+  $("printPageBtn").classList.remove("hidden");
   $("pageMeta").textContent = page.updatedAt ? `Edited ${relativeTime(page.updatedAt)}` : "";
   updateToolbar();
 }
@@ -223,6 +226,8 @@ export function mount() {
   });
 
   document.addEventListener("selectionchange", updateToolbar);
+
+  $("printPageBtn").addEventListener("click", () => printNote(currentPage()));
 
   $("pageSearch").addEventListener("input", (e) => {
     search = e.target.value;

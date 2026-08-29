@@ -141,6 +141,7 @@
 .timer-panel {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--sp-4);
   padding: var(--sp-4) var(--sp-5);
   border-radius: var(--r-lg);
@@ -188,5 +189,5 @@
   color: var(--text-2);
 }
 
-.timer-panel .tp-meta span { display: flex; align-items: center; gap: 5px; }
+.timer-panel .tp-meta span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 .timer-panel .tp-meta .icon { width: 14px; height: 14px; color: var(--text-3); }

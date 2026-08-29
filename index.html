@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="css/schedule.css">
 <link rel="stylesheet" href="css/notes.css">
 <link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/print.css">
 
 <script>
 // Applied before first paint so a dark-theme user never sees a white flash.
@@ -88,6 +89,8 @@ if (location.protocol === "file:") {
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
 <div class="offline-bar" id="offlineBar" role="status">Offline — your workspace is stored on this device, so everything still works.</div>
+
+<div class="print-sheet" id="printSheet" aria-hidden="true"></div>
 
 <div class="class-timer hidden" id="classTimer" role="status" aria-live="polite"></div>
 
@@ -370,6 +373,10 @@ if (location.protocol === "file:") {
       <div class="page-meta" id="pageMeta"></div>
       <div class="page-content" id="pageContent" contenteditable="true" data-placeholder="Start writing..."></div>
       <div class="notes-footer">
+        <button class="btn secondary" id="printPageBtn" title="Open the print dialog — choose “Save as PDF” there">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8" rx="2"/><path d="M7 13.5h10V21H7z"/></svg>
+          Export PDF
+        </button>
         <button class="btn danger" id="deletePageBtn">Delete Page</button>
       </div>
     </section>
