@@ -804,10 +804,10 @@ body.is-offline .app { padding-top: 30px; }
   }
 
   :root[data-sidebar="collapsed"] .sidebar {
-    width: 60px;
-    min-width: 60px;
-    padding-left: 8px;
-    padding-right: 8px;
+    width: 76px;
+    min-width: 76px;
+    padding-left: 10px;
+    padding-right: 10px;
     overflow-x: hidden;
   }
 
@@ -833,26 +833,19 @@ body.is-offline .app { padding-top: 30px; }
     gap: 0;
   }
 
+  /* Stacked, not overlaid: the toggle gets its own row under the mark. Floating
+     it over the corner put it on top of the logo, which read as a rendering
+     bug and made both harder to hit. */
   :root[data-sidebar="collapsed"] .brand {
+    flex-direction: column;
     justify-content: center;
-    padding: 4px 0 16px;
+    gap: 6px;
+    padding: 2px 0 14px;
   }
 
-  /* The toggle sits under the mark when there is no room beside it. */
   :root[data-sidebar="collapsed"] .sidebar-toggle {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    opacity: 0;
-    pointer-events: none;
+    margin-left: 0;
   }
-
-  :root[data-sidebar="collapsed"] .sidebar:hover .sidebar-toggle {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  :root[data-sidebar="collapsed"] .sidebar { position: relative; }
 
   :root[data-sidebar="collapsed"] .nav-section-header {
     justify-content: center;
@@ -861,6 +854,6 @@ body.is-offline .app { padding-top: 30px; }
 
   :root[data-sidebar="collapsed"] .backup-row { flex-direction: column; gap: 2px; }
 
-  /* Wrapping to two rows inside a 60px rail would look broken. */
+  /* Wrapping to two rows inside the rail would look broken. */
   :root[data-sidebar="collapsed"] .empty-hint { display: none; }
 }

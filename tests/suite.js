@@ -558,6 +558,24 @@ export async function suite(win) {
     /motionSidebar/.test(win.document.documentElement.innerHTML),
     "no pre-paint script");
 
+  // The toggle used to float over the corner of the rail, landing on top of the
+  // logo. It now takes its own row, so nothing overlaps and it is always hittable.
+  const collapsedToggleCss =
+    cssText.match(/data-sidebar="collapsed"\]\s*\.sidebar-toggle\s*\{[^}]*\}/) || [""];
+  check("collapsed toggle is not overlaid on the brand",
+    !/position:\s*absolute/.test(collapsedToggleCss[0]), collapsedToggleCss[0]);
+  const collapsedBrandCss =
+    cssText.match(/data-sidebar="collapsed"\]\s*\.brand\s*\{[^}]*\}/) || [""];
+  check("collapsed brand stacks the mark and the toggle",
+    /flex-direction:\s*column/.test(collapsedBrandCss[0]), collapsedBrandCss[0]);
+  check("collapsed toggle stays visible without hover",
+    !/data-sidebar="collapsed"\][^{]*\.sidebar:hover\s+\.sidebar-toggle/.test(cssText),
+    "toggle only appears on hover");
+  const railCss = cssText.match(/data-sidebar="collapsed"\]\s*\.sidebar\s*\{[^}]*\}/) || [""];
+  const railWidth = Number((railCss[0].match(/width:\s*(\d+)px/) || [0, 0])[1]);
+  check("rail is wide enough for a centred icon and its padding", railWidth >= 72,
+    `${railWidth}px`);
+
   // -------------------------------------------------------------- note → PDF ---
   group("Note PDF export");
   click(q("#pageList .page-item"));
