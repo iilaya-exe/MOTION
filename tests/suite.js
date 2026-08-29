@@ -486,6 +486,78 @@ export async function suite(win) {
   check("undo restores the page", qa("#pageList .page-item").length === 2,
     String(qa("#pageList .page-item").length));
 
+  // ---------------------------------------------------------- sidebar collapse ---
+  group("Collapsible sidebar");
+  const root = d.doc.documentElement;
+  const toggle = q("#sidebarToggle");
+
+  check("toggle exists", !!toggle);
+  check("starts expanded", root.getAttribute("data-sidebar") !== "collapsed",
+    root.getAttribute("data-sidebar"));
+  check("nav labels are wrappable elements, not text nodes",
+    qa(".nav-item .nav-label").length === 5, String(qa(".nav-item .nav-label").length));
+  check("nav items carry a tooltip for the collapsed rail",
+    qa(".nav-item[data-view]").every((n) => n.getAttribute("title")),
+    qa(".nav-item[data-view]").map((n) => n.getAttribute("title")).join(","));
+
+  click(toggle);
+  await settle();
+  check("collapses on click", root.getAttribute("data-sidebar") === "collapsed",
+    root.getAttribute("data-sidebar"));
+  check("aria-expanded follows", toggle.getAttribute("aria-expanded") === "false",
+    toggle.getAttribute("aria-expanded"));
+  check("label changes to Expand", /Expand/.test(toggle.getAttribute("aria-label")),
+    toggle.getAttribute("aria-label"));
+  check("choice is persisted", win.localStorage.getItem("motionSidebar") === "collapsed",
+    win.localStorage.getItem("motionSidebar"));
+  check("nav items still present and clickable when collapsed",
+    qa(".nav-item[data-view]").length === 5);
+
+  // navigation must still work from the rail
+  d.nav("Tasks");
+  await settle();
+  check("can still navigate while collapsed", d.view()?.id === "view-tasks", d.view()?.id);
+
+  click(toggle);
+  await settle();
+  check("expands again", root.getAttribute("data-sidebar") !== "collapsed",
+    root.getAttribute("data-sidebar"));
+  check("expanded state persisted too", win.localStorage.getItem("motionSidebar") === "expanded",
+    win.localStorage.getItem("motionSidebar"));
+
+  // Keyboard shortcut. Focus is parked in a text field by an earlier group, and
+  // ⌘B is deliberately inert while typing — so move focus out first.
+  d.doc.activeElement?.blur?.();
+  check("focus is not in a field before testing the shortcut",
+    !["INPUT", "TEXTAREA", "SELECT"].includes(d.doc.activeElement?.tagName),
+    d.doc.activeElement?.tagName);
+
+  key(d.doc.body, "b", { metaKey: true });
+  await settle();
+  check("⌘B collapses", root.getAttribute("data-sidebar") === "collapsed",
+    root.getAttribute("data-sidebar"));
+  key(d.doc.body, "b", { metaKey: true });
+  await settle();
+  check("⌘B expands", root.getAttribute("data-sidebar") !== "collapsed");
+
+  // ...but must not fire while the user is typing
+  d.nav("Tasks");
+  await settle();
+  q("#taskTextInput").focus();
+  key(q("#taskTextInput"), "b", { metaKey: true });
+  await settle();
+  check("⌘B ignored while typing in a field", root.getAttribute("data-sidebar") !== "collapsed",
+    "collapsed from inside an input");
+
+  // the CSS must not collide with the mobile drawer
+  check("collapse rules are desktop-only",
+    /@media \(min-width: 769px\)[\s\S]*?data-sidebar="collapsed"/.test(cssText),
+    "collapse not scoped above the drawer breakpoint");
+  check("state is applied before first paint",
+    /motionSidebar[\s\S]{0,200}data-sidebar/.test(win.document.head.innerHTML) ||
+    /motionSidebar/.test(win.document.documentElement.innerHTML),
+    "no pre-paint script");
+
   // -------------------------------------------------------------- note → PDF ---
   group("Note PDF export");
   click(q("#pageList .page-item"));

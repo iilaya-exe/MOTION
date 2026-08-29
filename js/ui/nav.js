@@ -19,6 +19,32 @@ export function setAfterSwitch(fn) {
 
 const MOBILE_QUERY = window.matchMedia("(max-width: 768px)");
 
+/* Collapsed state lives on <html> rather than in the store: it is per-device
+   chrome, not workspace data, and index.html reads it before first paint so the
+   sidebar never renders expanded and then snaps shut. */
+const SIDEBAR_KEY = "motionSidebar";
+
+export const isSidebarCollapsed = () =>
+  document.documentElement.getAttribute("data-sidebar") === "collapsed";
+
+export function setSidebarCollapsed(collapsed) {
+  const root = document.documentElement;
+
+  if (collapsed) root.setAttribute("data-sidebar", "collapsed");
+  else root.removeAttribute("data-sidebar");
+
+  try {
+    localStorage.setItem(SIDEBAR_KEY, collapsed ? "collapsed" : "expanded");
+  } catch {
+    /* preference just will not persist */
+  }
+
+  const btn = $("sidebarToggle");
+  btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  btn.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
+  btn.setAttribute("title", `${collapsed ? "Expand" : "Collapse"} sidebar (⌘B)`);
+}
+
 export const isMobile = () => MOBILE_QUERY.matches;
 
 export function setNavOpen(open) {
@@ -56,6 +82,26 @@ export function mount() {
   });
 
   $("menuBtn").addEventListener("click", () => setNavOpen(!isNavOpen()));
+
+  $("sidebarToggle").addEventListener("click", () => setSidebarCollapsed(!isSidebarCollapsed()));
+
+  // ⌘B / Ctrl+B, the convention in editors and Notion alike. Ignored while
+  // typing, so it cannot fire from inside the note editor or a text field.
+  document.addEventListener("keydown", (e) => {
+    if (e.key.toLowerCase() !== "b" || !(e.metaKey || e.ctrlKey)) return;
+    if (isMobile()) return;
+
+    const el = document.activeElement;
+    const typing =
+      el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName));
+    if (typing) return;
+
+    e.preventDefault();
+    setSidebarCollapsed(!isSidebarCollapsed());
+  });
+
+  // Sync the button to whatever index.html decided before paint.
+  setSidebarCollapsed(isSidebarCollapsed());
   $("sidebarBackdrop").addEventListener("click", closeNav);
 
   // Returning to desktop width must not leave the drawer state stuck on.

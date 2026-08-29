@@ -37,6 +37,12 @@
       t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     }
     document.documentElement.setAttribute("data-theme", t);
+
+    // Same reasoning as the theme: applying this after boot would show an
+    // expanded sidebar for a frame and then snap it shut.
+    if (localStorage.getItem("motionSidebar") === "collapsed") {
+      document.documentElement.setAttribute("data-sidebar", "collapsed");
+    }
   } catch (e) {
     document.documentElement.setAttribute("data-theme", "light");
   }
@@ -103,27 +109,31 @@ if (location.protocol === "file:") {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17V7l4.5 4.5L12 7.5l3.5 4L20 7v10"/></svg>
       </div>
       <span class="brand-name">Motion</span>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-expanded="true"
+              title="Collapse sidebar (⌘B)" aria-label="Collapse sidebar">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9.5 4v16"/></svg>
+      </button>
     </div>
 
-    <div class="nav-item" data-view="dashboard">
+    <div class="nav-item" data-view="dashboard" title="Home">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.8 12 3l9 6.8V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.8Z"/></svg>
-      Home
+      <span class="nav-label">Home</span>
     </div>
-    <div class="nav-item" data-view="tasks">
+    <div class="nav-item" data-view="tasks" title="Tasks">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4.5"/><path d="m8 12.2 2.6 2.6L16 9.4"/></svg>
-      Tasks
+      <span class="nav-label">Tasks</span>
     </div>
-    <div class="nav-item" data-view="calendar">
+    <div class="nav-item" data-view="calendar" title="Calendar">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3.5"/><path d="M3 10h18M8.5 3v4M15.5 3v4"/></svg>
-      Calendar
+      <span class="nav-label">Calendar</span>
     </div>
-    <div class="nav-item" data-view="schedule">
+    <div class="nav-item" data-view="schedule" title="Schedule">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2V12l3.2 2.2"/></svg>
-      Schedule
+      <span class="nav-label">Schedule</span>
     </div>
-    <div class="nav-item" data-view="checklists">
+    <div class="nav-item" data-view="checklists" title="Checklists">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6.5 1.8 1.8L8 5.2M3 16.5l1.8 1.8L8 15.2M11.5 7h9.5M11.5 17h9.5"/></svg>
-      Checklists
+      <span class="nav-label">Checklists</span>
     </div>
 
     <div class="nav-section">
@@ -142,13 +152,13 @@ if (location.protocol === "file:") {
 
     <div class="sidebar-footer">
       <div class="backup-row">
-        <button class="backup-btn" id="exportDataBtn" title="Download a backup of everything in this workspace">
+        <button class="backup-btn" id="exportDataBtn" title="Export — download a backup of everything">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 17.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/></svg>
-          Export
+          <span class="nav-label">Export</span>
         </button>
-        <label class="backup-btn" for="importDataInput" title="Restore a workspace from a backup file">
+        <label class="backup-btn" for="importDataInput" title="Import — restore a workspace from a backup file">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="m7.5 7.5 4.5-4.5 4.5 4.5"/><path d="M4 17.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/></svg>
-          Import
+          <span class="nav-label">Import</span>
         </label>
         <input type="file" id="importDataInput" accept="application/json,.json" hidden>
       </div>

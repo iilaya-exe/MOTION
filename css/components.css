@@ -770,3 +770,97 @@ body.is-offline .app { padding-top: 30px; }
 .backup-btn .icon { width: 14px; height: 14px; color: var(--text-3); }
 .backup-btn:hover { background: var(--hover); color: var(--text); }
 .backup-btn:hover .icon { color: var(--text-2); }
+
+/* ---------------- Collapsible sidebar ----------------
+   Collapses to an icon rail rather than disappearing, so navigation stays one
+   click away. Scoped to min-width 769px on purpose: below that the sidebar is
+   already a drawer, and the two behaviours would fight over the same element. */
+
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  color: var(--text-3);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.sidebar-toggle .icon { width: 16px; height: 16px; }
+.sidebar-toggle:hover { background: var(--hover-strong); color: var(--text); }
+
+/* The drawer has its own toggle in the topbar, so hide this one there. */
+@media (max-width: 768px) {
+  .sidebar-toggle { display: none; }
+}
+
+@media (min-width: 769px) {
+  .sidebar {
+    transition: width var(--dur) var(--ease), min-width var(--dur) var(--ease),
+      padding var(--dur) var(--ease);
+  }
+
+  :root[data-sidebar="collapsed"] .sidebar {
+    width: 60px;
+    min-width: 60px;
+    padding-left: 8px;
+    padding-right: 8px;
+    overflow-x: hidden;
+  }
+
+  /* Every label goes; the icons carry the meaning, with title= as the fallback. */
+  :root[data-sidebar="collapsed"] .nav-label,
+  :root[data-sidebar="collapsed"] .brand-name,
+  :root[data-sidebar="collapsed"] .nav-section-header span,
+  :root[data-sidebar="collapsed"] .nav-search,
+  :root[data-sidebar="collapsed"] .theme-toggle span,
+  :root[data-sidebar="collapsed"] .page-item span {
+    display: none;
+  }
+
+  /* Centre what is left, and keep the row heights identical to the expanded
+     state so nothing jumps vertically while the width animates. */
+  :root[data-sidebar="collapsed"] .nav-item,
+  :root[data-sidebar="collapsed"] .page-item,
+  :root[data-sidebar="collapsed"] .theme-toggle,
+  :root[data-sidebar="collapsed"] .backup-btn {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 0;
+  }
+
+  :root[data-sidebar="collapsed"] .brand {
+    justify-content: center;
+    padding: 4px 0 16px;
+  }
+
+  /* The toggle sits under the mark when there is no room beside it. */
+  :root[data-sidebar="collapsed"] .sidebar-toggle {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  :root[data-sidebar="collapsed"] .sidebar:hover .sidebar-toggle {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  :root[data-sidebar="collapsed"] .sidebar { position: relative; }
+
+  :root[data-sidebar="collapsed"] .nav-section-header {
+    justify-content: center;
+    padding: 2px 0 6px;
+  }
+
+  :root[data-sidebar="collapsed"] .backup-row { flex-direction: column; gap: 2px; }
+
+  /* Wrapping to two rows inside a 60px rail would look broken. */
+  :root[data-sidebar="collapsed"] .empty-hint { display: none; }
+}

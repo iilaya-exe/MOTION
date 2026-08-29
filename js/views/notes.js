@@ -58,7 +58,7 @@ export function renderPageList() {
     .map((p) => {
       const active = p.id === currentPageId && notesVisible;
       return (
-        `<div class="page-item${active ? " active" : ""}" data-id="${esc(p.id)}">` +
+        `<div class="page-item${active ? " active" : ""}" data-id="${esc(p.id)}" title="${esc(p.title) || "Untitled"}">` +
         `${icon("page")}<span>${esc(p.title) || "Untitled"}</span></div>`
       );
     })
