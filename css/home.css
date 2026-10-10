@@ -12,65 +12,102 @@
   justify-content: space-between;
   gap: var(--sp-4);
   flex-wrap: wrap;
-  margin-bottom: var(--sp-5);
+  /* Same gap under the header as every other page's subtitle. */
+  margin-bottom: 28px;
 }
 
 .home-hero h1 { margin-bottom: 2px; }
-.home-hero .subtitle { margin: 0; }
+/* .view-scoped so the phone rule that re-adds subtitle margin cannot double
+   the gap here. */
+.view .home-hero .subtitle { margin: 0; }
 
 .home-motto {
   font-size: var(--fs-body-s);
   font-style: italic;
   color: var(--text-3);
   padding-left: var(--sp-3);
-  border-left: 3px solid var(--accent-border);
+  border-left: 2px solid var(--border);
 }
 
+/* Named areas rather than auto-fit, so the cards always land in matching rows:
+   auto-fit left a lone half-width card at in-between widths. Cards in a row
+   stretch to the row's height, so their edges line up.
+
+     wide    next  next  glance       medium  next      next     narrow  next
+             add   add   progress             progress  glance           progress
+                                              add       add              glance
+                                                                         add
+
+   In the wide layout each row pairs cards of similar natural height (the stat
+   grid with the class tile, the ring with quick add), so stretching to match
+   never opens a big gap inside either one. */
 .widgets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--sp-3);
-  margin-bottom: var(--sp-6);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "next" "progress" "glance" "add";
+  gap: var(--gap-card);
+  margin-bottom: var(--gap-section);
+  align-items: stretch;
 }
 
-/* Two tracks where there is room, one when there is not. */
-.widget.w-wide { grid-column: span 2; }
-@media (max-width: 900px) {
-  .widget.w-wide { grid-column: span 1; }
+.w-next { grid-area: next; }
+.w-progress { grid-area: progress; }
+.w-add { grid-area: add; }
+.w-glance { grid-area: glance; }
+
+@container (min-width: 560px) {
+  .widgets {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "next next" "progress glance" "add add";
+  }
 }
 
+@container (min-width: 900px) {
+  .widgets {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas: "next next glance" "add add progress";
+  }
+}
+
+/* Card: rounded-xl, a hairline border and shadow-sm. Static, as shadcn cards
+   are — lifting on hover implied they were clickable when they are not. */
 .widget {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
   box-shadow: var(--shadow-sm);
-  padding: var(--sp-4);
-  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease),
-    transform var(--dur) var(--ease);
+  padding: 20px;
 }
 
-.widget:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
-}
+/* When a row stretches a card, each one spends the extra height on its main
+   element instead of leaving a gap at the bottom: the class tile and the stat
+   grid grow, the ring centres, and the quick links settle on the bottom edge. */
+.w-next #nextClass { flex: 1; display: flex; flex-direction: column; }
+.w-next .next-class { flex: 1; }
+.w-progress .progress-ring-wrap { flex: 1; }
+.w-glance .mini-stats { flex: 1; }
+.w-add .quick-actions { margin-top: auto; padding-top: var(--sp-3); }
 
 .widget-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-3);
+  min-height: 20px;
+  margin-bottom: var(--sp-4);
 }
 
+/* CardTitle: semibold, foreground, leading-none. */
 .widget-head h3 {
   margin: 0;
-  font-size: var(--fs-mini);
-  font-weight: 680;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-3);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
 }
 
 .widget-meta { font-size: var(--fs-caption); color: var(--text-3); }
@@ -95,7 +132,7 @@
      "4:00 PM" onto four lines. Letting the pill drop to its own row instead. */
   flex-wrap: wrap;
   padding: var(--sp-3);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   background: var(--cc-soft, var(--surface-2));
 }
 
@@ -103,7 +140,7 @@
   width: 42px;
   height: 42px;
   flex-shrink: 0;
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,7 +148,6 @@
   line-height: 1;
   color: #fff;
   background: var(--cc-grad, var(--grad));
-  box-shadow: var(--shadow-sm);
 }
 
 .nc-mark .icon { width: 20px; height: 20px; }
@@ -121,7 +157,7 @@
 
 .nc-name {
   font-size: var(--fs-body-l);
-  font-weight: 660;
+  font-weight: 600;
   letter-spacing: -0.015em;
   overflow-wrap: anywhere;
 }
@@ -157,7 +193,7 @@
   display: grid;
   place-items: center;
   background:
-    conic-gradient(var(--success) calc(var(--pct) * 1%), var(--track) 0);
+    conic-gradient(var(--accent-fill) calc(var(--pct) * 1%), var(--track) 0);
   transition: background var(--dur-slow) var(--ease);
 }
 
@@ -174,12 +210,13 @@
 
 .progress-ring span {
   position: relative;
-  font-size: var(--fs-body-s);
-  font-weight: 700;
-  color: var(--text-2);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
+.progress-ring.is-complete { background: conic-gradient(var(--success) 100%, var(--track) 0); }
 .progress-ring.is-complete span { color: var(--success); }
 
 .ring-legend {
@@ -190,7 +227,7 @@
   color: var(--text-3);
 }
 
-.ring-legend b { color: var(--text); font-weight: 680; font-variant-numeric: tabular-nums; }
+.ring-legend b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 .ring-legend .legend-warn b { color: var(--danger); }
 
 /* ---------------- Mini stats ---------------- */
@@ -203,16 +240,16 @@
 .mini-stat {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: var(--sp-2);
-  border-radius: var(--r-sm);
+  gap: 2px;
+  padding: 10px;
+  border-radius: var(--r-md);
   background: var(--surface-2);
   border: 1px solid var(--border);
 }
 
 .ms-num {
   font-size: var(--fs-h3);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -222,39 +259,34 @@
 .mini-stat.danger .ms-num { color: var(--danger); }
 .mini-stat.success .ms-num { color: var(--success); }
 
-/* ---------------- Quick actions ---------------- */
+/* ---------------- Quick actions ----------------
+   Outline buttons at shadcn's "sm" size (h-8). */
 .quick-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  margin-top: var(--sp-3);
 }
 
 .quick-action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 11px;
-  border-radius: 20px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--r-md);
   font-size: var(--fs-caption);
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none;
-  color: var(--text-2);
-  background: var(--surface-2);
+  color: var(--text);
+  background: var(--field-bg-solid);
   border: 1px solid var(--border);
-  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  box-shadow: var(--shadow-xs);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.quick-action .icon { width: 14px; height: 14px; color: var(--text-3); }
-.quick-action:hover {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent-border);
-  transform: translateY(-1px);
-}
-
-.quick-action:hover .icon { color: var(--accent); }
+.quick-action .icon { width: 15px; height: 15px; color: var(--text-3); }
+.quick-action:hover { background: var(--hover); }
+.quick-action:hover .icon { color: var(--text); }
 
 @media (max-width: 560px) {
   .mini-stats { grid-template-columns: repeat(2, 1fr); }

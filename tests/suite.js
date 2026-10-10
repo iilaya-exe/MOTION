@@ -559,27 +559,30 @@ export async function suite(win) {
     "no pre-paint script");
 
   // The toggle used to float over the corner of the rail, landing on top of the
-  // logo. It now takes its own row, so nothing overlaps and it is always hittable.
+  // logo. It now sits on its own row under the logo, so nothing overlaps and it
+  // is always hittable. The collapsed rule groups the toggle with the other rail
+  // buttons, so match up to the first brace rather than a lone selector.
   const collapsedToggleCss =
-    cssText.match(/data-sidebar="collapsed"\]\s*\.sidebar-toggle\s*\{[^}]*\}/) || [""];
+    cssText.match(/data-sidebar="collapsed"\]\s*\.sidebar-toggle[,\s][^{]*\{[^}]*\}/) || [""];
+  check("collapsed toggle rule exists", collapsedToggleCss[0] !== "", "no collapsed toggle rule");
   check("collapsed toggle is not overlaid on the brand",
     !/position:\s*absolute/.test(collapsedToggleCss[0]), collapsedToggleCss[0]);
   const collapsedBrandCss =
     cssText.match(/data-sidebar="collapsed"\]\s*\.brand\s*\{[^}]*\}/) || [""];
-  check("collapsed brand keeps the mark and toggle on one row",
-    !/flex-direction:\s*column/.test(collapsedBrandCss[0]), collapsedBrandCss[0]);
+  check("collapsed brand stacks the mark above the toggle",
+    /flex-direction:\s*column/.test(collapsedBrandCss[0]), collapsedBrandCss[0]);
   check("collapsed toggle stays visible without hover",
     !/data-sidebar="collapsed"\][^{]*\.sidebar:hover\s+\.sidebar-toggle/.test(cssText),
     "toggle only appears on hover");
 
-  // The rail clips with overflow-x: hidden, so the pair must actually fit.
+  // The rail clips with overflow-x: hidden, so the widest thing in it — the logo
+  // or the square rail buttons — must actually fit.
   const px = (rule, prop) => Number((rule.match(new RegExp(prop + ":\\s*(\\d+)px")) || [0, 0])[1]);
   const railCss = (cssText.match(/data-sidebar="collapsed"\]\s*\.sidebar\s*\{[^}]*\}/) || [""])[0];
   const markCss = (cssText.match(/\.brand-mark\s*\{[^}]*\}/) || [""])[0];
-  const toggleCss = (cssText.match(/\.sidebar-toggle\s*\{[^}]*\}/) || [""])[0];
   const inner = px(railCss, "width") - px(railCss, "padding-left") - px(railCss, "padding-right");
-  const needed = px(markCss, "width") + px(collapsedBrandCss[0], "gap") + px(toggleCss, "width");
-  check("rail is wide enough to fit the logo and toggle side by side",
+  const needed = Math.max(px(markCss, "width"), px(collapsedToggleCss[0], "width"));
+  check("rail is wide enough for the logo and its buttons",
     needed > 0 && inner >= needed, `${inner}px of room, needs ${needed}px`);
 
   // -------------------------------------------------------------- note → PDF ---
@@ -805,4 +808,159 @@ export async function suite(win) {
   check("restored page persisted", stored?.pages?.length === 2, String(stored?.pages?.length));
   check("pages carry an updatedAt", stored?.pages?.every((p) => typeof p.updatedAt === "number"));
   check("tasks carry a repeat field", stored?.tasks?.every((t) => "repeat" in t));
+
+  // ------------------------------------------------------- command palette ---
+  group("Command palette");
+  const palette = () => q("#cmdkOverlay");
+  const paletteOpen = () => !palette().classList.contains("hidden");
+  const items = () => qa("#cmdkList .cmdk-item");
+  const labels = () => items().map((el) => el.querySelector(".cmdk-label").textContent);
+  const typeQuery = async (text) => {
+    setValue(q("#cmdkInput"), text);
+    await settle();
+  };
+
+  d.nav("Home");
+  await settle();
+  key(win.document.body, "k", { ctrlKey: true });
+  await settle();
+  check("Ctrl+K opens the palette", paletteOpen(), palette().className);
+  check("its input takes focus", win.document.activeElement === q("#cmdkInput"),
+    win.document.activeElement?.id);
+  check("an empty palette offers actions", labels().includes("New task"), labels().join(" | "));
+  check("first row is highlighted", items()[0]?.getAttribute("aria-selected") === "true");
+
+  key(q("#cmdkInput"), "ArrowDown");
+  check("arrow keys move the highlight", items()[1]?.getAttribute("aria-selected") === "true",
+    items().map((el) => el.getAttribute("aria-selected")).join(","));
+
+  key(win.document, "Escape");
+  await settle();
+  check("Escape closes it", !paletteOpen());
+
+  click(q(".cmdk-trigger"));
+  await settle();
+  check("the sidebar search button opens it", paletteOpen());
+  await typeQuery("calend");
+  check("navigation is searchable", labels()[0] === "Go to Calendar", labels().join(" | "));
+  key(q("#cmdkInput"), "Enter");
+  await settle(80);
+  check("Enter runs the highlighted item", d.view()?.id === "view-calendar", d.view()?.id);
+  check("and closes the palette", !paletteOpen());
+
+  key(win.document.body, "k", { ctrlKey: true });
+  await settle();
+  await typeQuery("Palette made task");
+  check("a query offers to create it",
+    labels().includes("Add task “Palette made task”"), labels().join(" | "));
+  click(items().find((el) => el.textContent.includes("Add task “Palette made task”")));
+  await settle(80);
+  d.nav("Tasks");
+  await settle();
+  check("clicking a create action adds the task",
+    qa(".task-row .task-text").some((el) => el.textContent === "Palette made task"),
+    qa(".task-row .task-text").map((el) => el.textContent).join(" | "));
+
+  // Opens from inside a text field too: the shortcut never needs escaping from.
+  q("#taskTextInput").focus();
+  key(q("#taskTextInput"), "k", { metaKey: true });
+  await settle();
+  check("⌘K works while typing in a field", paletteOpen());
+  await typeQuery("palette made");
+  const taskRow = items().find((el) => el.closest(".cmdk-group")?.getAttribute("aria-label") === "Tasks");
+  check("open tasks are searchable", taskRow?.textContent.includes("Palette made task"),
+    labels().join(" | "));
+  click(taskRow);
+  await settle(80);
+  const madeRow = qa(".task-row").find((r) => r.querySelector(".task-text")?.textContent === "Palette made task");
+  check("choosing a task completes it", madeRow?.classList.contains("done"), madeRow?.className);
+  check("with an undo offered", q("#undoToast").textContent.includes("Completed"),
+    q("#undoToast").textContent);
+
+  key(win.document.body, "k", { ctrlKey: true });
+  await settle();
+  await typeQuery("chemistry");
+  check("a name match outranks a body match", labels()[0] === "Chemistry lab", labels().join(" | "));
+  key(q("#cmdkInput"), "Enter");
+  await settle(80);
+  check("notes are searchable and open", d.view()?.id === "view-notes" &&
+    q("#pageTitleInput").value === "Chemistry lab", `${d.view()?.id} ${q("#pageTitleInput").value}`);
+
+  // ------------------------------------------------------------- reminders ---
+  group("Reminders");
+  win.localStorage.removeItem("motionReminders_e2e");
+  win.localStorage.removeItem("motionRemindersFired_e2e");
+  // Never let the suite raise a real permission prompt.
+  if (win.Notification) win.Notification.requestPermission = async () => "denied";
+  const toasts = () => qa("#reminderStack .reminder-toast .reminder-title").map((el) => el.textContent);
+
+  click(q("#remindersBtn"));
+  await settle();
+  check("sidebar button opens the settings", !q("#reminderOverlay").classList.contains("hidden"));
+  check("reminders start switched off", q("#remEnabled").getAttribute("aria-checked") === "false");
+  check("options are disabled while off", q("#remClassLead").disabled);
+
+  click(q("#remEnabled"));
+  await settle(80);
+  check("the switch turns them on", q("#remEnabled").getAttribute("aria-checked") === "true");
+  check("options become editable", !q("#remClassLead").disabled);
+  check("the sidebar shows they are on", q("#remindersBtn").classList.contains("is-on"));
+  check("permission state is explained", q("#remPermission").textContent.length > 20,
+    q("#remPermission").textContent);
+  check("the limits are stated", /while Motion is open/.test(q(".setting-note").textContent));
+
+  click(q("#remDoneBtn"));
+  await settle();
+
+  const remNow = new Date();
+  if (remNow.getHours() === 23 && remNow.getMinutes() >= 45) {
+    check("class reminder test skipped near midnight (would cross days)", true);
+  } else {
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const at = (mins) => {
+      const t = new Date(remNow.getTime() + mins * 60000);
+      return `${pad2(t.getHours())}:${pad2(t.getMinutes())}`;
+    };
+    d.nav("Schedule");
+    await settle();
+    click(q("#addClassBtn"));
+    await settle();
+    setValue(q("#classSubjectInput"), "Reminder Class");
+    setValue(q("#classStartInput"), at(5));
+    setValue(q("#classEndInput"), at(12));
+    qa("#classDayToggle button").forEach((b) => { if (!b.classList.contains("on")) click(b); });
+    click(q("#classSaveBtn"));
+    await settle();
+
+    win.dispatchEvent(new win.Event("focus"));
+    await settle();
+    check("a class inside the lead time triggers a reminder",
+      toasts().some((t) => t.includes("Reminder Class starts in")), toasts().join(" | "));
+
+    win.dispatchEvent(new win.Event("focus"));
+    await settle();
+    check("each class reminds only once",
+      toasts().filter((t) => t.includes("Reminder Class")).length === 1, toasts().join(" | "));
+  }
+
+  click(q("#remindersBtn"));
+  await settle();
+  setValue(q("#remDigestTime"), "00:00", "change");
+  await settle();
+  check("the daily summary arrives once its time has passed",
+    toasts().filter((t) => t === "Your day in Motion").length === 1, toasts().join(" | "));
+
+  click(q("#remTestBtn"));
+  await settle();
+  check("a test reminder can be sent", toasts().includes("Test reminder"), toasts().join(" | "));
+
+  click(q("#remEnabled"));
+  await settle();
+  check("they can be switched off again", !q("#remindersBtn").classList.contains("is-on"));
+  click(q("#remDoneBtn"));
+  qa("#reminderStack .reminder-close").forEach(click);
+  await settle();
+  check("toasts can be dismissed", !q("#reminderStack .reminder-toast"));
+  win.localStorage.removeItem("motionReminders_e2e");
+  win.localStorage.removeItem("motionRemindersFired_e2e");
 }

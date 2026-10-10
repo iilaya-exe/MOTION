@@ -1,61 +1,107 @@
 /* ============================================================================
    Design tokens
    ----------------------------------------------------------------------------
-   Every colour, radius, shadow and font size in the app resolves through one of
-   these custom properties, so the dark theme is a single attribute swap on
-   <html> rather than a parallel set of rules.
+   The palette, radii and shadows follow shadcn/ui's "zinc" theme, so the app
+   reads like a shadcn interface without pulling in React or Tailwind. Every
+   colour, radius, shadow and font size in the app resolves through one of these
+   custom properties, so the dark theme is a single attribute swap on <html>
+   rather than a parallel set of rules.
+
+   The names predate the shadcn palette and are kept so no component had to be
+   renamed; the shadcn role each one plays is noted alongside:
+     --accent / --accent-fill   primary            --accent-soft   accent
+     --surface                  card               --surface-2     muted/50
+     --text-3                   muted-foreground   --border        border / input
    ========================================================================== */
 
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  --font-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
   --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #fafafb;
-  --sidebar-bg: #fbfbfc;
-  --border: #e7e7ee;
-  --border-strong: #d5d5de;
-  --text: #101014;
-  --text-2: #4a4a55;
-  --text-3: #74747f;
-  --accent: #115e59;
-  --accent-hover: #0d4a46;
-  --accent-soft: #e6f4f1;
-  --accent-border: #a9d8d1;
-  --danger: #d92d20;
-  --danger-soft: #fef3f2;
-  --danger-border: #fbd5d1;
-  --success: #079455;
-  --success-soft: #ecfdf3;
-  --amber: #b54708;
-  --amber-soft: #fffaeb;
+  --surface-2: #fafafa;
+  --muted: #f4f4f5;
+  --sidebar-bg: #fafafa;
+  --border: #e4e4e7;
+  --border-strong: #e4e4e7;
+  --text: #09090b;
+  --text-2: #3f3f46;
+  --text-3: #71717a;
+
+  /* Primary: near-black, with its foreground for anything drawn on top. */
+  --accent: #18181b;
+  --accent-hover: #27272a;
+  --accent-soft: #f4f4f5;
+  --accent-border: #d4d4d8;
+  --accent-fill: #18181b;
+  --accent-fill-hover: #2f2f33;
+  --on-accent: #fafafa;
+  --accent-ghost: rgba(24, 24, 27, 0.12);
+  --accent-glow: rgba(24, 24, 27, 0.3);
+  --grad: #18181b;
+
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-fill: #dc2626;
+  --danger-hover: #b91c1c;
+  --success: #16a34a;
+  --success-soft: #f0fdf4;
+  --success-border: #bbf7d0;
+  --amber: #b45309;
+  --amber-soft: #fffbeb;
   --amber-border: #fde68a;
-  --grad: linear-gradient(135deg, #115e59 0%, #14b8a6 100%);
+  --info: #2563eb;
+  --info-soft: #eff6ff;
+  --info-border: #bfdbfe;
+
+  /* shadcn's radius scale: --radius is 0.625rem, the rest step off it. */
   --r-sm: 6px;
-  --r-md: 9px;
-  --r-lg: 14px;
-  /* Layered rather than single-drop: a tight contact shadow plus a wider, softer
-     one reads as real elevation instead of a grey smear. */
-  --shadow-xs: 0 1px 1px rgba(16, 18, 27, 0.04);
-  --shadow-sm: 0 1px 2px rgba(16, 18, 27, 0.06), 0 1px 3px -1px rgba(16, 18, 27, 0.05);
-  --shadow-md: 0 2px 4px -2px rgba(16, 18, 27, 0.07), 0 8px 20px -6px rgba(16, 18, 27, 0.12);
-  --shadow-lg: 0 6px 16px -6px rgba(16, 18, 27, 0.12), 0 24px 56px -12px rgba(16, 18, 27, 0.24);
+  --r-md: 8px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+
+  /* Tailwind's shadow scale, as shadcn uses it: xs on controls, sm on cards,
+     lg on dialogs and popovers. */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   --shadow-glow: 0 4px 18px -4px var(--accent-glow);
-  --ring: 0 0 0 3px rgba(17, 94, 89, 0.16);
-  --hover-subtle: rgba(23, 23, 28, 0.028);
-  --hover: rgba(23, 23, 28, 0.055);
-  --hover-strong: rgba(23, 23, 28, 0.08);
-  --control-border: #c6c6d0;
-  --border-hover: #cfcfd6;
-  --placeholder: #c9c9d2;
-  --track: #eeeef2;
-  --topbar-bg: rgba(255, 255, 255, 0.86);
-  --accent-fill: #115e59;
-  --accent-fill-hover: #0d4a46;
-  --accent-ghost: rgba(17, 94, 89, 0.18);
-  --accent-glow: rgba(17, 94, 89, 0.5);
-  --overlay: rgba(16, 18, 27, 0.42);
-  --danger-hover: #b42318;
-  --success-border: #abefc6;
-  --selection: rgba(17, 94, 89, 0.18);
+
+  /* Focus: the border turns --ring-color and a 3px half-strength halo sits
+     outside it — shadcn's `focus-visible:ring-[3px] ring-ring/50`. */
+  --ring-color: #a1a1aa;
+  --ring-soft: rgba(161, 161, 170, 0.5);
+  --ring: 0 0 0 3px var(--ring-soft);
+
+  --hover-subtle: rgba(244, 244, 245, 0.6);
+  --hover: #f4f4f5;
+  --hover-strong: #e4e4e7;
+  --control-border: #d4d4d8;
+  --border-hover: #d4d4d8;
+  --placeholder: #a1a1aa;
+  --track: #f4f4f5;
+  --field-bg: transparent;
+  --field-bg-solid: #ffffff;
+  --tab-active: #ffffff;
+  --tab-active-border: transparent;
+  --topbar-bg: rgba(255, 255, 255, 0.85);
+  --overlay: rgba(0, 0, 0, 0.5);
+  --selection: rgba(24, 24, 27, 0.12);
+
+  /* Lucide's chevron-down, for native <select>s dressed as shadcn's trigger. */
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
   /* Slight overshoot; used only where something should feel like it "lands". */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -72,7 +118,11 @@
   --sp-6: 30px;
   --sp-7: 42px;
 
-  --r-xl: 18px;
+  /* Layout rhythm. Every page uses the same two gaps: between cards that sit
+     side by side or stacked, and between one section and the next heading. */
+  --gap-card: 16px;
+  --gap-section: 32px;
+  --gap-heading: 12px;
 
   /* Fluid type scale — every size interpolates with the viewport between a
      phone-width floor and an ultrawide ceiling, so nothing is hard-coded. */
@@ -97,47 +147,66 @@
 /* ---------------- Dark theme ---------------- */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0e0e11;
-  --surface: #16161a;
-  --surface-2: #1c1c21;
-  --sidebar-bg: #121215;
-  --border: #26262d;
-  --border-strong: #33333c;
-  --text: #f5f5f8;
-  --text-2: #bcbcc8;
-  --text-3: #8d8d9b;
-  --accent: #2dd4bf;
-  --accent-hover: #5eead4;
-  --accent-soft: #0d2e2a;
-  --accent-border: #1d5750;
-  --danger: #f97066;
-  --danger-soft: #331a19;
-  --danger-border: #5c2723;
-  --danger-hover: #fda29b;
-  --success: #47cd89;
-  --success-soft: #10281d;
-  --success-border: #1f4d38;
-  --amber: #f5b544;
-  --amber-soft: #2b2113;
-  --amber-border: #4a381a;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.34);
-  --shadow-md: 0 4px 14px -3px rgba(0, 0, 0, 0.5), 0 2px 5px -2px rgba(0, 0, 0, 0.34);
-  --shadow-lg: 0 24px 56px -12px rgba(0, 0, 0, 0.66), 0 6px 16px -6px rgba(0, 0, 0, 0.45);
-  --ring: 0 0 0 3px rgba(45, 212, 191, 0.28);
-  --hover-subtle: rgba(255, 255, 255, 0.035);
-  --hover: rgba(255, 255, 255, 0.065);
-  --hover-strong: rgba(255, 255, 255, 0.1);
-  --control-border: #3f3f4a;
-  --border-hover: #4a4a56;
-  --placeholder: #5b5b68;
-  --track: #292930;
-  --topbar-bg: rgba(18, 18, 21, 0.86);
-  --accent-fill: #12706a;
-  --accent-fill-hover: #158079;
-  --accent-ghost: rgba(45, 212, 191, 0.24);
-  --accent-glow: rgba(45, 212, 191, 0.5);
-  --overlay: rgba(0, 0, 0, 0.6);
-  --selection: rgba(45, 212, 191, 0.3);
+  --bg: #09090b;
+  --surface: #111113;
+  --surface-2: #18181b;
+  --muted: #27272a;
+  --sidebar-bg: #0f0f11;
+  --border: #27272a;
+  --border-strong: #303036;
+  --text: #fafafa;
+  --text-2: #d4d4d8;
+  --text-3: #a1a1aa;
+
+  --accent: #fafafa;
+  --accent-hover: #e4e4e7;
+  --accent-soft: #27272a;
+  --accent-border: #3f3f46;
+  --accent-fill: #fafafa;
+  --accent-fill-hover: #e4e4e7;
+  --on-accent: #18181b;
+  --accent-ghost: rgba(250, 250, 250, 0.16);
+  --accent-glow: rgba(250, 250, 250, 0.2);
+  --grad: #fafafa;
+
+  --danger: #f87171;
+  --danger-soft: #2a1414;
+  --danger-border: #4c1d1d;
+  --danger-fill: #b91c1c;
+  --danger-hover: #dc2626;
+  --success: #4ade80;
+  --success-soft: #0f2418;
+  --success-border: #1b4630;
+  --amber: #fbbf24;
+  --amber-soft: #261d0b;
+  --amber-border: #4a3714;
+  --info: #60a5fa;
+  --info-soft: #0f1d33;
+  --info-border: #1e3a5f;
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.55);
+
+  --ring-color: #71717a;
+  --ring-soft: rgba(113, 113, 122, 0.5);
+
+  --hover-subtle: rgba(39, 39, 42, 0.45);
+  --hover: #27272a;
+  --hover-strong: #3f3f46;
+  --control-border: #3f3f46;
+  --border-hover: #3f3f46;
+  --placeholder: #71717a;
+  --track: #27272a;
+  --field-bg: rgba(63, 63, 70, 0.3);
+  --field-bg-solid: rgba(63, 63, 70, 0.3);
+  --tab-active: rgba(63, 63, 70, 0.6);
+  --tab-active-border: #3f3f46;
+  --topbar-bg: rgba(9, 9, 11, 0.85);
+  --overlay: rgba(0, 0, 0, 0.7);
+  --selection: rgba(250, 250, 250, 0.2);
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 /* ---------------- Class colour palette ----------------
@@ -172,5 +241,5 @@
 /* A gradient per class colour. Derived from --cc so adding a colour above is
    enough — nothing here needs a matching edit. */
 [class*="c-"] {
-  --cc-grad: linear-gradient(135deg, var(--cc) 0%, color-mix(in srgb, var(--cc) 62%, var(--accent)) 100%);
+  --cc-grad: linear-gradient(135deg, var(--cc) 0%, color-mix(in srgb, var(--cc) 78%, #000) 100%);
 }

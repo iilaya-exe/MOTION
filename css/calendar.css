@@ -13,22 +13,20 @@
 .cal-header h2 {
   font-size: var(--fs-h3);
   margin: 0;
-  font-weight: 640;
+  font-weight: 600;
   letter-spacing: -0.015em;
 }
 
-.cal-nav { display: flex; gap: 5px; align-items: center; }
+.cal-nav { display: flex; gap: 6px; align-items: center; }
 
 .cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); }
 
 .cal-dow {
   text-align: center;
-  font-size: var(--fs-tiny);
-  font-weight: 650;
+  font-size: var(--fs-caption);
+  font-weight: 400;
   color: var(--text-3);
   padding-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
 }
 
 .cal-week {
@@ -42,14 +40,21 @@
    day-of-week header is also a div and sits first, so :first-of-type never
    matched a week and only the bottom corners were ever rounded. */
 .cal-week.is-first {
-  border-top-left-radius: var(--r-md);
-  border-top-right-radius: var(--r-md);
+  border-top-left-radius: var(--r-xl);
+  border-top-right-radius: var(--r-xl);
 }
 
 .cal-week.is-last {
-  border-bottom-left-radius: var(--r-md);
-  border-bottom-right-radius: var(--r-md);
+  border-bottom-left-radius: var(--r-xl);
+  border-bottom-right-radius: var(--r-xl);
 }
+
+/* The day boxes paint the corner cells, so they need the same rounding or
+   their backgrounds poke out past the rounded border. */
+.cal-week.is-first > .cal-daybox:first-child { border-top-left-radius: var(--r-xl); }
+.cal-week.is-first > .cal-daybox:nth-child(7) { border-top-right-radius: var(--r-xl); }
+.cal-week.is-last > .cal-daybox:first-child { border-bottom-left-radius: var(--r-xl); }
+.cal-week.is-last > .cal-daybox:nth-child(7) { border-bottom-right-radius: var(--r-xl); }
 
 .cal-week:not(.is-first) { margin-top: -1px; }
 
@@ -63,7 +68,7 @@
 
 .cal-daybox:hover { background: var(--hover-subtle); }
 .cal-daybox.blank { cursor: default; background: var(--surface-2); }
-.cal-daybox.today { background: var(--accent-soft); }
+.cal-daybox.today { background: var(--hover-subtle); }
 
 .cal-dayhead {
   grid-row: 1;
@@ -85,23 +90,21 @@
 
 .cal-daynum {
   font-size: var(--fs-caption);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-2);
-  letter-spacing: -0.01em;
-}
-
-.cal-dayhead.today .cal-daynum {
-  background: var(--accent-fill);
-  color: #fff;
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
+  min-width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--fs-mini);
-  font-weight: 650;
-  box-shadow: 0 1px 4px -1px var(--accent-glow);
+}
+
+/* Today as shadcn's Calendar marks the selected day: a primary-filled square. */
+.cal-dayhead.today .cal-daynum {
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  border-radius: var(--r-md);
+  font-weight: 600;
 }
 
 .cal-task-indicator {
@@ -109,9 +112,9 @@
   color: var(--text-3);
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   white-space: nowrap;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .cal-task-dot {
@@ -125,13 +128,12 @@
 
 .cal-holiday-chip {
   font-size: var(--fs-micro);
-  font-weight: 650;
-  padding: 1.5px 5px;
-  border-radius: 4px;
+  font-weight: 500;
+  padding: 1.5px 6px;
+  border-radius: var(--r-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: 0.01em;
 }
 
 .cal-holiday-chip.regular { background: var(--danger-soft); color: var(--danger); }
@@ -139,11 +141,9 @@
 
 .cal-event-bar {
   background: var(--accent-fill);
-  color: #fff;
+  color: var(--on-accent);
   font-size: var(--fs-mini);
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
+  font-weight: 500;
   line-height: 1;
   height: 22px;
   display: flex;
@@ -161,21 +161,21 @@
 .cal-event-bar:hover { background: var(--accent-fill-hover); }
 
 .cal-event-bar.cap-start {
-  border-top-left-radius: 11px;
-  border-bottom-left-radius: 11px;
+  border-top-left-radius: var(--r-sm);
+  border-bottom-left-radius: var(--r-sm);
   margin-left: 4px;
 }
 
 .cal-event-bar.cap-end {
-  border-top-right-radius: 11px;
-  border-bottom-right-radius: 11px;
+  border-top-right-radius: var(--r-sm);
+  border-bottom-right-radius: var(--r-sm);
   margin-right: 4px;
 }
 
 .cal-more-events {
   font-size: var(--fs-tiny);
   color: var(--text-3);
-  font-weight: 550;
+  font-weight: 500;
   padding: 0 8px;
   margin-bottom: 4px;
   white-space: nowrap;

@@ -6,7 +6,7 @@
    which is what makes a deploy actually reach people instead of being masked by
    a stale cache forever. */
 
-const CACHE = "motion-v11";
+const CACHE = "motion-v13";
 
 const ASSETS = [
   "./",
@@ -16,6 +16,7 @@ const ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/maskable-512.png",
+  "./fonts/Geist-Variable.woff2",
 
   "./css/tokens.css",
   "./css/base.css",
@@ -28,6 +29,7 @@ const ASSETS = [
   "./css/checklists.css",
   "./css/schedule.css",
   "./css/notes.css",
+  "./css/command.css",
   "./css/responsive.css",
   "./css/print.css",
 
@@ -53,6 +55,8 @@ const ASSETS = [
   "./js/ui/class-timer.js",
   "./js/ui/confirm.js",
   "./js/ui/backup.js",
+  "./js/ui/command.js",
+  "./js/ui/reminders.js",
   "./js/views/dashboard.js",
   "./js/views/tasks.js",
   "./js/views/calendar.js",
@@ -87,6 +91,25 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+/* A reminder notification was clicked: bring Motion forward on the right view.
+   An open window is focused and told the route (navigating it would reload);
+   with none open, a new one is started straight on that route. */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const hash = event.notification.data?.hash || "";
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      const client = list[0];
+      if (client) {
+        client.postMessage({ type: "open-route", hash });
+        return client.focus();
+      }
+      return self.clients.openWindow(`./${hash}`);
+    })
+  );
 });
 
 self.addEventListener("fetch", (event) => {

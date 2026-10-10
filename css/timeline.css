@@ -11,20 +11,20 @@
   display: flex;
   align-items: baseline;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: var(--gap-heading);
 }
 
+/* Section headings: shadcn's h4 — semibold foreground, not a caps eyebrow. */
 .today-head h3,
 .dash-h {
-  font-size: var(--fs-mini);
+  font-size: var(--fs-body-l);
   margin: 0;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 650;
+  color: var(--text);
+  letter-spacing: -0.015em;
+  font-weight: 600;
 }
 
-.dash-h { margin: 30px 0 10px; }
+.dash-h { margin: var(--gap-section) 0 var(--gap-heading); }
 
 .today-meta {
   font-size: var(--fs-caption);
@@ -33,10 +33,10 @@
 
 .timeline {
   border: 1px solid var(--border);
-  border-radius: var(--r-md);
+  border-radius: var(--r-xl);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
-  padding: 6px 0;
+  padding: 8px 0;
 }
 
 .tl-allday {
@@ -50,15 +50,15 @@
 
 .tl-chip {
   font-size: var(--fs-mini);
-  font-weight: 650;
-  padding: 2px 9px;
-  border-radius: 20px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--r-md);
   border: 1px solid transparent;
 }
 
 .tl-chip.regular { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-border); }
 .tl-chip.special { background: var(--amber-soft); color: var(--amber); border-color: var(--amber-border); }
-.tl-chip.event { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+.tl-chip.event { background: var(--muted); color: var(--text); }
 
 .tl-list {
   list-style: none;
@@ -86,8 +86,8 @@
 
 .tl-time b {
   font-size: var(--fs-body-s);
-  font-weight: 650;
-  color: var(--text-2);
+  font-weight: 600;
+  color: var(--text);
 }
 
 .tl-time span {
@@ -133,7 +133,7 @@
 
 .tl-title {
   font-size: var(--fs-body-l);
-  font-weight: 620;
+  font-weight: 600;
   letter-spacing: -0.01em;
   display: flex;
   align-items: center;
@@ -141,7 +141,7 @@
   flex-wrap: wrap;
 }
 
-.tl-item.is-now .tl-title { color: var(--cc, var(--accent)); }
+.tl-item.is-now .tl-title { color: var(--cc, var(--text)); }
 
 .tl-meta {
   display: flex;
@@ -172,10 +172,8 @@
 }
 
 .tl-now span {
-  font-size: var(--fs-micro);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: var(--fs-mini);
+  font-weight: 600;
   color: var(--danger);
 }
 
@@ -192,9 +190,9 @@
 .tl-task {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 4px 7px;
-  border-radius: var(--r-sm);
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: var(--r-md);
   font-size: var(--fs-body-s);
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -208,35 +206,6 @@
 
 .tl-task.done .tl-task-text { text-decoration: line-through; color: var(--text-3); }
 
-.tl-task input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  cursor: pointer;
-  border: 1.6px solid var(--control-border);
-  border-radius: 5px;
-  background: var(--surface);
-  position: relative;
-  transition: background 0.13s var(--ease), border-color 0.13s var(--ease);
-}
-
-.tl-task input[type="checkbox"]:hover { border-color: var(--accent); }
-.tl-task input[type="checkbox"]:checked { background: var(--accent-fill); border-color: var(--accent-fill); }
-
-.tl-task input[type="checkbox"]:checked::after {
-  content: "";
-  position: absolute;
-  left: 4.6px;
-  top: 1.3px;
-  width: 4.2px;
-  height: 8.4px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
 /* Tasks with no class today, or none at all. */
 .tl-loose {
   padding: 10px 14px 8px;
@@ -245,12 +214,10 @@
 }
 
 .tl-loose-head {
-  font-size: var(--fs-mini);
-  font-weight: 650;
+  font-size: var(--fs-caption);
+  font-weight: 500;
   color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 7px;
+  margin-bottom: 8px;
 }
 
 .tl-loose .tl-tasks { margin-top: 0; }
@@ -262,7 +229,7 @@
   font-size: var(--fs-body-s);
 }
 
-.tl-empty b { color: var(--text-2); font-weight: 650; }
+.tl-empty b { color: var(--text); font-weight: 600; }
 
 /* Overdue work on the timeline gets the same red treatment as the task table,
    so the two views agree at a glance. */

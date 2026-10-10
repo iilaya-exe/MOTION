@@ -45,15 +45,15 @@ function readVars(spec, className = "") {
 /** Light-theme values, used when a variable cannot be resolved. */
 const THEME_FALLBACK = {
   "--surface": "#ffffff",
-  "--surface-2": "#fafafb",
-  "--text": "#101014",
-  "--text-2": "#4a4a55",
-  "--text-3": "#74747f",
-  "--border": "#e7e7ee",
-  "--accent": "#115e59",
+  "--surface-2": "#fafafa",
+  "--text": "#09090b",
+  "--text-2": "#3f3f46",
+  "--text-3": "#71717a",
+  "--border": "#e4e4e7",
+  "--accent": "#18181b",
 };
 
-const CLASS_FALLBACK = { "--cc": "#115e59", "--cc-soft": "#e6f4f1" };
+const CLASS_FALLBACK = { "--cc": "#18181b", "--cc-soft": "#f4f4f5" };
 
 function roundRect(ctx, x, y, w, h, r) {
   if (ctx.roundRect) {
@@ -113,7 +113,7 @@ export function renderScheduleCanvas(classes, { opaque = true } = {}) {
   ctx.textBaseline = "middle";
 
   const font = (size, weight = 400) =>
-    `${weight} ${size}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+    `${weight} ${size}px Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
 
   // Background — always filled, so a PNG dropped on a dark page still reads.
   ctx.fillStyle = theme["--surface"];

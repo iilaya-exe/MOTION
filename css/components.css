@@ -1,6 +1,10 @@
 /* Shared design-system pieces: navigation chrome, controls, badges, cards,
    checklists and modals. These are the parts reused across several views, so
-   they stay as named classes rather than repeated utility strings. */
+   they stay as named classes rather than repeated utility strings.
+
+   Each one mirrors a shadcn/ui component — Sidebar, Button, Input, Tabs, Badge,
+   Card, Dialog, AlertDialog, Sonner — down to its sizes (h-8 menu items, h-9
+   controls), radii and focus ring, so the app reads as one shadcn interface. */
 
 /* ---------------- Sidebar ---------------- */
 .sidebar {
@@ -10,150 +14,307 @@
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 14px 10px;
+  gap: 2px;
+  padding: 12px 10px;
   overflow-y: auto;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 4px 8px 16px;
+  gap: 8px;
+  padding: 4px 4px 14px;
 }
 
+/* shadcn's team-switcher logo: a primary-filled square with the mark inverted. */
 .brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-lg);
   background: var(--grad);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px -1px rgba(17, 94, 89, 0.45);
   flex-shrink: 0;
 }
 
 .brand-mark svg {
-  width: 16px;
-  height: 16px;
-  color: #fff;
+  width: 18px;
+  height: 18px;
+  color: var(--on-accent);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
 }
 
 .brand-name {
-  font-size: var(--fs-body-l);
-  font-weight: 650;
-  letter-spacing: -0.015em;
+  font-size: var(--fs-body-s);
+  font-weight: 600;
   color: var(--text);
 }
 
+.brand-sub {
+  font-size: var(--fs-mini);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+/* SidebarMenuButton: h-8, rounded-md, the icon inherits the text colour and
+   the active item is the muted accent fill rather than a coloured one. */
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
+  height: 32px;
   text-align: left;
-  padding: 7px 9px;
-  border-radius: var(--r-sm);
+  padding: 0 8px;
+  border-radius: var(--r-md);
   font-size: var(--fs-body-s);
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   color: var(--text-2);
   user-select: none;
-  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.nav-item .icon {
-  width: 16.5px;
-  height: 16.5px;
-  color: var(--text-3);
-  transition: color 0.13s var(--ease);
-}
+.nav-item .icon { width: 16px; height: 16px; }
 
 .nav-item:hover { background: var(--hover); color: var(--text); }
-.nav-item:hover .icon { color: var(--text-2); }
-.nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-.nav-item.active .icon { color: var(--accent); }
+.nav-item.active { background: var(--hover); color: var(--text); font-weight: 500; }
 
-.nav-section { margin-top: 22px; }
+.nav-section { margin-top: 18px; }
 
+/* SidebarGroupLabel: small, muted, sentence case. */
 .nav-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 9px 6px;
+  height: 32px;
+  padding: 0 4px 0 8px;
   font-size: var(--fs-mini);
-  font-weight: 650;
+  font-weight: 500;
   color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 .nav-section-header button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-sm);
   color: var(--text-3);
-  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.nav-section-header button:hover { background: var(--hover-strong); color: var(--text); }
-.nav-section-header button .icon { width: 14px; height: 14px; }
+.nav-section-header button:hover { background: var(--hover); color: var(--text); }
+.nav-section-header button .icon { width: 16px; height: 16px; }
 
 .page-item {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
+  height: 32px;
   text-align: left;
-  padding: 6px 9px;
-  border-radius: var(--r-sm);
+  padding: 0 8px;
+  border-radius: var(--r-md);
   font-size: var(--fs-body-s);
   cursor: pointer;
   color: var(--text-2);
   white-space: nowrap;
   overflow: hidden;
-  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.page-item .icon { width: 15px; height: 15px; color: var(--text-3); }
+.page-item .icon { width: 16px; height: 16px; color: var(--text-3); }
 .page-item span { overflow: hidden; text-overflow: ellipsis; }
 .page-item:hover { background: var(--hover); color: var(--text); }
-.page-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-.page-item.active .icon { color: var(--accent); }
+.page-item.active { background: var(--hover); color: var(--text); font-weight: 500; }
+.page-item.active .icon { color: var(--text); }
 
 .empty-hint {
-  padding: 5px 9px;
+  padding: 5px 8px;
   font-size: var(--fs-caption);
   color: var(--text-3);
 }
 
-.sidebar-footer { margin-top: auto; padding-top: 14px; }
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
 
-.theme-toggle {
+.theme-toggle,
+.footer-btn {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   width: 100%;
-  padding: 7px 9px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-body-s);
+  color: var(--text-2);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.theme-toggle .icon,
+.footer-btn .icon { width: 16px; height: 16px; }
+.theme-toggle:hover,
+.footer-btn:hover { background: var(--hover); color: var(--text); }
+
+/* "On" marker for the Reminders button: a dot that also survives the rail. */
+.footer-btn .on-dot {
+  display: none;
+  width: 6px;
+  height: 6px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.footer-btn.is-on .on-dot { display: block; }
+
+/* Sidebar search trigger: shadcn's SidebarInput look, but a button that opens
+   the command palette, with the shortcut shown as a Kbd. */
+.cmdk-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  padding: 0 6px 0 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-xs);
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  text-align: left;
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.cmdk-trigger .icon { width: 15px; height: 15px; }
+.cmdk-trigger .kbd { margin-left: auto; }
+.cmdk-trigger:hover { border-color: var(--border-hover); color: var(--text-2); }
+
+/* Kbd: a small muted key cap. */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
   border-radius: var(--r-sm);
+  background: var(--muted);
+  color: var(--text-3);
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Switch: role="switch" button, pill track with a sliding thumb. */
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  padding: 0;
+  border-radius: 99px;
+  border: 1px solid transparent;
+  background: var(--control-border);
+  box-shadow: var(--shadow-xs);
+  transition: background var(--dur) var(--ease);
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur) var(--ease);
+}
+
+.switch[aria-checked="true"] { background: var(--accent-fill); }
+.switch[aria-checked="true"] .switch-thumb { transform: translateX(16px); }
+:root[data-theme="dark"] .switch[aria-checked="true"] .switch-thumb { background: var(--on-accent); }
+:root[data-theme="dark"] .switch[aria-checked="false"] .switch-thumb { background: var(--text); }
+.switch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Settings rows inside a dialog: label + hint on the left, control on the right. */
+.modal-settings { width: 520px; }
+.modal-settings h3 { margin-bottom: 6px; }
+
+.modal-desc {
+  margin: 0 0 18px;
+  font-size: var(--fs-body-s);
+  color: var(--text-3);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  transition: opacity var(--dur) var(--ease);
+}
+
+.setting-group .setting-row { border: none; border-radius: 0; }
+.setting-group .setting-row + .setting-row { border-top: 1px solid var(--border); }
+.setting-group.is-disabled { opacity: 0.5; }
+
+.setting-text { min-width: 0; }
+
+.setting-label {
+  display: block;
   font-size: var(--fs-body-s);
   font-weight: 500;
-  color: var(--text-2);
-  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+  color: var(--text);
 }
 
-.theme-toggle .icon {
-  width: 16.5px;
-  height: 16.5px;
+.setting-hint {
+  margin-top: 2px;
+  font-size: var(--fs-caption);
   color: var(--text-3);
-  transition: color 0.13s var(--ease);
+  line-height: 1.45;
 }
 
-.theme-toggle:hover { background: var(--hover); color: var(--text); }
-.theme-toggle:hover .icon { color: var(--text-2); }
+.setting-row .field { flex-shrink: 0; width: 148px; }
+
+.setting-note {
+  margin: 14px 0 0;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  line-height: 1.5;
+}
 
 /* ---------------- Mobile chrome (hidden on desktop) ---------------- */
 .topbar {
@@ -180,16 +341,16 @@
   width: 38px;
   height: 38px;
   margin-left: -7px;
-  border-radius: 8px;
+  border-radius: var(--r-md);
   color: var(--text-2);
   flex-shrink: 0;
-  transition: background 0.13s var(--ease);
+  transition: background var(--dur-fast) var(--ease);
 }
 
-.topbar-btn:active { background: var(--hover-strong); }
+.topbar-btn:active { background: var(--hover); }
 .topbar-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.topbar-brand .brand-mark { width: 23px; height: 23px; border-radius: 6px; }
-.topbar-brand .brand-mark svg { width: 14px; height: 14px; }
+.topbar-brand .brand-mark { width: 26px; height: 26px; border-radius: var(--r-md); }
+.topbar-brand .brand-mark svg { width: 15px; height: 15px; }
 
 .sidebar-backdrop {
   display: none;
@@ -197,8 +358,6 @@
   inset: 0;
   z-index: 115;
   background: var(--overlay);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
   opacity: 0;
   transition: opacity 0.22s var(--ease);
 }
@@ -209,8 +368,8 @@
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  padding: 16px 18px;
+  border-radius: var(--r-xl);
+  padding: 20px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -221,71 +380,137 @@
   flex-wrap: wrap;
 }
 
+/* Input: h-9, transparent on light, a faint fill on dark, and on focus the
+   border turns --ring-color with the 3px halo around it. */
 .field {
-  padding: 8px 11px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
   outline: none;
-  background: var(--surface);
+  background: var(--field-bg);
   color: var(--text);
-  box-shadow: var(--shadow-sm);
-  transition: border-color 0.13s var(--ease), box-shadow 0.13s var(--ease);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 
 .field::placeholder { color: var(--text-3); }
-.field:hover { border-color: var(--border-hover); }
-.field:focus { border-color: var(--accent); box-shadow: var(--ring); }
-select.field { cursor: pointer; }
+.field:focus { border-color: var(--ring-color); box-shadow: var(--ring); outline: none; }
 
+/* Native selects dressed as shadcn's SelectTrigger: same box, Lucide chevron. */
+select.field,
+.select-wrap select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: var(--chevron);
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+}
+
+select.field { padding-right: 34px; }
+
+/* Button. The base class is the "default" variant; .secondary is shadcn's
+   "outline" and .danger its "destructive". */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: var(--r-sm);
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--r-md);
   background: var(--accent-fill);
-  color: #fff;
+  color: var(--on-accent);
   font-size: var(--fs-body-s);
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  box-shadow: 0 1px 2px rgba(16, 18, 27, 0.08);
-  transition: background 0.13s var(--ease), box-shadow 0.13s var(--ease), transform 0.1s var(--ease);
+  font-weight: 500;
+  box-shadow: var(--shadow-xs);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
   white-space: nowrap;
 }
 
-.btn .icon { width: 15px; height: 15px; stroke-width: 2.1; }
+.btn:has(> svg) { padding: 0 12px; }
+.btn .icon { width: 16px; height: 16px; }
 .btn:hover { background: var(--accent-fill-hover); }
-.btn:active { transform: translateY(0.5px); }
-.btn:focus-visible { outline: none; box-shadow: var(--ring); }
 
 .btn.secondary {
-  background: var(--surface);
-  color: var(--text-2);
-  border: 1px solid var(--border-strong);
-  box-shadow: var(--shadow-sm);
+  background: var(--field-bg-solid);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
-.btn.secondary:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-hover); }
-.btn.danger { background: var(--danger); }
+.btn.secondary:hover { background: var(--hover); }
+.btn.danger { background: var(--danger-fill); color: #fff; }
 .btn.danger:hover { background: var(--danger-hover); }
-.btn.icon-only { padding: 8px; }
+.btn.icon-only { width: 36px; padding: 0; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Ghost icon button. */
 .icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: var(--r-sm);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-md);
   color: var(--text-3);
   flex-shrink: 0;
-  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.icon-btn .icon { width: 15px; height: 15px; }
-.icon-btn:hover { background: var(--hover-strong); color: var(--text); }
+.icon-btn .icon { width: 16px; height: 16px; }
+.icon-btn:hover { background: var(--hover); color: var(--text); }
 .icon-btn.danger-hover:hover { background: var(--danger-soft); color: var(--danger); }
+
+/* Checkbox: size-4, rounded-[4px], primary when checked. Every checkbox in
+   the app (task rows, board cards, the timeline, checklists) is this one. */
+.task-row input[type="checkbox"],
+.board-card input[type="checkbox"],
+.tl-task input[type="checkbox"],
+.cl-items input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 1px solid var(--control-border);
+  border-radius: 4px;
+  background: var(--field-bg);
+  box-shadow: var(--shadow-xs);
+  position: relative;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.task-row input[type="checkbox"]:hover,
+.board-card input[type="checkbox"]:hover,
+.tl-task input[type="checkbox"]:hover,
+.cl-items input[type="checkbox"]:hover { border-color: var(--ring-color); }
+
+.task-row input[type="checkbox"]:checked,
+.board-card input[type="checkbox"]:checked,
+.tl-task input[type="checkbox"]:checked,
+.cl-items input[type="checkbox"]:checked { background: var(--accent-fill); border-color: var(--accent-fill); }
+
+/* The tick is sized in em-free percentages so it stays centred at any box size
+   (touch devices enlarge the row checkbox). */
+.task-row input[type="checkbox"]:checked::after,
+.board-card input[type="checkbox"]:checked::after,
+.tl-task input[type="checkbox"]:checked::after,
+.cl-items input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 34%;
+  top: 14%;
+  width: 28%;
+  height: 52%;
+  border: solid var(--on-accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
 
 /* ---------------- Dashboard ---------------- */
 .stat-grid {
@@ -298,13 +523,10 @@ select.field { cursor: pointer; }
 .stat-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-md);
+  border-radius: var(--r-xl);
   padding: 15px 16px;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.16s var(--ease), border-color 0.16s var(--ease);
 }
-
-.stat-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); }
 .stat-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 
 .stat-icon {
@@ -325,7 +547,7 @@ select.field { cursor: pointer; }
 
 .stat-card .num {
   font-size: var(--fs-stat);
-  font-weight: 680;
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
 }
@@ -336,12 +558,11 @@ select.field { cursor: pointer; }
 .dash-col { flex: 1; min-width: 290px; }
 
 .dash-col h3 {
-  font-size: var(--fs-mini);
+  font-size: var(--fs-body);
   margin: 0 0 10px;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 650;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  font-weight: 600;
 }
 
 .simple-list {
@@ -354,11 +575,11 @@ select.field { cursor: pointer; }
 }
 
 .simple-list li {
-  padding: 10px 13px;
+  padding: 10px 14px;
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-lg);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   font-size: var(--fs-body-s);
   display: flex;
   justify-content: space-between;
@@ -375,44 +596,50 @@ select.field { cursor: pointer; }
 .field.grow { flex: 1 1 auto; min-width: 0; }
 .task-form .field.grow { min-width: 200px; }
 
+/* TabsList / TabsTrigger: a muted track with the active tab raised onto the
+   background colour. */
 .filter-tabs {
   display: inline-flex;
-  gap: 2px;
+  align-items: center;
+  height: 36px;
   margin-bottom: 16px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--muted);
   padding: 3px;
-  border-radius: 8px;
+  border-radius: var(--r-lg);
 }
 
 .filter-tab {
-  padding: 5px 13px;
-  border-radius: 6px;
+  height: 100%;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
   font-size: var(--fs-body-s);
-  font-weight: 550;
+  font-weight: 500;
   color: var(--text-3);
-  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .filter-tab:hover { color: var(--text); }
-.filter-tab.active { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--shadow-sm); }
+.filter-tab.active { background: var(--tab-active); border-color: var(--tab-active-border); color: var(--text); box-shadow: var(--shadow-sm); }
 
+/* Badge: rounded-md, text-xs, medium weight. Colour variants are soft tints
+   with a matching border, the way shadcn badges are usually themed. */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-size: var(--fs-mini);
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 20px;
+  font-weight: 500;
+  line-height: 1.35;
+  padding: 2px 8px;
+  border-radius: var(--r-md);
   white-space: nowrap;
   border: 1px solid transparent;
   text-transform: capitalize;
-  letter-spacing: 0.01em;
 }
 
-.badge .icon { width: 11px; height: 11px; stroke-width: 2.3; }
-.badge.due { background: var(--surface-2); color: var(--text-3); border-color: var(--border); }
+.badge .icon { width: 12px; height: 12px; }
+.badge.due { background: transparent; color: var(--text-2); border-color: var(--border); }
 .badge.overdue { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-border); }
 .badge.priority-low { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
 .badge.priority-medium { background: var(--amber-soft); color: var(--amber); border-color: var(--amber-border); }
@@ -423,8 +650,6 @@ select.field { cursor: pointer; }
   position: fixed;
   inset: 0;
   background: var(--overlay);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -438,30 +663,32 @@ select.field { cursor: pointer; }
   to { opacity: 1; }
 }
 
+/* DialogContent: p-6, rounded-lg, shadow-lg, zooming in from 95%. */
 .modal {
-  background: var(--surface);
+  background: var(--bg);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
-  width: 440px;
+  width: 480px;
   max-width: 100%;
-  max-height: 82vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  padding: 22px;
-  animation: modalIn 0.18s var(--ease);
+  padding: 24px;
+  animation: modalIn 0.2s var(--ease);
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: none; }
 }
 
 .modal h3 {
-  margin: 0 0 14px;
+  margin: 0 0 18px;
   font-size: var(--fs-h3);
-  font-weight: 640;
-  letter-spacing: -0.015em;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .modal-body { overflow-y: auto; flex: 1; margin: 0 -4px; padding: 0 4px; }
@@ -474,13 +701,15 @@ select.field { cursor: pointer; }
   margin-bottom: 14px;
 }
 
-.modal-label {
-  font-size: var(--fs-mini);
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 650;
-  margin: 0 0 7px;
+/* Label: text-sm, medium, foreground — not a shouty caps eyebrow. Scoped
+   under .modal because some labels are <h3>s, which `.modal h3` would size. */
+.modal .modal-label {
+  font-size: var(--fs-body-s);
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  margin: 0 0 8px;
 }
 
 .modal-events {
@@ -497,17 +726,18 @@ select.field { cursor: pointer; }
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  padding: 9px 11px;
+  padding: 9px 12px;
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   font-size: var(--fs-body-s);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
 }
 
 .modal-events li.empty-row {
   border: none;
   box-shadow: none;
+  background: none;
   color: var(--text-3);
   padding: 2px 0;
   font-size: var(--fs-body-s);
@@ -518,14 +748,12 @@ select.field { cursor: pointer; }
 
 .modal-holiday-type {
   color: var(--text-3);
-  font-size: var(--fs-tiny);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: var(--fs-mini);
+  font-weight: 500;
 }
 
-.modal-event-text { cursor: pointer; flex: 1; min-width: 0; text-align: left; }
-.modal-event-text:hover { color: var(--accent); }
+.modal-event-text { cursor: pointer; flex: 1; min-width: 0; text-align: left; text-underline-offset: 3px; }
+.modal-event-text:hover { text-decoration: underline; }
 .modal-event-count { color: var(--text-3); font-size: var(--fs-mini); font-weight: 500; }
 
 .modal-tasks {
@@ -559,7 +787,11 @@ select.field { cursor: pointer; }
 }
 
 .modal-add-row input { flex: 1; min-width: 132px; }
-.modal-footer { display: flex; justify-content: flex-end; margin-top: 18px; gap: 8px; }
+.modal-footer { display: flex; justify-content: flex-end; margin-top: 24px; gap: 8px; }
+
+/* Footers that pair a destructive action with Cancel/Save keep the pair on the
+   right even while the destructive button is hidden (as it is for new items). */
+.modal-footer > .row { margin-left: auto; }
 
 .date-chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
 
@@ -567,13 +799,13 @@ select.field { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid var(--accent-border);
-  padding: 3px 3px 3px 10px;
-  border-radius: 20px;
+  background: var(--muted);
+  color: var(--text);
+  border: 1px solid transparent;
+  padding: 2px 3px 2px 9px;
+  border-radius: var(--r-md);
   font-size: var(--fs-caption);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .date-chip button {
@@ -582,19 +814,20 @@ select.field { cursor: pointer; }
   justify-content: center;
   width: 18px;
   height: 18px;
-  color: var(--accent);
-  border-radius: 50%;
-  transition: background 0.13s var(--ease);
+  color: var(--text-3);
+  border-radius: var(--r-sm);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.date-chip button .icon { width: 11px; height: 11px; stroke-width: 2.4; }
-.date-chip button:hover { background: var(--accent-ghost); }
+.date-chip button .icon { width: 12px; height: 12px; }
+.date-chip button:hover { background: var(--hover-strong); color: var(--text); }
 
-.hint-text { font-size: var(--fs-caption); color: var(--text-3); margin: 5px 0 2px; }
+.hint-text { font-size: var(--fs-caption); color: var(--text-3); margin: 6px 0 2px; }
 
 /* ---------------- Undo toast ----------------
    Every delete offers a way back, which is why there are no confirm() dialogs
-   on single-item deletes. Sits above the modals so it stays reachable. */
+   on single-item deletes. Sits above the modals so it stays reachable. Styled
+   after Sonner, the toast shadcn ships: a popover card with an inline action. */
 .undo-toast {
   position: fixed;
   left: 50%;
@@ -604,13 +837,15 @@ select.field { cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 10px;
+  width: max-content;
+  min-width: min(356px, calc(100vw - 32px));
   max-width: min(520px, calc(100vw - 32px));
-  padding: 10px 10px 10px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
+  padding: 12px 10px 12px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
   box-shadow: var(--shadow-lg);
-  animation: toastIn 0.18s var(--ease);
+  animation: toastIn 0.2s var(--ease);
 }
 
 @keyframes toastIn {
@@ -619,8 +854,10 @@ select.field { cursor: pointer; }
 }
 
 .undo-text {
+  flex: 1;
   font-size: var(--fs-body-s);
-  color: var(--text-2);
+  font-weight: 500;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -628,13 +865,14 @@ select.field { cursor: pointer; }
 
 .undo-btn {
   flex-shrink: 0;
-  padding: 5px 12px;
-  border-radius: 999px;
-  font-size: var(--fs-body-s);
-  font-weight: 650;
-  color: #fff;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--on-accent);
   background: var(--accent-fill);
-  transition: background 0.13s var(--ease);
+  transition: background var(--dur-fast) var(--ease);
 }
 
 .undo-btn:hover { background: var(--accent-fill-hover); }
@@ -643,31 +881,33 @@ select.field { cursor: pointer; }
   flex-shrink: 0;
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: var(--r-sm);
   font-size: var(--fs-body-l);
   line-height: 1;
   color: var(--text-3);
   transition: background 0.13s var(--ease), color 0.13s var(--ease);
 }
 
-.undo-close:hover { background: var(--hover-strong); color: var(--text); }
+.undo-close:hover { background: var(--hover); color: var(--text); }
 
 /* ---------------- Sidebar note search ---------------- */
+/* SidebarInput: h-8 on the page background, no shadow. */
 .nav-search {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 0 2px 6px;
+  gap: 8px;
+  margin: 0 0 6px;
   padding: 0 8px;
-  height: 30px;
-  background: var(--surface);
+  height: 32px;
+  background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  transition: border-color 0.13s var(--ease), box-shadow 0.13s var(--ease);
+  border-radius: var(--r-md);
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 
-.nav-search:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
-.nav-search .icon { width: 13px; height: 13px; color: var(--text-3); }
+.nav-search:focus-within { border-color: var(--ring-color); box-shadow: var(--ring); }
+.nav-search input:focus-visible { outline: none; }
+.nav-search .icon { width: 14px; height: 14px; color: var(--text-3); }
 
 .nav-search input {
   flex: 1;
@@ -693,7 +933,7 @@ select.field { cursor: pointer; }
   padding: 7px 16px;
   text-align: center;
   font-size: var(--fs-caption);
-  font-weight: 550;
+  font-weight: 500;
   color: var(--amber);
   background: var(--amber-soft);
   border-bottom: 1px solid var(--amber-border);
@@ -702,46 +942,40 @@ select.field { cursor: pointer; }
 body.is-offline .offline-bar { display: block; }
 body.is-offline .app { padding-top: 30px; }
 
-/* ---------------- Confirmation dialog ---------------- */
+/* ---------------- Confirmation dialog ----------------
+   AlertDialog: left-aligned title and muted description, actions bottom-right. */
 .modal.modal-confirm {
-  width: 400px;
-  text-align: center;
-  padding: var(--sp-5) var(--sp-5) var(--sp-4);
+  width: 440px;
+  padding: 24px;
 }
 
 .modal.modal-confirm h3 {
-  margin: 0 0 var(--sp-2);
+  margin: 0 0 8px;
   font-size: var(--fs-h3);
 }
 
 .confirm-icon {
-  width: 46px;
-  height: 46px;
-  margin: 0 auto var(--sp-3);
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin: 0 0 16px;
+  border-radius: var(--r-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--danger);
   background: var(--danger-soft);
-  border: 1px solid var(--danger-border);
 }
 
-.confirm-icon .icon { width: 22px; height: 22px; }
+.confirm-icon .icon { width: 20px; height: 20px; }
 
 .confirm-message {
   margin: 0;
   font-size: var(--fs-body-s);
-  color: var(--text-2);
+  color: var(--text-3);
   line-height: 1.55;
 }
 
-.modal.modal-confirm .modal-footer {
-  justify-content: center;
-  margin-top: var(--sp-5);
-}
-
-.modal.modal-confirm .modal-footer .btn { min-width: 108px; }
+.modal.modal-confirm .modal-footer { margin-top: 24px; }
 
 /* ---------------- Backup row ----------------
    Sits with the theme toggle rather than behind a settings screen: the whole
@@ -758,18 +992,18 @@ body.is-offline .app { padding-top: 30px; }
   justify-content: center;
   gap: 6px;
   flex: 1;
-  padding: 7px 8px;
-  border-radius: var(--r-sm);
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--r-md);
   font-size: var(--fs-caption);
-  font-weight: 550;
+  font-weight: 500;
   color: var(--text-2);
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.backup-btn .icon { width: 14px; height: 14px; color: var(--text-3); }
+.backup-btn .icon { width: 15px; height: 15px; }
 .backup-btn:hover { background: var(--hover); color: var(--text); }
-.backup-btn:hover .icon { color: var(--text-2); }
 
 /* ---------------- Collapsible sidebar ----------------
    Collapses to an icon rail rather than disappearing, so navigation stays one
@@ -780,17 +1014,17 @@ body.is-offline .app { padding-top: 30px; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   margin-left: auto;
   flex-shrink: 0;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   color: var(--text-3);
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .sidebar-toggle .icon { width: 16px; height: 16px; }
-.sidebar-toggle:hover { background: var(--hover-strong); color: var(--text); }
+.sidebar-toggle:hover { background: var(--hover); color: var(--text); }
 
 /* The drawer has its own toggle in the topbar, so hide this one there. */
 @media (max-width: 768px) {
@@ -803,61 +1037,120 @@ body.is-offline .app { padding-top: 30px; }
       padding var(--dur) var(--ease);
   }
 
-  /* 86px is not arbitrary: the brand mark (26) + gap (8) + toggle (26) is 60,
-     plus 10px padding either side. Any narrower and the pair cannot sit on one
-     row without one of them being clipped by overflow-x: hidden. */
+  /* Modelled on shadcn's collapsible="icon" sidebar: a narrow rail where every
+     control is the same 40px square, centred on one vertical axis, so the rail
+     reads as a single column of buttons rather than squeezed-down rows.
+     64px = 40px buttons + 12px either side. */
   :root[data-sidebar="collapsed"] .sidebar {
-    width: 86px;
-    min-width: 86px;
-    padding-left: 10px;
-    padding-right: 10px;
+    width: 64px;
+    min-width: 64px;
+    padding-left: 12px;
+    padding-right: 12px;
+    gap: 4px;
     overflow-x: hidden;
   }
 
-  /* Every label goes; the icons carry the meaning, with title= as the fallback. */
+  /* Every label goes; the icons carry the meaning, with title= as the fallback.
+     The note search and the "No pages" hint have no icon-only form, so they go
+     too. */
   :root[data-sidebar="collapsed"] .nav-label,
-  :root[data-sidebar="collapsed"] .brand-name,
+  :root[data-sidebar="collapsed"] .brand-text,
   :root[data-sidebar="collapsed"] .nav-section-header span,
   :root[data-sidebar="collapsed"] .nav-search,
   :root[data-sidebar="collapsed"] .theme-toggle span,
-  :root[data-sidebar="collapsed"] .page-item span {
+  :root[data-sidebar="collapsed"] .footer-btn span,
+  :root[data-sidebar="collapsed"] .cmdk-trigger .kbd,
+  :root[data-sidebar="collapsed"] .page-item span,
+  :root[data-sidebar="collapsed"] .empty-hint {
     display: none;
   }
 
-  /* Centre what is left, and keep the row heights identical to the expanded
-     state so nothing jumps vertically while the width animates. */
+  /* Logo above the toggle rather than beside it: side by side they needed a
+     wider rail and still sat cramped against each other. */
+  :root[data-sidebar="collapsed"] .brand {
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0 12px;
+  }
+
+  :root[data-sidebar="collapsed"] .sidebar-toggle,
   :root[data-sidebar="collapsed"] .nav-item,
   :root[data-sidebar="collapsed"] .page-item,
+  :root[data-sidebar="collapsed"] .nav-section-header button,
+  :root[data-sidebar="collapsed"] .backup-btn,
   :root[data-sidebar="collapsed"] .theme-toggle,
-  :root[data-sidebar="collapsed"] .backup-btn {
-    justify-content: center;
-    padding-left: 0;
-    padding-right: 0;
+  :root[data-sidebar="collapsed"] .footer-btn,
+  :root[data-sidebar="collapsed"] .cmdk-trigger {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
     gap: 0;
-  }
-
-  /* Side by side, and never overlaid: the rail is sized so both fit on one row.
-     Floating the toggle over the corner put it on top of the logo, which read
-     as a rendering bug and made both harder to hit. */
-  :root[data-sidebar="collapsed"] .brand {
     justify-content: center;
-    gap: 8px;
-    padding: 4px 0 16px;
+    border-radius: var(--r-md);
   }
 
-  /* margin-left: auto would shove the toggle to the edge; here the pair is
-     centred in the rail as a unit. */
-  :root[data-sidebar="collapsed"] .sidebar-toggle {
-    margin-left: 0;
+  :root[data-sidebar="collapsed"] .sidebar-toggle .icon,
+  :root[data-sidebar="collapsed"] .nav-item .icon,
+  :root[data-sidebar="collapsed"] .page-item .icon,
+  :root[data-sidebar="collapsed"] .nav-section-header .icon,
+  :root[data-sidebar="collapsed"] .backup-btn .icon,
+  :root[data-sidebar="collapsed"] .theme-toggle .icon,
+  :root[data-sidebar="collapsed"] .footer-btn .icon,
+  :root[data-sidebar="collapsed"] .cmdk-trigger .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* In the rail the search trigger is just another ghost button. */
+  :root[data-sidebar="collapsed"] .cmdk-trigger {
+    margin-bottom: 4px;
+    border-color: transparent;
+    background: none;
+    box-shadow: none;
+    color: var(--text-2);
+  }
+
+  :root[data-sidebar="collapsed"] .cmdk-trigger:hover { background: var(--hover); color: var(--text); }
+
+  :root[data-sidebar="collapsed"] .footer-btn .on-dot {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+  }
+
+  /* The Notes label becomes a divider; its "+" stays as a rail button. */
+  :root[data-sidebar="collapsed"] .nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
   }
 
   :root[data-sidebar="collapsed"] .nav-section-header {
-    justify-content: center;
-    padding: 2px 0 6px;
+    height: auto;
+    padding: 0;
   }
 
-  :root[data-sidebar="collapsed"] .backup-row { flex-direction: column; gap: 2px; }
+  :root[data-sidebar="collapsed"] #pageList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
 
-  /* Wrapping to two rows inside the rail would look broken. */
-  :root[data-sidebar="collapsed"] .empty-hint { display: none; }
+  :root[data-sidebar="collapsed"] .sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 12px;
+  }
+
+  :root[data-sidebar="collapsed"] .backup-row {
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+  }
 }

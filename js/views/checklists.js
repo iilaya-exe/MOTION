@@ -168,6 +168,21 @@ function commitItem(input) {
   render();
 }
 
+/** Adds an empty checklist and clears the search so it is visible. Shared with
+    the command palette. @returns the checklist, or null for a blank name */
+export function createChecklist(name) {
+  const trimmed = (name || "").trim();
+  if (!trimmed) return null;
+
+  const cl = { id: uid(), name: trimmed, items: [], collapsed: false };
+  store.state.checklists.push(cl);
+  view.search = "";
+  $("checklistSearch").value = "";
+  store.save();
+  render();
+  return cl;
+}
+
 function addItem(clId) {
   const cl = getChecklist(clId);
   const input = $("checklistGrid").querySelector(`[data-cl-input="${clId}"]`);
@@ -185,14 +200,7 @@ export function mount() {
   const nameInput = $("newChecklistInput");
 
   const create = () => {
-    const name = nameInput.value.trim();
-    if (!name) return;
-    store.state.checklists.push({ id: uid(), name, items: [], collapsed: false });
-    nameInput.value = "";
-    view.search = "";
-    $("checklistSearch").value = "";
-    store.save();
-    render();
+    if (createChecklist(nameInput.value)) nameInput.value = "";
   };
 
   $("addChecklistBtn").addEventListener("click", create);

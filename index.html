@@ -7,12 +7,14 @@
 <meta name="description" content="Motion — a local-first workspace for tasks, calendar, class schedule, checklists and notes.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#115e59">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Motion">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
 
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
@@ -25,6 +27,7 @@
 <link rel="stylesheet" href="css/checklists.css">
 <link rel="stylesheet" href="css/schedule.css">
 <link rel="stylesheet" href="css/notes.css">
+<link rel="stylesheet" href="css/command.css">
 <link rel="stylesheet" href="css/responsive.css">
 <link rel="stylesheet" href="css/print.css">
 
@@ -90,6 +93,9 @@ if (location.protocol === "file:") {
     </div>
     <span class="brand-name">Motion</span>
   </div>
+  <button class="topbar-btn topbar-search" data-open="cmdk" aria-label="Search and commands">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+  </button>
 </header>
 
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
@@ -102,18 +108,29 @@ if (location.protocol === "file:") {
 
 <div class="undo-toast hidden" id="undoToast" role="status" aria-live="polite"></div>
 
+<div class="reminder-stack" id="reminderStack" aria-live="polite"></div>
+
 <div class="app">
   <nav class="sidebar" id="sidebar">
     <div class="brand">
       <div class="brand-mark">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17V7l4.5 4.5L12 7.5l3.5 4L20 7v10"/></svg>
       </div>
-      <span class="brand-name">Motion</span>
+      <span class="brand-text">
+        <span class="brand-name">Motion</span>
+        <span class="brand-sub">Local workspace</span>
+      </span>
       <button class="sidebar-toggle" id="sidebarToggle" aria-expanded="true"
               title="Collapse sidebar (⌘B)" aria-label="Collapse sidebar">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9.5 4v16"/></svg>
       </button>
     </div>
+
+    <button class="cmdk-trigger" data-open="cmdk" title="Search and commands" aria-label="Search and commands">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+      <span class="nav-label">Search…</span>
+      <kbd class="kbd" data-shortcut="cmdk">⌘K</kbd>
+    </button>
 
     <div class="nav-item" data-view="dashboard" title="Home">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.8 12 3l9 6.8V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.8Z"/></svg>
@@ -162,6 +179,11 @@ if (location.protocol === "file:") {
         </label>
         <input type="file" id="importDataInput" accept="application/json,.json" hidden>
       </div>
+      <button class="footer-btn" id="remindersBtn" title="Reminders">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.5a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 14.5 6 8.5Z"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/></svg>
+        <span>Reminders</span>
+        <i class="on-dot" aria-hidden="true"></i>
+      </button>
       <button class="theme-toggle" id="themeToggle"></button>
     </div>
   </nav>
@@ -180,12 +202,12 @@ if (location.protocol === "file:") {
       <div class="timer-panel hidden" id="homeTimer"></div>
 
       <div class="widgets">
-        <section class="widget w-wide" id="wNext">
+        <section class="widget w-next" id="wNext">
           <div class="widget-head"><h3>Up next</h3><span class="widget-meta" id="nextMeta"></span></div>
           <div id="nextClass"></div>
         </section>
 
-        <section class="widget" id="wProgress">
+        <section class="widget w-progress" id="wProgress">
           <div class="widget-head"><h3>Today&rsquo;s progress</h3></div>
           <div class="progress-ring-wrap">
             <div class="progress-ring" id="dayRing" style="--pct:0"><span id="dayRingPct">0%</span></div>
@@ -193,7 +215,7 @@ if (location.protocol === "file:") {
           </div>
         </section>
 
-        <section class="widget w-wide">
+        <section class="widget w-add">
           <div class="widget-head"><h3>Quick add</h3></div>
           <div class="row task-form">
             <input class="field grow" id="quickTaskInput" type="text" placeholder="Add a task for today and press Enter...">
@@ -202,7 +224,7 @@ if (location.protocol === "file:") {
           <div class="quick-actions" id="quickActions"></div>
         </section>
 
-        <section class="widget">
+        <section class="widget w-glance">
           <div class="widget-head"><h3>At a glance</h3></div>
           <div class="mini-stats">
             <div class="mini-stat"><span class="ms-num" id="statClasses">0</span><span class="ms-label">Classes today</span></div>
@@ -331,7 +353,7 @@ if (location.protocol === "file:") {
       <h3 class="sched-heading" id="dayHeading">Classes Today</h3>
       <ul class="class-list" id="dayClassList"></ul>
 
-      <h3 class="sched-heading" style="margin-top:30px;">All Classes</h3>
+      <h3 class="sched-heading">All Classes</h3>
       <div class="table-scroll"><table class="sched-table" id="allClassesTable"></table></div>
     </section>
 
@@ -392,6 +414,75 @@ if (location.protocol === "file:") {
     </section>
 
   </main>
+</div>
+
+<div class="modal-overlay cmdk-overlay hidden" id="cmdkOverlay">
+  <div class="cmdk" role="dialog" aria-modal="true" aria-label="Command menu">
+    <div class="cmdk-input-row">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>
+      <input id="cmdkInput" type="text" placeholder="Type a command or search…" autocomplete="off" spellcheck="false"
+             role="combobox" aria-expanded="false" aria-controls="cmdkList" aria-autocomplete="list">
+      <kbd class="kbd">Esc</kbd>
+    </div>
+    <div class="cmdk-list" id="cmdkList" role="listbox" aria-label="Results"></div>
+    <div class="cmdk-foot">
+      <span><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> to navigate</span>
+      <span><kbd class="kbd">↵</kbd> to select</span>
+      <span><kbd class="kbd" data-shortcut="cmdk">⌘K</kbd> to toggle</span>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="reminderOverlay">
+  <div class="modal modal-settings" role="dialog" aria-modal="true" aria-labelledby="reminderTitle">
+    <h3 id="reminderTitle">Reminders</h3>
+    <p class="modal-desc">A heads-up before each class, and a daily summary of what&rsquo;s due.</p>
+    <div class="modal-body">
+      <div class="setting-row">
+        <div class="setting-text">
+          <label class="setting-label" for="remEnabled">Enable reminders</label>
+          <div class="setting-hint" id="remPermission"></div>
+        </div>
+        <button class="switch" id="remEnabled" role="switch" aria-checked="false"><span class="switch-thumb"></span></button>
+      </div>
+
+      <div class="setting-group" id="remOptions">
+        <div class="setting-row">
+          <div class="setting-text">
+            <label class="setting-label" for="remClassLead">Before each class</label>
+            <div class="setting-hint">For every class on today&rsquo;s schedule.</div>
+          </div>
+          <select class="field" id="remClassLead">
+            <option value="0">Off</option>
+            <option value="5">5 minutes</option>
+            <option value="10">10 minutes</option>
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div class="setting-text">
+            <label class="setting-label" for="remDigest">Daily summary</label>
+            <div class="setting-hint">Tasks due, overdue work, classes and events.</div>
+          </div>
+          <button class="switch" id="remDigest" role="switch" aria-checked="true"><span class="switch-thumb"></span></button>
+        </div>
+        <div class="setting-row" id="remDigestTimeRow">
+          <div class="setting-text">
+            <label class="setting-label" for="remDigestTime">Summary time</label>
+            <div class="setting-hint">Sent once, the first time Motion is open after this.</div>
+          </div>
+          <input class="field" type="time" id="remDigestTime" value="08:00">
+        </div>
+      </div>
+
+      <p class="setting-note">Motion keeps everything on this device, with no server to send reminders from, so they arrive while Motion is open &mdash; in a tab or installed as an app. Install it and leave it running in the background to get them all day.</p>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn secondary" id="remTestBtn">Send a test</button>
+      <button class="btn" id="remDoneBtn">Done</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay hidden" id="confirmOverlay">

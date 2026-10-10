@@ -335,9 +335,11 @@ function taskRow(task) {
 function taskCard(task) {
   return (
     `<li class="board-card ${rowState(task)} p-${esc(task.priority)}">` +
-    `<div class="board-card-top">${checkbox(task)}${textCell(task)}</div>` +
+    // Delete sits in the top row: at the end of the chip row it wrapped onto a
+    // line of its own and left every card with a blank strip along the bottom.
+    `<div class="board-card-top">${checkbox(task)}${textCell(task)}${deleteButton(task)}</div>` +
     `<div class="board-card-foot">${subjectCell(task)}${dueCell(task)}${priorityCell(task)}${repeatCell(task)}` +
-    `${statusCell(task)}${deleteButton(task)}</div>` +
+    `${statusCell(task)}</div>` +
     "</li>"
   );
 }

@@ -10,6 +10,8 @@ import * as classTimer from "./ui/class-timer.js";
 import * as confirmDialog from "./ui/confirm.js";
 import * as backup from "./ui/backup.js";
 import * as theme from "./ui/theme.js";
+import * as command from "./ui/command.js";
+import * as reminders from "./ui/reminders.js";
 
 import * as dashboard from "./views/dashboard.js";
 import * as tasks from "./views/tasks.js";
@@ -27,8 +29,11 @@ import * as fullSchedule from "./modals/full-schedule.js";
 function handleEscape(e) {
   if (e.key !== "Escape") return;
 
-  // The confirmation sits above every other layer, so it unwinds first.
-  if (confirmDialog.isConfirmOpen()) confirmDialog.cancel();
+  // The palette opens over anything, and the confirmation sits above every
+  // other dialog, so those two unwind first.
+  if (command.isCommandOpen()) command.closeCommand();
+  else if (confirmDialog.isConfirmOpen()) confirmDialog.cancel();
+  else if (reminders.isReminderSettingsOpen()) reminders.closeReminderSettings();
   else if (classEditor.isClassEditorOpen()) classEditor.closeClassEditor();
   else if (fullSchedule.isFullScheduleOpen()) fullSchedule.closeFullSchedule();
   else if (eventEditor.isEventEditorOpen()) eventEditor.closeEventEditor();
@@ -51,7 +56,7 @@ async function boot() {
   nav.setAfterSwitch(notes.renderPageList);
 
   [
-    nav, theme, modal, undo, pwa, classTimer, confirmDialog, backup,
+    nav, theme, modal, undo, pwa, classTimer, confirmDialog, backup, reminders, command,
     dashboard, tasks, calendar, schedule, checklists, notes,
     dayModal, eventEditor, classEditor, fullSchedule,
   ].forEach((module) => module.mount());

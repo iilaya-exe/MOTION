@@ -166,6 +166,16 @@ function insertDivider() {
   updateToolbar();
 }
 
+/** Adds a page, opens it, and returns it. Shared with the command palette. */
+export function createPage(title = "") {
+  const page = { id: uid(), title, content: "", updatedAt: Date.now() };
+  store.state.pages.push(page);
+  store.state.currentPageId = page.id;
+  store.save();
+  if (!router.go("notes", page.id)) switchView("notes");
+  return page;
+}
+
 export function mount() {
   $("pageList").addEventListener("click", (e) => {
     const item = e.target.closest(".page-item");
@@ -177,11 +187,7 @@ export function mount() {
   });
 
   $("newPageBtn").addEventListener("click", () => {
-    const page = { id: uid(), title: "", content: "", updatedAt: Date.now() };
-    store.state.pages.push(page);
-    store.state.currentPageId = page.id;
-    store.save();
-    if (!router.go("notes", page.id)) switchView("notes");
+    createPage();
     if (isMobile()) closeNav();
     // Focusing immediately on mobile fights the closing drawer animation.
     else $("pageTitleInput").focus();

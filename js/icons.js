@@ -19,6 +19,13 @@ const ICON_PATHS = {
   flag: '<path d="M5 21V4.5M5 5.2h11.5l-2 3.6 2 3.6H5"/>',
   broom: '<path d="M4 20.5 9.5 15M9.5 15l-2-2 7-7 2 2-7 7Zm4.5-9 3.5-3.5a2.1 2.1 0 0 1 3 3L17 9"/><path d="M12.5 17.5 15 20l5.5-5.5"/>',
   repeat: '<path d="M17 2.5 20.5 6 17 9.5"/><path d="M3.5 12V9a3 3 0 0 1 3-3h14"/><path d="M7 21.5 3.5 18 7 14.5"/><path d="M20.5 12v3a3 3 0 0 1-3 3h-14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/>',
+  bell: '<path d="M6 8.5a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 14.5 6 8.5Z"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/>',
+  home: '<path d="M3 9.8 12 3l9 6.8V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.8Z"/>',
+  download: '<path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 17.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/>',
+  printer: '<path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8" rx="2"/><path d="M7 13.5h10V21H7z"/>',
+  sidebar: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9.5 4v16"/>',
+  arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   book: '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v14.5a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18V4.5Z"/><path d="M5 16.5h13.5"/>',
 };
 

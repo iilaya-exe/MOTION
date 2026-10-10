@@ -69,6 +69,8 @@
   body.nav-open { overflow: hidden; }
 
   .topbar { display: flex; }
+  .topbar-search { margin: 0 -7px 0 auto; }
+  .cmdk-trigger { display: none; }
   .sidebar-backdrop { display: block; pointer-events: none; }
   .sidebar-backdrop.show { pointer-events: auto; }
 
@@ -104,6 +106,7 @@
   }
 
   .view .subtitle { margin-bottom: 20px; }
+  .home-hero { margin-bottom: 20px; }
 
   /* Calendar keeps its true proportions and scrolls instead of squashing. */
   .cal-scroll {
@@ -123,8 +126,10 @@
 
   .page-content { font-size: 16px; min-height: 280px; }
 
-  .field { padding: 10px 12px; }
-  .btn { padding: 10px 15px; min-height: 42px; }
+  .field { height: 42px; padding: 0 12px; }
+  select.field { padding-right: 34px; }
+  .btn { height: 42px; padding: 0 16px; }
+  .btn.icon-only { width: 42px; padding: 0; }
   .icon-btn { width: 32px; height: 32px; }
   .icon-btn .icon { width: 17px; height: 17px; }
 
@@ -199,14 +204,29 @@
     overscroll-behavior: contain;
   }
 
+  /* Bottom sheet, like shadcn's Drawer: rounded top and a grab handle. */
   .modal {
+    position: relative;
     width: 100%;
     max-width: 100%;
     max-height: 90vh;
     max-height: 90dvh;
-    border-radius: 16px 16px 0 0;
-    padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    border-bottom: none;
+    padding: 28px 18px calc(20px + env(safe-area-inset-bottom));
     animation: sheetIn 0.24s var(--ease);
+  }
+
+  .modal::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 44px;
+    height: 5px;
+    margin-left: -22px;
+    border-radius: 99px;
+    background: var(--muted);
   }
 
   @keyframes sheetIn {
@@ -235,10 +255,4 @@
   .task-row .icon-btn,
   .board-card .icon-btn { opacity: 1; }
   .task-row input[type="checkbox"] { width: 20px; height: 20px; }
-  .task-row input[type="checkbox"]:checked::after {
-    left: 6px;
-    top: 2px;
-    width: 5px;
-    height: 10px;
-  }
 }
