@@ -19,6 +19,11 @@
   overflow-y: auto;
 }
 
+/* The sidebar is a flex column that scrolls, and flex items shrink by
+   default: once a long notes list overflowed it, the nav items were squeezed
+   from 32px down to their text height instead of the sidebar scrolling. */
+.sidebar > * { flex-shrink: 0; }
+
 .brand {
   display: flex;
   align-items: center;

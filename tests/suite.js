@@ -809,6 +809,14 @@ export async function suite(win) {
   check("pages carry an updatedAt", stored?.pages?.every((p) => typeof p.updatedAt === "number"));
   check("tasks carry a repeat field", stored?.tasks?.every((t) => "repeat" in t));
 
+  // ------------------------------------------------------ sidebar overflow ---
+  group("Sidebar with many notes");
+  check("sidebar sections never shrink", /\.sidebar > \* \{ flex-shrink: 0; \}/.test(cssText),
+    "sidebar children can shrink");
+  const sideTall = q("#sidebar").scrollHeight > q("#sidebar").clientHeight;
+  check("nav items keep their full height", qa(".nav-item").every((el) => el.offsetHeight >= 30),
+    `${qa(".nav-item").map((el) => el.offsetHeight).join(",")} (overflowing: ${sideTall})`);
+
   // ------------------------------------------------------- command palette ---
   group("Command palette");
   const palette = () => q("#cmdkOverlay");
