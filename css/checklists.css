@@ -9,11 +9,15 @@
 /* Cards in a row share its height, with each card's add-item row pinned to
    the bottom, so the inputs line up across the row. A collapsed card opts out:
    stretched, it would be a tall empty box. */
+/* Masonry: cards keep their own height and flow down columns, so a long list
+   doesn't stretch a short one beside it. */
 .checklist-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--gap-card);
-  align-items: stretch;
+  columns: 300px;
+  column-gap: var(--gap-card);
+}
+.checklist-grid > .checklist-card {
+  break-inside: avoid;
+  margin-bottom: var(--gap-card);
 }
 
 .checklist-card.collapsed { align-self: start; }
@@ -22,7 +26,7 @@
    span it sits in the first ~300px track and wraps there — looking cramped while
    the rest of the row sits empty. 1 / -1 makes it use the full width. */
 .checklist-empty {
-  grid-column: 1 / -1;
+  column-span: all;
   margin: 0;
   padding: 30px;
   text-align: center;
@@ -41,7 +45,6 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
-  box-shadow: var(--shadow-sm);
 }
 
 .checklist-card.collapsed { gap: 10px; }
@@ -251,43 +254,16 @@
 
 .cl-progress-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
 
-/* Same conic-gradient technique as the Home ring, at card scale. */
-.cl-ring {
-  --size: 44px;
-  position: relative;
-  width: var(--size);
-  height: var(--size);
-  flex-shrink: 0;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(var(--accent-fill) calc(var(--pct) * 1%), var(--track) 0);
-  transition: background var(--dur-slow) var(--ease);
-}
-
-.cl-ring::before {
-  content: "";
-  position: absolute;
-  width: calc(var(--size) - 11px);
-  height: calc(var(--size) - 11px);
-  border-radius: 50%;
-  background: var(--surface);
-}
-
-.cl-ring span {
-  position: relative;
-  font-size: var(--fs-mini);
-  font-weight: 600;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-
-.cl-ring small { font-size: 0.75em; font-weight: 600; }
-.checklist-card.is-complete .cl-ring span { color: var(--success); }
 .cl-meta b { color: var(--text); font-weight: 600; }
 .cl-done-flag { color: var(--success); font-weight: 600; }
 
 .checklist-card { transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease); }
-.checklist-card.is-complete { border-color: var(--success-border); }
+.checklist-card.is-complete .cl-items { opacity: 0.7; }
 .checklist-card.is-complete .progress-bar .fill { background: var(--success); }
-.checklist-card.is-complete .cl-ring { background: conic-gradient(var(--success) 100%, var(--track) 0); }
+
+/* Revamp: one thin bar and a mono count, nothing else. */
+.cl-progress .progress-bar { height: 4px; border-radius: 2px; background: var(--track); }
+.cl-progress .progress-bar .fill { background: var(--text); border-radius: inherit; }
+.cl-meta { color: var(--text-2); font-size: 12px; }
+.cl-meta .mono { color: var(--text); }
+.cl-done-flag { font-weight: 500; }

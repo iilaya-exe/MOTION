@@ -1,21 +1,25 @@
 /* Shared design-system pieces: navigation chrome, controls, badges, cards,
    checklists and modals. These are the parts reused across several views, so
-   they stay as named classes rather than repeated utility strings.
+   they stay as named classes rather than repeated utility strings. */
 
-   Each one mirrors a shadcn/ui component — Sidebar, Button, Input, Tabs, Badge,
-   Card, Dialog, AlertDialog, Sonner — down to its sizes (h-8 menu items, h-9
-   controls), radii and focus ring, so the app reads as one shadcn interface. */
-
-/* ---------------- Sidebar ---------------- */
+/* ---------------- Sidebar ----------------
+   Navigation is the functional layer, so it is glass: a panel floating inset
+   from the window edge (window 20 → inset 8 → panel 14). */
 .sidebar {
-  width: 252px;
-  min-width: 252px;
+  width: 240px;
+  min-width: 240px;
+  margin: 8px 0 8px 8px;
+  height: calc(100% - 16px);
+  border-radius: 14px;
   background: var(--sidebar-bg);
-  border-right: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-top), var(--float);
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 12px 10px;
+  padding: 12px 8px;
   overflow-y: auto;
 }
 
@@ -33,9 +37,9 @@
 
 /* shadcn's team-switcher logo: a primary-filled square with the mark inverted. */
 .brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-lg);
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   background: var(--grad);
   display: flex;
   align-items: center;
@@ -44,8 +48,8 @@
 }
 
 .brand-mark svg {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   color: var(--on-accent);
 }
 
@@ -57,16 +61,12 @@
 }
 
 .brand-name {
-  font-size: var(--fs-body-s);
+  font-size: 16px;
   font-weight: 600;
   color: var(--text);
 }
 
-.brand-sub {
-  font-size: var(--fs-mini);
-  color: var(--text-3);
-  white-space: nowrap;
-}
+.brand-sub { display: none; }
 
 /* SidebarMenuButton: h-8, rounded-md, the icon inherits the text colour and
    the active item is the muted accent fill rather than a coloured one. */
@@ -75,22 +75,24 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  height: 32px;
+  height: 34px;
   text-align: left;
   padding: 0 8px;
   border-radius: var(--r-md);
-  font-size: var(--fs-body-s);
+  font-size: 14px;
   font-weight: 400;
   cursor: pointer;
-  color: var(--text-2);
+  color: var(--text);
   user-select: none;
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.nav-item .icon { width: 16px; height: 16px; }
+.nav-item .icon { width: 16px; height: 16px; color: var(--text-2); stroke-width: 1.6; }
 
 .nav-item:hover { background: var(--hover); color: var(--text); }
-.nav-item.active { background: var(--hover); color: var(--text); font-weight: 500; }
+/* The current page is a raised surface step with a hairline, not a tint. */
+.nav-item.active { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: inset 0 0 0 1px var(--border), 0 1px 2px rgba(0, 0, 0, 0.04); }
+.nav-item.active .icon { color: var(--text); }
 
 .nav-section { margin-top: 18px; }
 
@@ -125,22 +127,22 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  height: 32px;
+  height: 34px;
   text-align: left;
   padding: 0 8px;
   border-radius: var(--r-md);
-  font-size: var(--fs-body-s);
+  font-size: 14px;
   cursor: pointer;
-  color: var(--text-2);
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.page-item .icon { width: 16px; height: 16px; color: var(--text-3); }
+.page-item .icon { width: 16px; height: 16px; color: var(--text-2); stroke-width: 1.6; }
 .page-item span { overflow: hidden; text-overflow: ellipsis; }
 .page-item:hover { background: var(--hover); color: var(--text); }
-.page-item.active { background: var(--hover); color: var(--text); font-weight: 500; }
+.page-item.active { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: inset 0 0 0 1px var(--border), 0 1px 2px rgba(0, 0, 0, 0.04); }
 .page-item.active .icon { color: var(--text); }
 
 /* ---------------- Menu ----------------
@@ -356,19 +358,18 @@
   flex-shrink: 0;
   margin-bottom: 8px;
   padding: 0 6px 0 8px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--hover);
+  border: 1px solid transparent;
   border-radius: var(--r-md);
-  box-shadow: var(--shadow-xs);
-  font-size: var(--fs-caption);
-  color: var(--text-3);
+  font-size: 13px;
+  color: var(--text-2);
   text-align: left;
   transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .cmdk-trigger .icon { width: 15px; height: 15px; }
 .cmdk-trigger .kbd { margin-left: auto; }
-.cmdk-trigger:hover { border-color: var(--border-hover); color: var(--text-2); }
+.cmdk-trigger:hover { background: var(--hover-strong); color: var(--text); }
 
 /* Kbd: a small muted key cap. */
 .kbd {
@@ -798,7 +799,6 @@ select.field { padding-right: 34px; }
   border-radius: var(--r-md);
   white-space: nowrap;
   border: 1px solid transparent;
-  text-transform: capitalize;
 }
 
 .badge .icon { width: 12px; height: 12px; }
@@ -1179,6 +1179,7 @@ body.is-offline .app { padding-top: 30px; }
   :root[data-sidebar="collapsed"] .sidebar {
     width: 64px;
     min-width: 64px;
+    margin-right: 0;
     padding-left: 12px;
     padding-right: 12px;
     gap: 4px;
@@ -1308,3 +1309,61 @@ body.is-offline .app { padding-top: 30px; }
    Hidden here; responsive.css shows them at phone width. */
 .tabbar,
 .fab { display: none; }
+
+/* ============================================================================
+   Functional layer: glass
+   ----------------------------------------------------------------------------
+   Menus, the colour palette, the search palette and the note ribbon float over
+   content, so they share the glass material. Dialogs are content you work in,
+   so they stay solid, just rounder and quieter.
+   ========================================================================== */
+.menu,
+.color-popover,
+.cmdk,
+.notes-toolbar {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-top), var(--float);
+}
+.menu { border-radius: 14px; padding: 6px; }
+.menu [role="menuitem"] { border-radius: 8px; }
+.color-popover { border-radius: 16px; padding: 12px; }
+.cmdk { border-radius: 20px; }
+.notes-toolbar { border-radius: 14px; }
+.notes-toolbar button { border-radius: 10px; }
+.notes-ribbon.is-stuck { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+
+.modal { border-radius: 20px; background: var(--surface); box-shadow: var(--float); }
+.modal h3 { font: 500 22px/1.2 var(--font-serif); letter-spacing: -0.01em; }
+
+@media (prefers-reduced-transparency: reduce) {
+  .menu, .color-popover, .cmdk, .notes-toolbar {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Phone top bar: no slab, just floating glass controls over a soft fade
+   (the web version of a scroll edge effect). */
+.topbar {
+  background: linear-gradient(var(--bg) 35%, color-mix(in srgb, var(--bg) 0%, transparent));
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom: none;
+}
+.topbar-btn,
+.topbar-brand {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-top), var(--float);
+}
+.topbar-btn { width: 40px; height: 40px; margin-left: 0; border-radius: 50%; color: var(--text); }
+.topbar-brand { height: 40px; padding: 0 14px 0 7px; border-radius: 20px; }
+@media (prefers-reduced-transparency: reduce) {
+  .topbar-btn, .topbar-brand { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

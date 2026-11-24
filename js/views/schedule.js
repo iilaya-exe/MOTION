@@ -150,7 +150,7 @@ function renderWeek() {
     const date = new Date(monday);
     date.setDate(monday.getDate() + ((d + 6) % 7));
     const label = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    html += `<div class="tt-dayname${d === today ? " today" : ""}">${DAY_SHORT[d]}<small>${esc(label)}</small></div>`;
+    html += `<div class="tt-dayname${d === today ? " today" : ""}">${DAY_SHORT[d]}<small>${d === today ? `<span class="mark">${esc(label)}</span>` : esc(label)}</small></div>`;
   });
 
   // Hour labels.
@@ -182,7 +182,8 @@ function renderWeek() {
         "</button>";
     });
     if (d === today && nowMin > first * 60 && nowMin < last * 60) {
-      html += `<span class="tt-now" style="top:${pct(nowMin)}%" aria-hidden="true"></span>`;
+      const label = formatTime(`${Math.floor(nowMin / 60)}:${nowMin % 60}`).replace(" ", "\u00a0");
+      html += `<span class="tt-now" style="top:${pct(nowMin)}%" aria-hidden="true"><span class="mark">${label}</span></span>`;
     }
     html += "</div>";
   });
@@ -199,13 +200,13 @@ function renderNowCard() {
   if (!current) {
     const next = nextClassToday(classes);
     const msg = !classes.length
-      ? "No classes yet — add one to get started."
+      ? "No classes yet. Add one to get started"
       : next
-        ? `Next up: <b>${esc(next.subject)}</b> at ${esc(formatTime(next.start))}`
-        : "Nothing left on the schedule today.";
+        ? `Next: <b>${esc(next.subject)}</b> at ${esc(formatTime(next.start))}`
+        : "Nothing left on the schedule today";
 
     card.className = "now-card";
-    card.innerHTML = `<div class="now-empty">No Ongoing Class</div><div class="now-next">${msg}</div>`;
+    card.innerHTML = `<div class="now-empty">No class right now</div><div class="now-next">${msg}</div>`;
     return;
   }
 
@@ -215,7 +216,7 @@ function renderNowCard() {
 
   card.className = `now-card live ${colorClass(current)}`;
   card.innerHTML =
-    '<div class="now-label"><span class="live-dot"></span>Ongoing Class</div>' +
+    '<div class="now-label"><span class="live-dot"></span>In class now</div>' +
     `<div class="now-title">` +
     (current.emoji ? `<span class="class-emoji">${esc(current.emoji)}</span>` : "") +
     esc(current.subject) +
@@ -244,7 +245,7 @@ function renderDayClasses() {
   const today = new Date().getDay();
 
   $("dayHeading").textContent =
-    selectedDay === today ? "Classes Today" : `Classes on ${DAY_FULL[selectedDay]}`;
+    selectedDay === today ? "Classes today" : `Classes on ${DAY_FULL[selectedDay]}`;
 
   const items = classesOnDay(store.state.classes, selectedDay);
   const list = $("dayClassList");
@@ -289,7 +290,7 @@ function renderAllClasses() {
 
   if (!classes.length) {
     table.innerHTML =
-      '<tbody><tr><td class="sched-empty" style="border:none;">No classes added yet. Use <b>Add Class</b> above.</td></tr></tbody>';
+      '<tbody><tr><td class="sched-empty" style="border:none;">No classes added yet. Use <b>Add class</b> above.</td></tr></tbody>';
     return;
   }
 
@@ -345,7 +346,18 @@ function renderTimerPanel() {
     "</div></div>";
 }
 
+// "5 classes · 9 hours a week" under the title.
+function renderSub() {
+  const { classes } = store.state;
+  const minutes = classes.reduce((sum, c) => sum + Math.max(0, toMinutes(c.end) - toMinutes(c.start)) * c.days.length, 0);
+  const hours = Math.round((minutes / 60) * 10) / 10;
+  $("schedSub").innerHTML = classes.length
+    ? `<span class="mono">${classes.length}</span> class${classes.length === 1 ? "" : "es"} · <span class="mono">${hours}</span> hour${hours === 1 ? "" : "s"} a week`
+    : "";
+}
+
 export function render() {
+  renderSub();
   applyView();
   renderTimerPanel();
   renderNowCard();

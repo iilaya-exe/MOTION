@@ -47,7 +47,7 @@ export const REPEATS = [
 const repeatLabel = (id) => REPEATS.find((r) => r.id === (id || ""))?.label || "Once";
 
 /** Shared with the dashboard's quick-add box. */
-export function addTask(text, due, priority) {
+export function addTask(text, due, priority, subjectId = null) {
   const trimmed = (text || "").trim();
   if (!trimmed) return;
 
@@ -59,7 +59,7 @@ export function addTask(text, due, priority) {
     priority: priority || "medium",
     status: "todo",
     repeat: null,
-    subjectId: null,
+    subjectId: store.state.classes.some((c) => c.id === subjectId) ? subjectId : null,
     createdAt: Date.now(),
   });
   store.save();
@@ -222,14 +222,20 @@ function dueCell(task) {
   );
 }
 
+const PRIORITY_LABEL = { low: "Low", medium: "Medium", high: "High" };
+
+/** Priority as a three-step bar, filled to its level, with its name. */
+export const priorityBars = (p) =>
+  `<span class="pri-bars pri-${esc(p)}" aria-hidden="true"><i></i><i></i><i></i></span>`;
+
 function priorityCell(task) {
   const options = PRIORITIES.map(
-    (p) => `<option value="${p}"${p === task.priority ? " selected" : ""}>${p}</option>`
+    (p) => `<option value="${p}"${p === task.priority ? " selected" : ""}>${PRIORITY_LABEL[p]}</option>`
   ).join("");
 
   return (
     `<span class="prop-cell">` +
-    `<span class="badge priority-${esc(task.priority)}">${esc(task.priority)}</span>` +
+    `<span class="badge priority-${esc(task.priority)}">${priorityBars(task.priority)}${PRIORITY_LABEL[task.priority] || esc(task.priority)}</span>` +
     `<select class="prop-input" data-action="set-priority" data-id="${esc(task.id)}" ` +
     `aria-label="Priority for ${esc(task.text)}">${options}</select></span>`
   );
@@ -364,14 +370,19 @@ function renderSummary() {
   const done = all.filter((t) => t.done).length;
   const open = all.length - done;
 
+  const late = all.filter((t) => !t.done && t.due && t.due < todayKey()).length;
+  $("taskHeadSub").innerHTML = all.length
+    ? `<span class="mono">${open}</span> open · <span class="mono">${done}</span> done` +
+      (late ? ` · <span class="mono is-late">${late}</span> overdue` : "")
+    : "Nothing here yet";
+
   if (!all.length) {
     $("taskSummary").innerHTML = "";
     return;
   }
 
   $("taskSummary").innerHTML =
-    `<span><b>${open}</b> open · <b>${done}</b> completed</span>` +
-    (done ? '<button class="link-btn" data-action="clear-done">Clear completed</button>' : "");
+    done ? '<button class="link-btn" data-action="clear-done">Clear completed</button>' : "";
 }
 
 const TABLE_HEAD =
@@ -446,9 +457,22 @@ function emptyMessage() {
   return "No tasks yet. Add one above to get started.";
 }
 
+/** The composer's subject picker follows the class list. */
+function renderSubjectPicker() {
+  const sel = $("taskSubjectInput");
+  const current = sel.value;
+  const classes = [...store.state.classes].sort((a, b) => a.subject.localeCompare(b.subject));
+  sel.innerHTML =
+    '<option value="">No subject</option>' +
+    classes.map((c) => `<option value="${esc(c.id)}">${esc(c.subject)}</option>`).join("");
+  sel.value = classes.some((c) => c.id === current) ? current : "";
+  sel.classList.toggle("hidden", !classes.length);
+}
+
 export function render() {
   const groups = buildGroups();
 
+  renderSubjectPicker();
   renderSummary();
   $("taskList").classList.toggle("hidden", view.mode !== "list");
   $("taskBoard").classList.toggle("hidden", view.mode !== "board");
@@ -594,7 +618,7 @@ export function mount() {
 
   const submit = () => {
     if (!textEl.value.trim()) return;
-    addTask(textEl.value, dueEl.value, priEl.value);
+    addTask(textEl.value, dueEl.value, priEl.value, $("taskSubjectInput").value || null);
     textEl.value = "";
     dueEl.value = "";
     duePicker.sync();

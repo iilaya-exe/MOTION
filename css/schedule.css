@@ -5,81 +5,53 @@
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  padding: 20px 24px;
+  padding: 16px 20px;
   margin-bottom: var(--gap-card);
 }
 
-.now-card.live {
-  border-color: var(--cc, var(--accent));
-  background: var(--cc-soft, var(--accent-soft));
-  border-left-width: 4px;
-}
+/* A running class keeps the solid card and shows its colour only as a stripe. */
+.now-card.live { box-shadow: inset 3px 0 0 var(--cc, var(--text)); }
 
-.now-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 78px;
-  border: 1px dashed var(--control-border);
-  border-radius: var(--r-lg);
-  color: var(--text-3);
-  font-size: var(--fs-body-s);
-}
+/* Nothing running: one quiet line, then what comes next. */
+.now-empty { font-size: 14px; font-weight: 500; color: var(--text); }
 
 .now-label {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--fs-caption);
+  font-size: 13px;
   font-weight: 500;
-  color: var(--cc, var(--accent));
-  margin-bottom: 10px;
+  color: var(--text);
+  margin-bottom: 8px;
 }
 
-.live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--cc, var(--accent));
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--cc, var(--accent)) 40%, transparent);
-  animation: livePulse 1.8s var(--ease) infinite;
-  flex-shrink: 0;
-}
-
-@keyframes livePulse {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cc, var(--accent)) 40%, transparent); }
-  70% { box-shadow: 0 0 0 7px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc, var(--text)); flex-shrink: 0; }
 
 .now-title {
-  font-size: var(--fs-h3);
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  margin-bottom: 5px;
+  font: 500 22px/1.2 var(--font-serif);
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+.now-title .class-section { font: 400 13px var(--font-mono); color: var(--text-2); }
 
 .now-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 18px;
-  font-size: var(--fs-body-s);
+  gap: 6px 16px;
+  font-size: 13px;
   color: var(--text-2);
 }
 
 .now-meta span { display: flex; align-items: center; gap: 6px; }
 .now-meta .icon { width: 14px; height: 14px; color: var(--text-3); }
 
-.now-remaining {
-  margin-top: 10px;
-  font-size: var(--fs-caption);
-  color: var(--text-3);
-  font-weight: 500;
-}
+.now-remaining { margin-top: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--text); }
 
-.now-next { margin-top: 12px; font-size: var(--fs-body-s); color: var(--text-3); }
-.now-next b { color: var(--text); font-weight: 600; }
+.now-next { margin-top: 4px; font-size: 13px; color: var(--text-2); }
+.now-next b { color: var(--text); font-weight: 500; }
 
 .sched-bar {
   display: flex;
@@ -557,21 +529,22 @@
 .tt-dayname {
   padding: 10px 12px;
   font-size: var(--fs-caption);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-2);
   border-left: 1px solid var(--border);
 }
-.tt-dayname small { display: block; font-weight: 400; color: var(--text-3); font-size: var(--fs-mini); }
+.tt-dayname small { display: block; font-weight: 400; color: var(--text-3); font-size: 12px; font-family: var(--font-mono); margin-top: 2px; }
 .tt-dayname.today { color: var(--text); }
-.tt-dayname.today small { color: var(--text-2); font-weight: 500; }
+.tt-dayname.today small { color: var(--hl-ink); }
 
 .tt-hours { position: relative; }
 .tt-hour {
   position: absolute;
   right: 8px;
   transform: translateY(-50%);
-  font-size: var(--fs-mini);
-  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -583,7 +556,7 @@
   border-left: 1px solid var(--border);
   cursor: copy;
 }
-.tt-col.today { background: var(--hover-subtle); }
+.tt-col.today { background: color-mix(in srgb, var(--hover) 50%, transparent); }
 .tt-line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--border); pointer-events: none; }
 
 .tt-block {
@@ -596,8 +569,8 @@
   padding: 5px 8px;
   overflow: hidden;
   text-align: left;
-  border-radius: var(--r-md);
-  background: var(--cc-soft, var(--muted));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--cc, var(--text-3)) 12%, var(--surface));
   box-shadow: inset 3px 0 0 var(--cc, var(--text-3));
   color: var(--text);
   font-size: var(--fs-caption);
@@ -605,32 +578,31 @@
   cursor: pointer;
   transition: box-shadow var(--dur-fast) var(--ease), filter var(--dur-fast) var(--ease);
 }
-.tt-block:hover { box-shadow: inset 3px 0 0 var(--cc, var(--text-3)), var(--shadow-md); }
+.tt-block:hover { background: color-mix(in srgb, var(--cc, var(--text-3)) 18%, var(--surface)); }
 .tt-block:focus-visible { outline: none; box-shadow: inset 3px 0 0 var(--cc, var(--text-3)), var(--ring); }
 .tt-block.is-past { opacity: 0.6; }
-.tt-name { font-weight: 600; display: flex; gap: 4px; align-items: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tt-meta { color: var(--text-3); font-size: var(--fs-mini); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.tt-tasks { color: var(--cc, var(--text-2)); font-size: var(--fs-mini); font-weight: 600; }
+.tt-name { font-weight: 500; display: flex; gap: 4px; align-items: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-meta { color: var(--text-2); font-size: var(--fs-mini); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tt-tasks { color: var(--text-2); font-family: var(--font-mono); font-size: 11px; margin-top: auto; }
 
 /* The current time, across today's column. */
 .tt-now {
   position: absolute;
   left: 0;
   right: 0;
-  height: 2px;
-  background: var(--danger);
+  height: 1.5px;
+  background: var(--text);
   z-index: 2;
   pointer-events: none;
 }
-.tt-now::before {
-  content: "";
+.tt-now .mark {
   position: absolute;
-  left: -4px;
-  top: -3px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--danger);
+  left: 6px;
+  top: -9px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .tt-empty {

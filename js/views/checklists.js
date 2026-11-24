@@ -73,16 +73,15 @@ function card(cl) {
     `title="Delete checklist" aria-label="Delete ${esc(cl.name)}">${icon("trash")}</button>` +
     "</div></div>" +
     '<div class="cl-progress">' +
-    `<div class="cl-ring" style="--pct:${pct}"><span>${pct}<small>%</small></span></div>` +
     '<div class="cl-progress-body">' +
     `<div class="progress-bar"><div class="fill" style="width:${pct}%;"></div></div>` +
-    `<div class="cl-meta"><span><b>${doneCount}</b> of <b>${total}</b> complete</span>` +
+    `<div class="cl-meta"><span class="mono">${doneCount} of ${total}</span>` +
     (total - doneCount ? `<span>${total - doneCount} left</span>` : '<span class="cl-done-flag">Done</span>') +
     "</div></div></div>" +
     '<div class="cl-body">' +
     `<ul class="cl-items">${items}</ul>` +
     '<div class="cl-add-row">' +
-    `<input class="field" type="text" data-cl-input="${esc(cl.id)}" placeholder="Add an item...">` +
+    `<input class="field" type="text" data-cl-input="${esc(cl.id)}" placeholder="Add an item">` +
     `<button class="btn secondary" data-action="add-item" data-cl="${esc(cl.id)}">Add</button>` +
     "</div></div></div>"
   );

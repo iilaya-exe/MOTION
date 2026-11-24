@@ -53,7 +53,7 @@ export function openEditClass(id) {
 }
 
 function showEditor() {
-  $("classModalTitle").textContent = draft.id ? "Edit Class" : "Add Class";
+  $("classModalTitle").textContent = draft.id ? "Edit class" : "Add class";
   $("classSubjectInput").value = draft.subject;
   $("classSectionInput").value = draft.section;
   $("classRoomInput").value = draft.room;

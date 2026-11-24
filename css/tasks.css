@@ -21,8 +21,11 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
-  box-shadow: var(--shadow-sm);
 }
+
+.composer .field { height: 36px; }
+.composer select.field { width: auto; min-width: 0; }
+.composer #taskSubjectInput[hidden] { display: none; }
 
 .composer .field.grow {
   flex: 1 1 auto;
@@ -133,7 +136,25 @@
 
 .list-toolbar .filter-tabs {
   margin-bottom: 0;
+  gap: 16px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
+.list-toolbar .filter-tab {
+  height: 32px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--text-2);
+  border-bottom: 1.5px solid transparent;
+}
+.list-toolbar .filter-tab:hover { color: var(--text); background: none; }
+.list-toolbar .filter-tab.active { color: var(--text); background: none; box-shadow: none; border-bottom-color: var(--text); }
+.list-toolbar .filter-tab .count { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); background: none; padding: 0 0 0 4px; }
 
 .toolbar-end {
   display: flex;
@@ -570,7 +591,7 @@
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
-  padding: 10px;
+  padding: 8px;
 }
 
 .board-col-head {
@@ -596,12 +617,11 @@
   padding: 12px 12px 12px 14px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  border-radius: 8px;
+  transition: border-color var(--dur) var(--ease);
 }
 
-.board-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-hover); }
+.board-card:hover { border-color: var(--border-strong); }
 
 .board-card-top {
   display: flex;
@@ -670,16 +690,17 @@
 .task-row .badge.priority-high { color: var(--danger); font-weight: 600; }
 .task-row .badge.priority-medium { color: var(--amber); }
 .task-row .badge.priority-low { color: var(--text-3); }
-.task-row .badge.priority-high::before,
-.task-row .badge.priority-medium::before,
-.task-row .badge.priority-low::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-  background: currentColor;
-  margin-right: 2px;
-}
+/* Priority reads as three small bars filled to its level, like signal strength. */
+.pri-bars { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 12px; margin-right: 3px; }
+.pri-bars i { width: 3px; border-radius: 1px; background: var(--border-strong); }
+.pri-bars i:nth-child(1) { height: 5px; }
+.pri-bars i:nth-child(2) { height: 8px; }
+.pri-bars i:nth-child(3) { height: 12px; }
+.pri-bars.pri-low i:nth-child(1),
+.pri-bars.pri-medium i:nth-child(-n+2),
+.pri-bars.pri-high i { background: currentColor; }
+.task-row .badge.priority-medium { color: var(--text); }
+.task-row .badge.priority-high { color: var(--danger); font-weight: 500; }
 
 .task-row .badge[class*="status-"] { background: transparent; border-color: transparent; }
 .task-row .badge.status-todo { color: var(--text-3); }

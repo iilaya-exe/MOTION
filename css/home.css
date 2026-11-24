@@ -1,257 +1,122 @@
-/* ============================================================================
-   Home — widget dashboard
-   ----------------------------------------------------------------------------
-   A responsive widget grid rather than a fixed column count: each widget claims
-   a minimum width and the grid decides how many fit, so the same markup works
-   from a phone to an ultrawide without breakpoints per widget.
-   ========================================================================== */
+/* Today: four numbers, the day as a timetable, and two narrow lists beside it.
+   Panels are solid content; only the toolbar above them is glass. */
 
-.home-hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--sp-4);
-  flex-wrap: wrap;
-  /* Same gap under the header as every other page's subtitle. */
-  margin-bottom: 28px;
-}
-
-.home-hero h1 { margin-bottom: 2px; }
-/* .view-scoped so the phone rule that re-adds subtitle margin cannot double
-   the gap here. */
-.view .home-hero .subtitle { margin: 0; }
-
-.home-motto {
-  font-size: var(--fs-body-s);
-  font-style: italic;
-  color: var(--text-3);
-  padding-left: var(--sp-3);
-  border-left: 2px solid var(--border);
-}
-
-/* Named areas rather than auto-fit, so the cards always land in matching rows:
-   auto-fit left a lone half-width card at in-between widths. Cards in a row
-   stretch to the row's height, so their edges line up.
-
-     wide    glance  glance       narrow  glance
-             next    add                  next
-                                          add
-
-   The counts lead; "Up next" and "Quick add" are similar in height, so
-   stretching them to match never opens a big gap inside either one. */
-.widgets {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "glance" "next" "add";
-  gap: var(--gap-card);
-  margin-bottom: var(--gap-section);
-  align-items: stretch;
-}
-
-.w-next { grid-area: next; }
-.w-add { grid-area: add; }
-.w-glance { grid-area: glance; }
-
-/* The day's numbers lead, in one row; "Up next" and "Quick add" share the
-   row under them, so the Today timeline is visible without scrolling. */
-@container (min-width: 640px) {
-  .widgets {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    grid-template-areas: "glance glance" "next add";
-  }
-}
-
-/* The counts are the content, so they stand on their own without a card. */
-.w-glance.widget {
-  padding: 0;
-  border: none;
-  background: none;
-  box-shadow: none;
-}
-.w-glance .widget-head { display: none; }
-
-/* Card: rounded-xl, a hairline border and shadow-sm. Static, as shadcn cards
-   are — lifting on hover implied they were clickable when they are not. */
-.widget {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+/* ---------------- Panels (shared by Today and other screens) ---------------- */
+.panel {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-xl);
-  box-shadow: var(--shadow-sm);
-  padding: 20px;
-}
-
-/* When a row stretches a card, each one spends the extra height on its main
-   element instead of leaving a gap at the bottom. */
-.w-next #nextClass { flex: 1; display: flex; flex-direction: column; }
-.w-next .next-class { flex: 1; }
-.w-glance .mini-stats { flex: 1; }
-
-.widget-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--sp-2);
-  min-height: 20px;
-  margin-bottom: var(--sp-4);
-}
-
-/* CardTitle: semibold, foreground, leading-none. */
-.widget-head h3 {
-  margin: 0;
-  font-size: var(--fs-body);
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: var(--text);
-}
-
-.widget-meta { font-size: var(--fs-caption); color: var(--text-3); }
-
-.widget-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  padding: var(--sp-4) 0;
-  color: var(--text-3);
-  font-size: var(--fs-body-s);
-}
-
-/* The next piece of work, offered when no class is left today. */
-.up-next-task {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  color: var(--text);
-  text-decoration: none;
-  transition: background var(--dur-fast) var(--ease);
-}
-.up-next-task:hover { background: var(--hover-subtle); }
-.up-next-task .icon { width: 17px; height: 17px; margin-top: 2px; color: var(--text-3); }
-.up-next-task b { display: block; font-weight: 500; }
-.up-next-task small { color: var(--text-3); font-size: var(--fs-caption); }
-.up-next-task small.is-late { color: var(--danger); }
-.up-next-action .icon { width: 15px; height: 15px; }
-
-.widget .task-form { margin-bottom: 0; }
-
-/* ---------------- Up next ---------------- */
-.next-class .cls-status { flex-shrink: 0; }
-
-.next-class {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  /* The status pill is nowrap and the mark is fixed, so without wrapping the
-     body is the only thing that can give — and it collapses far enough to break
-     "4:00 PM" onto four lines. Letting the pill drop to its own row instead. */
-  flex-wrap: wrap;
-  padding: var(--sp-3);
-  border-radius: var(--r-lg);
-  background: var(--cc-soft, var(--surface-2));
-}
-
-.nc-mark {
-  width: 42px;
-  height: 42px;
-  flex-shrink: 0;
-  border-radius: var(--r-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  line-height: 1;
-  color: #fff;
-  background: var(--cc-grad, var(--grad));
-}
-
-.nc-mark .icon { width: 20px; height: 20px; }
-/* A floor, not min-width:0: below this the text is no longer readable and the
-   pill should wrap instead. */
-.nc-body { flex: 1 1 150px; min-width: 150px; }
-
-.nc-name {
-  font-size: var(--fs-body-l);
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  overflow-wrap: anywhere;
-}
-
-.nc-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 14px;
-  margin-top: 2px;
-  font-size: var(--fs-caption);
-  color: var(--text-2);
-}
-
-/* A time range and a room name are single units — breaking them mid-phrase is
-   what produced "4:00 / PM / – / 5:30 / PM". */
-.nc-meta span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-.nc-meta .icon { width: 13px; height: 13px; color: var(--text-3); }
-
-/* ---------------- Mini stats ---------------- */
-.mini-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sp-2);
-}
-
-@container (min-width: 900px) {
-  .mini-stats { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
-}
-
-.mini-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 14px 16px;
-  border-radius: var(--r-lg);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-xs);
   min-width: 0;
 }
 
-/* "Done today" carries the day's progress as a thin bar. */
-.ms-bar {
-  display: block;
-  height: 4px;
-  margin-top: 6px;
-  border-radius: 2px;
-  background: var(--track);
+.panel-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 0;
+}
+
+.panel-h h3 { margin: 0; font-size: 14px; font-weight: 500; }
+.panel-meta { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------------- Stats ---------------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 16px 20px;
+  min-width: 0;
+}
+
+.stat-lbl { color: var(--text-2); font-size: 13px; }
+.stat-num { font-size: 30px; line-height: 1; font-weight: 500; letter-spacing: -0.01em; margin: 12px 0 8px; font-variant-numeric: tabular-nums; }
+.stat-num.is-late { color: var(--danger); }
+.stat-of { font-size: 16px; color: var(--text-2); }
+.stat-meta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
-.ms-bar > span {
-  display: block;
-  height: 100%;
-  width: 0;
-  border-radius: inherit;
-  background: var(--success);
-  transition: width var(--dur-slow) var(--ease);
-}
+.stat-bar { height: 4px; border-radius: 2px; background: var(--track); overflow: hidden; margin-top: 12px; }
+.stat-bar > span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--text); transition: width var(--dur-slow) var(--ease); }
 
-.ms-num {
-  font-size: clamp(22px, 0.5vw + 18px, 28px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
+@container (max-width: 720px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.ms-label { font-size: var(--fs-caption); color: var(--text-3); line-height: 1.25; }
-.mini-stat.danger .ms-num { color: var(--danger); }
-.mini-stat.success .ms-num { color: var(--success); }
+/* ---------------- Layout ---------------- */
+.today-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+  align-items: start;
+}
 
-@media (max-width: 560px) {
-  .mini-stat { padding: 11px 12px; }
-  .home-motto { display: none; }
+.today-side { display: grid; gap: 16px; }
+
+@container (max-width: 900px) {
+  .today-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------------- Due next ---------------- */
+.quick-add { display: flex; gap: 8px; padding: 12px 16px 4px; }
+.quick-add .field { flex: 1; min-width: 0; height: 36px; }
+.quick-add .btn { height: 36px; }
+
+.due-list,
+.week-list { list-style: none; margin: 0; padding: 4px 8px 12px; }
+
+.due-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 12px;
+}
+.due-list li + li,
+.week-list li + li { border-top: 1px solid var(--border); }
+.due-list input[type="checkbox"] { width: 16px; height: 16px; margin: 0; flex-shrink: 0; }
+.due-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.due-when { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); white-space: nowrap; }
+.due-when.is-late { color: var(--danger); }
+.due-empty { color: var(--text-2); font-size: 13px; padding: 12px; }
+
+/* ---------------- This week ---------------- */
+.week-list li { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 12px; }
+.wk-date { width: 40px; text-align: center; line-height: 1.1; flex-shrink: 0; }
+.wk-date b { display: block; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.wk-date small { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); }
+.wk-text { min-width: 0; }
+.wk-text small { display: block; color: var(--text-2); font-size: 12px; }
+
+/* ---------------- First run ---------------- */
+.first-run {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+  padding: 20px 4px 8px;
+}
+.fr-text h3 { font: 500 30px/1.12 var(--font-serif); letter-spacing: -0.015em; margin: 0 0 12px; }
+.fr-text p { color: var(--text-2); font-size: 15px; line-height: 24px; margin: 0 0 20px; max-width: 46ch; }
+.fr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.fr-sketch { position: relative; height: 260px; border-radius: var(--r-xl); border: 1px dashed var(--border-strong); overflow: hidden; }
+.fr-col { position: absolute; top: 0; bottom: 0; border-left: 1px dashed var(--border); }
+.fr-blk { position: absolute; width: calc(20% - 12px); border-radius: 10px; border: 1.5px dashed var(--border-strong); }
+.fr-blk.is-filled { border: none; background: color-mix(in srgb, #2b8a78 14%, var(--surface)); box-shadow: inset 3px 0 0 #2b8a78; }
+
+@container (max-width: 720px) {
+  .first-run { grid-template-columns: minmax(0, 1fr); }
+  .fr-sketch { height: 180px; }
 }

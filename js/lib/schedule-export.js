@@ -122,7 +122,7 @@ export function renderScheduleCanvas(classes, { opaque = true } = {}) {
   // Title
   ctx.fillStyle = theme["--text"];
   ctx.font = font(24, 700);
-  ctx.fillText("Weekly Schedule", PAD, PAD + 14);
+  ctx.fillText("Weekly schedule", PAD, PAD + 14);
 
   ctx.fillStyle = theme["--text-3"];
   ctx.font = font(12, 500);

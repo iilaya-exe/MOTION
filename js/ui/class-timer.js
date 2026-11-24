@@ -66,18 +66,23 @@ function cueFor(minsLeft) {
 function paintShell(host, state) {
   const { cls, ongoing, phase } = state;
 
-  host.className = `class-timer ${colorClass(cls)} phase-${phase}`;
+  const label = ongoing
+    ? "In class now"
+    : { soon: "Next class", warn: "Starts soon", urgent: "Starts soon", critical: "Leave now" }[phase];
+
+  host.className = `class-timer glass ${colorClass(cls)} phase-${phase}`;
   host.innerHTML =
-    '<div class="ct-ring" aria-hidden="true"></div>' +
-    '<div class="ct-body">' +
-    `<div class="ct-label">${ongoing ? "Ends in" : "Starts in"}</div>` +
-    '<div class="ct-count" id="ctCount">--:--</div>' +
+    '<div class="ct-top">' +
+    `<span class="ct-label"><i class="ct-dot" aria-hidden="true"></i>${label}</span>` +
+    `<span class="ct-when">${ongoing ? "ends" : "starts"} ${esc(formatTime(ongoing ? cls.end : cls.start))}</span>` +
     "</div>" +
+    '<div class="ct-main">' +
+    '<div class="ct-count" id="ctCount">--:--</div>' +
     '<div class="ct-class">' +
     `<div class="ct-name">${cls.emoji ? `<span class="ct-emoji">${esc(cls.emoji)}</span>` : ""}${esc(cls.subject)}</div>` +
-    `<div class="ct-meta">${icon("clock")}${esc(formatTime(cls.start))}` +
-    (cls.room ? ` · ${esc(cls.room)}` : "") +
+    `<div class="ct-meta">${cls.room ? esc(cls.room) : esc(formatTime(cls.start))}</div>` +
     "</div></div>" +
+    (ongoing ? '<div class="ct-progress" aria-hidden="true"><i id="ctBar"></i></div>' : "") +
     `<button class="ct-hide" data-action="hide-timer" title="Hide until the next class" aria-label="Hide timer">${icon("close")}</button>`;
 }
 
@@ -111,6 +116,11 @@ export function tick() {
 
   const count = $("ctCount");
   if (count) count.textContent = formatCountdown(state.secondsLeft);
+  const bar = $("ctBar");
+  if (bar && state.ongoing) {
+    const total = (toMinutes(state.cls.end) - toMinutes(state.cls.start)) * 60;
+    bar.style.width = `${Math.min(100, Math.max(0, 100 - (state.secondsLeft / total) * 100))}%`;
+  }
 
   // One-shot cues at 30 / 15 / 5 minutes.
   if (!state.ongoing) {

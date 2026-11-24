@@ -45,7 +45,7 @@ export function closeEventEditor() {
 }
 
 function renderEditor() {
-  $("eventModalTitle").textContent = draft.id ? "Edit Event" : "New Event";
+  $("eventModalTitle").textContent = draft.id ? "Edit event" : "New event";
   $("eventTitleInput").value = draft.title;
   $("eventDeleteBtn").classList.toggle("hidden", !draft.id);
   renderDateChips();

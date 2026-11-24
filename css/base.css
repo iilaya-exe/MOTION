@@ -77,14 +77,97 @@ textarea {
   container-type: inline-size;
 }
 
-/* shadcn's page heading: bold, tight, with a muted description under it. */
+/* Page titles are set in the serif, at a reading weight: hierarchy comes from
+   size and colour, not boldness. */
 .view h1 {
-  font-size: var(--fs-h1);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.025em;
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 1.1vw + 20px, 36px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
   margin: 0 0 6px;
 }
+
+/* Page header: title and a one-line summary on the left, the page's actions
+   in a glass toolbar on the right. */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.page-head h1 { margin: 0; }
+.page-sub { color: var(--text-2); font-size: 14px; margin: 6px 0 0; font-variant-numeric: tabular-nums; }
+.page-sub:empty { display: none; }
+.page-sub .is-late { color: var(--danger); }
+.page-sub .mono { font-family: inherit; font-size: inherit; }
+
+/* ---------------- Glass ----------------
+   Apple's Liquid Glass rule, on the web: only the functional layer — bars,
+   toolbars, menus, the tab bar, the class countdown — is glass, because only
+   it floats above content. Cards, rows and the page itself stay solid. */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(170%);
+  backdrop-filter: blur(22px) saturate(170%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 var(--glass-top), var(--float);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  flex-wrap: wrap;
+}
+.toolbar .tb-sep { width: 1px; height: 18px; background: var(--border-strong); margin: 0 4px; }
+.toolbar > .btn,
+.toolbar > button,
+.toolbar > .filter-tabs { margin: 0; }
+
+/* Inside a toolbar every control is borderless; the glass is the container.
+   Hierarchy: the one ink button is the primary action, the rest are quiet. */
+.toolbar .btn { height: 32px; border-radius: 10px; box-shadow: none; font-size: 13px; padding: 0 12px; }
+.toolbar .btn.secondary { background: transparent; border-color: transparent; }
+.toolbar .btn.secondary:hover { background: var(--hover); }
+.toolbar .btn.icon-only { width: 32px; padding: 0; }
+.toolbar .search-field,
+.toolbar .select-wrap { height: 32px; border-color: transparent; background: transparent; box-shadow: none; border-radius: 10px; }
+.toolbar .search-field:hover,
+.toolbar .select-wrap:hover { background: var(--hover); }
+.toolbar .search-field:focus-within,
+.toolbar .select-wrap:focus-within { background: var(--surface); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.toolbar .search-field input { width: 110px; font-size: 13px; }
+.toolbar .select-wrap span,
+.toolbar .select-wrap select { font-size: 13px; }
+.toolbar .seg,
+.toolbar .filter-tabs { height: 32px; padding: 0; background: transparent; gap: 2px; }
+.toolbar .seg-btn,
+.toolbar .filter-tab { border-radius: 10px; height: 32px; }
+.toolbar .seg-btn.active,
+.toolbar .filter-tab.active { background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); border-color: transparent; }
+
+/* The signature: a highlighter stroke behind whatever is "now" — the current
+   time, today's date. Used nowhere else. */
+.mark { position: relative; z-index: 0; white-space: nowrap; color: var(--hl-ink); }
+.mark::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0.1em -0.3em 0.02em -0.24em;
+  background: var(--hl-mark);
+  border-radius: 3px 7px 4px 6px;
+  transform: skewX(-10deg) rotate(-1.2deg);
+}
+
+.mono { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
 
 /* Times, dates and counts use equal-width digits, so "10:00 AM" and "1:00 PM"
    line up down a list and numbers don't shift as they change. */
@@ -96,6 +179,7 @@ textarea {
 
 /* A title with no subtitle under it still needs room before the content. */
 .view h1.page-title { margin-bottom: 20px; }
+.page-head h1.page-title { margin-bottom: 0; }
 
 .view .subtitle {
   color: var(--text-3);

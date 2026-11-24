@@ -50,7 +50,7 @@ export function renderDayModal() {
       .map(
         (h) =>
           `<li class="modal-holiday-item ${h.type}"><span>${esc(h.name)}</span>` +
-          `<span class="modal-holiday-type">${h.type === "regular" ? "Regular Holiday" : "Special Holiday"}</span></li>`
+          `<span class="modal-holiday-type">${h.type === "regular" ? "Regular holiday" : "Special holiday"}</span></li>`
       )
       .join("");
   }

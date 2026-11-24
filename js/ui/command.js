@@ -181,7 +181,7 @@ function actionItems(q) {
 }
 
 const NAV = [
-  ["dashboard", "Home", "home"],
+  ["dashboard", "Today", "home"],
   ["tasks", "Tasks", "checkSquare"],
   ["calendar", "Calendar", "calendarSm"],
   ["schedule", "Schedule", "clock"],

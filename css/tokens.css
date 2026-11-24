@@ -1,8 +1,8 @@
 /* ============================================================================
    Design tokens
    ----------------------------------------------------------------------------
-   The palette, radii and shadows follow shadcn/ui's "zinc" theme, so the app
-   reads like a shadcn interface without pulling in React or Tailwind. Every
+   A student's week on paper: warm-neutral surfaces, ink for actions, a serif
+   for titles and notes, a mono for times, and colour kept for subjects. Every
    colour, radius, shadow and font size in the app resolves through one of these
    custom properties, so the dark theme is a single attribute swap on <html>
    rather than a parallel set of rules.
@@ -15,6 +15,22 @@
    ========================================================================== */
 
 @font-face {
+  font-family: "Newsreader";
+  src: url("../fonts/Newsreader-Variable.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Geist";
   src: url("../fonts/Geist-Variable.woff2") format("woff2");
   font-weight: 100 900;
@@ -24,85 +40,86 @@
 
 :root {
   --font-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --bg: #ffffff;
+  --bg: #f8f8f7;
   --surface: #ffffff;
-  --surface-2: #fafafa;
-  --muted: #f4f4f5;
-  --sidebar-bg: #fafafa;
-  --border: #e4e4e7;
-  --border-strong: #e4e4e7;
-  --text: #09090b;
-  --text-2: #3f3f46;
-  --text-3: #71717a;
+  --surface-2: #f4f4f2;
+  --muted: #f0f0ee;
+  --sidebar-bg: rgba(252, 252, 251, 0.64);
+  --border: #e7e7e4;
+  --border-strong: #dcdcd8;
+  --text: #171716;
+  --text-2: #3d3d3a;
+  --text-3: #6b6b67;
 
   /* Primary: near-black, with its foreground for anything drawn on top. */
-  --accent: #18181b;
-  --accent-hover: #27272a;
-  --accent-soft: #f4f4f5;
-  --accent-border: #d4d4d8;
-  --accent-fill: #18181b;
-  --accent-fill-hover: #2f2f33;
-  --on-accent: #fafafa;
-  --accent-ghost: rgba(24, 24, 27, 0.12);
-  --accent-glow: rgba(24, 24, 27, 0.3);
-  --grad: #18181b;
+  --accent: #171716;
+  --accent-hover: #2a2a28;
+  --accent-soft: #f0f0ee;
+  --accent-border: #d6d6d2;
+  --accent-fill: #171716;
+  --accent-fill-hover: #2e2e2b;
+  --on-accent: #fafaf9;
+  --accent-ghost: rgba(23, 23, 22, 0.1);
+  --accent-glow: rgba(23, 23, 22, 0.2);
+  --grad: #171716;
 
-  --danger: #dc2626;
-  --danger-soft: #fef2f2;
-  --danger-border: #fecaca;
-  --danger-fill: #dc2626;
-  --danger-hover: #b91c1c;
-  --success: #16a34a;
-  --success-soft: #f0fdf4;
-  --success-border: #bbf7d0;
-  --amber: #b45309;
-  --amber-soft: #fffbeb;
-  --amber-border: #fde68a;
-  --info: #2563eb;
-  --info-soft: #eff6ff;
-  --info-border: #bfdbfe;
+  --danger: #c8322a;
+  --danger-soft: #fdf1f0;
+  --danger-border: #f3c9c5;
+  --danger-fill: #c8322a;
+  --danger-hover: #a92820;
+  --success: #2f7d4f;
+  --success-soft: #eff7f2;
+  --success-border: #c7e4d2;
+  --amber: #9a5b10;
+  --amber-soft: #fbf5ea;
+  --amber-border: #ecd9b5;
+  --info: #2f5cc2;
+  --info-soft: #eff3fb;
+  --info-border: #cbd8f2;
 
   /* shadcn's radius scale: --radius is 0.625rem, the rest step off it. */
   --r-sm: 6px;
   --r-md: 8px;
-  --r-lg: 10px;
-  --r-xl: 14px;
+  --r-lg: 12px;
+  --r-xl: 16px;
 
   /* Tailwind's shadow scale, as shadcn uses it: xs on controls, sm on cards,
      lg on dialogs and popovers. */
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xs: 0 1px 2px 0 rgba(20, 20, 18, 0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(20, 20, 18, 0.05);
+  --shadow-md: 0 4px 12px -2px rgba(20, 20, 18, 0.08);
+  --shadow-lg: 0 12px 32px rgba(20, 20, 18, 0.10), 0 1px 2px rgba(20, 20, 18, 0.06);
   --shadow-glow: 0 4px 18px -4px var(--accent-glow);
 
   /* Focus: the border turns --ring-color and a 3px half-strength halo sits
      outside it — shadcn's `focus-visible:ring-[3px] ring-ring/50`. */
-  --ring-color: #a1a1aa;
-  --ring-soft: rgba(161, 161, 170, 0.5);
+  --ring-color: #9b9b96;
+  --ring-soft: rgba(155, 155, 150, 0.45);
   --ring: 0 0 0 3px var(--ring-soft);
 
-  --hover-subtle: rgba(244, 244, 245, 0.6);
-  --hover: #f4f4f5;
-  --hover-strong: #e4e4e7;
-  --control-border: #d4d4d8;
-  --border-hover: #d4d4d8;
-  --placeholder: #a1a1aa;
-  --track: #f4f4f5;
+  --hover-subtle: rgba(23, 23, 22, 0.025);
+  --hover: rgba(23, 23, 22, 0.05);
+  --hover-strong: rgba(23, 23, 22, 0.09);
+  --control-border: #d6d6d2;
+  --border-hover: #cfcfca;
+  --placeholder: #8e8e89;
+  --track: #ececea;
   --field-bg: transparent;
   --field-bg-solid: #ffffff;
   --tab-active: #ffffff;
   --tab-active-border: transparent;
-  --topbar-bg: rgba(255, 255, 255, 0.85);
-  --overlay: rgba(0, 0, 0, 0.5);
-  --selection: rgba(24, 24, 27, 0.12);
+  --topbar-bg: rgba(252, 252, 251, 0.64);
+  --overlay: rgba(14, 14, 13, 0.32);
+  --selection: rgba(255, 228, 92, 0.55);
 
   /* Lucide's chevron-down, for native <select>s dressed as shadcn's trigger. */
   --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
-  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
   /* Slight overshoot; used only where something should feel like it "lands". */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --dur-fast: 0.12s;
@@ -114,9 +131,9 @@
   --sp-2: 8px;
   --sp-3: 12px;
   --sp-4: 16px;
-  --sp-5: 22px;
-  --sp-6: 30px;
-  --sp-7: 42px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 40px;
 
   /* Layout rhythm. Every page uses the same two gaps: between cards that sit
      side by side or stacked, and between one section and the next heading. */
@@ -138,6 +155,15 @@
   --fs-stat: clamp(20px, 0.396vw + 18.51px, 28px);
   --fs-h1: clamp(20px, 0.555vw + 17.92px, 31px);
   --fs-display: clamp(23px, 0.634vw + 20.62px, 36px);
+  /* Revamp: the highlighter marks "now", and nothing else. */
+  --hl-mark: #ffe45c;
+  --hl-ink: #171716;
+  /* Glass: the functional layer (bars, toolbars, menus) floating over content. */
+  --glass: rgba(252, 252, 251, 0.64);
+  --glass-edge: rgba(23, 23, 22, 0.08);
+  --glass-top: rgba(255, 255, 255, 0.9);
+  --float: 0 12px 32px rgba(20, 20, 18, 0.10), 0 1px 2px rgba(20, 20, 18, 0.06);
+
 }
 
 :root {
@@ -190,66 +216,71 @@
   --hl-pink: rgba(236, 72, 153, 0.28);
   --hl-red: rgba(239, 68, 68, 0.28);
 
-  --bg: #09090b;
-  --surface: #111113;
-  --surface-2: #18181b;
-  --muted: #27272a;
-  --sidebar-bg: #0f0f11;
-  --border: #27272a;
-  --border-strong: #303036;
-  --text: #fafafa;
-  --text-2: #d4d4d8;
-  --text-3: #a1a1aa;
+  --bg: #141415;
+  --surface: #19191b;
+  --surface-2: #1e1e20;
+  --muted: #232325;
+  --sidebar-bg: rgba(36, 36, 39, 0.6);
+  --border: #29292c;
+  --border-strong: #323236;
+  --text: #ededed;
+  --text-2: #c6c6ca;
+  --text-3: #8e8e93;
 
-  --accent: #fafafa;
-  --accent-hover: #e4e4e7;
-  --accent-soft: #27272a;
-  --accent-border: #3f3f46;
-  --accent-fill: #fafafa;
-  --accent-fill-hover: #e4e4e7;
-  --on-accent: #18181b;
+  --accent: #ededed;
+  --accent-hover: #dcdcdc;
+  --accent-soft: #232325;
+  --accent-border: #3a3a3e;
+  --accent-fill: #ededed;
+  --accent-fill-hover: #dcdcdc;
+  --on-accent: #141415;
   --accent-ghost: rgba(250, 250, 250, 0.16);
   --accent-glow: rgba(250, 250, 250, 0.2);
   --grad: #fafafa;
 
-  --danger: #f87171;
-  --danger-soft: #2a1414;
-  --danger-border: #4c1d1d;
-  --danger-fill: #b91c1c;
-  --danger-hover: #dc2626;
-  --success: #4ade80;
-  --success-soft: #0f2418;
-  --success-border: #1b4630;
-  --amber: #fbbf24;
-  --amber-soft: #261d0b;
-  --amber-border: #4a3714;
-  --info: #60a5fa;
-  --info-soft: #0f1d33;
-  --info-border: #1e3a5f;
+  --danger: #ef6b63;
+  --danger-soft: #2a1715;
+  --danger-border: #4d2522;
+  --danger-fill: #c8322a;
+  --danger-hover: #e0453c;
+  --success: #5fc48a;
+  --success-soft: #13241a;
+  --success-border: #22432f;
+  --amber: #e0a35e;
+  --amber-soft: #271e12;
+  --amber-border: #4a3820;
+  --info: #8aa6f0;
+  --info-soft: #161d2c;
+  --info-border: #263553;
 
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
 
-  --ring-color: #71717a;
-  --ring-soft: rgba(113, 113, 122, 0.5);
+  --ring-color: #77777c;
+  --ring-soft: rgba(119, 119, 124, 0.5);
 
-  --hover-subtle: rgba(39, 39, 42, 0.45);
-  --hover: #27272a;
-  --hover-strong: #3f3f46;
-  --control-border: #3f3f46;
-  --border-hover: #3f3f46;
-  --placeholder: #71717a;
-  --track: #27272a;
-  --field-bg: rgba(63, 63, 70, 0.3);
-  --field-bg-solid: rgba(63, 63, 70, 0.3);
-  --tab-active: rgba(63, 63, 70, 0.6);
-  --tab-active-border: #3f3f46;
-  --topbar-bg: rgba(9, 9, 11, 0.85);
-  --overlay: rgba(0, 0, 0, 0.7);
-  --selection: rgba(250, 250, 250, 0.2);
+  --hover-subtle: rgba(237, 237, 237, 0.03);
+  --hover: rgba(237, 237, 237, 0.06);
+  --hover-strong: rgba(237, 237, 237, 0.1);
+  --control-border: #3a3a3e;
+  --border-hover: #45454a;
+  --placeholder: #77777c;
+  --track: #29292c;
+  --field-bg: rgba(237, 237, 237, 0.04);
+  --field-bg-solid: #1e1e20;
+  --tab-active: #2a2a2d;
+  --tab-active-border: transparent;
+  --topbar-bg: rgba(36, 36, 39, 0.6);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --selection: rgba(227, 194, 74, 0.35);
   --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --hl-mark: #e3c24a;
+  --glass: rgba(36, 36, 39, 0.6);
+  --glass-edge: rgba(237, 237, 237, 0.1);
+  --glass-top: rgba(255, 255, 255, 0.08);
+  --float: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
 /* ---------------- Class colour palette ----------------

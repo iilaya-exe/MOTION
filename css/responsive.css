@@ -69,7 +69,7 @@
   body.nav-open { overflow: hidden; }
 
   .topbar { display: flex; }
-  .topbar-search { margin: 0 -7px 0 auto; }
+  .topbar-search { margin: 0 0 0 auto; }
   .cmdk-trigger { display: none; }
   .sidebar-backdrop { display: block; pointer-events: none; }
   .sidebar-backdrop.show { pointer-events: auto; }
@@ -98,11 +98,29 @@
   }
 
   .sidebar.open { transform: none; box-shadow: var(--shadow-lg); }
+  /* The drawer runs edge to edge; the floating inset is a desktop thing. */
+  .sidebar { margin: 0; height: auto; border-radius: 0 18px 18px 0; border-left: none; }
+  .sidebar:not(.open) { box-shadow: none; visibility: hidden; transition: transform 0.24s var(--ease), visibility 0s 0.24s; }
+  .sidebar.open { visibility: visible; transition: transform 0.24s var(--ease); }
+  /* Search and add already live in the top bar and the round button. */
+  #view-dashboard .page-head .toolbar { display: none; }
+  .page-head > div:first-child { flex: 1 1 100%; }
+  .page-head .toolbar { width: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .page-head .toolbar::-webkit-scrollbar { display: none; }
+  .page-head .toolbar .search-field { flex: 1 1 auto; min-width: 96px; }
+  .page-head .toolbar .search-field input { width: 100%; }
+  .page-head .toolbar > * { flex-shrink: 0; }
+  .page-head .toolbar > .search-field { flex-shrink: 1; }
+  /* The round + button adds a class here, so the toolbar keeps to views. */
+  #schedToolbar #addClassBtn { display: none; }
+  #schedToolbar #fullSchedBtn { margin-left: auto; }
+  /* Narrow day cells: the task count is just its small box. */
+  .cal-task-indicator { font-size: 0; gap: 0; }
 
   .content {
     --content-pad-x: 18px;
     /* The bottom clears the tab bar and the floating add button. */
-    padding: calc(54px + env(safe-area-inset-top) + 22px) var(--content-pad-x) calc(var(--tabbar-h) + 84px);
+    padding: calc(54px + env(safe-area-inset-top) + 22px) var(--content-pad-x) calc(var(--tabbar-h) + 32px);
     overflow: visible;
     height: auto;
   }
@@ -177,7 +195,7 @@
   .dash-columns { gap: 24px; }
   .dash-col { min-width: 100%; }
 
-  .checklist-grid { grid-template-columns: 1fr; gap: 12px; }
+  .checklist-grid { columns: 1; }
   .cl-items { max-height: none; }
 
   .form-2col { grid-template-columns: 1fr; }
@@ -197,9 +215,6 @@
 
   .cal-header { gap: 10px; }
   .cal-header h2 { order: -1; flex: 1 0 100%; }
-  .cal-nav { flex: 1; }
-  .cal-nav .btn { flex: 1; }
-  .new-event-btn { flex: 1 0 100%; }
 
   /* Phones: pinned under the fixed top bar, one scrollable row instead of
      several wrapped ones, and docked above the keyboard while typing. */
@@ -208,22 +223,26 @@
   /* ---- Bottom tab bar and add button ----
      The five main screens sit where a thumb reaches; "+" adds what belongs on
      the current screen. Both step aside while the keyboard is up. */
-  :root { --tabbar-h: calc(60px + env(safe-area-inset-bottom)); }
+  :root { --tabbar-h: calc(74px + env(safe-area-inset-bottom)); }
 
+  /* A floating glass capsule, with the add button as its own round glass
+     disc beside it, both clear of the home indicator. */
   .tabbar {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: max(12px, env(safe-area-inset-left));
+    right: calc(max(12px, env(safe-area-inset-right)) + 66px);
+    bottom: calc(10px + env(safe-area-inset-bottom));
     z-index: 105;
-    height: var(--tabbar-h);
-    padding: 0 max(6px, env(safe-area-inset-left)) env(safe-area-inset-bottom) max(6px, env(safe-area-inset-right));
+    height: 58px;
+    padding: 0 4px;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    background: var(--topbar-bg);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
-    border-top: 1px solid var(--border);
+    border-radius: 29px;
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid var(--glass-edge);
+    box-shadow: inset 0 1px 0 var(--glass-top), var(--float);
   }
 
   .tab {
@@ -231,32 +250,34 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
+    margin: 4px 0;
+    border-radius: 25px;
     font-size: 10.5px;
     font-weight: 500;
-    color: var(--text-3);
+    color: var(--text-2);
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
   }
   .tab .icon { width: 22px; height: 22px; stroke-width: 1.8; }
-  .tab[aria-current="page"] { color: var(--text); }
+  .tab[aria-current="page"] { color: var(--text); background: var(--hover); }
   .tab[aria-current="page"] .icon { stroke-width: 2.2; }
   .tab:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ring-color); border-radius: var(--r-md); }
 
   .fab {
     position: fixed;
-    right: max(16px, env(safe-area-inset-right));
-    bottom: calc(var(--tabbar-h) + 14px);
+    right: max(12px, env(safe-area-inset-right));
+    bottom: calc(10px + env(safe-area-inset-bottom));
     z-index: 106;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 54px;
-    height: 54px;
-    border-radius: 18px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
     background: var(--accent-fill);
     color: var(--on-accent);
-    box-shadow: var(--shadow-lg);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), var(--float);
     transition: transform var(--dur-fast) var(--ease);
   }
   .fab.hidden { display: none; }
@@ -270,7 +291,7 @@
   /* Floating things lifted above the bar. */
   .undo-toast { bottom: calc(var(--tabbar-h) + 12px); }
   body.is-typing .undo-toast { bottom: calc(12px + env(safe-area-inset-bottom)); }
-  .class-timer { bottom: calc(var(--tabbar-h) + 80px); }
+  .class-timer { bottom: calc(var(--tabbar-h) + 6px); }
 
   /* No hover on touch: folder actions stay visible, sized for a finger. */
   .folder-actions { display: flex; }
@@ -354,4 +375,8 @@
   .task-row .icon-btn,
   .board-card .icon-btn { opacity: 1; }
   .task-row input[type="checkbox"] { width: 20px; height: 20px; }
+}
+
+@media (max-width: 768px) and (prefers-reduced-transparency: reduce) {
+  .tabbar { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }

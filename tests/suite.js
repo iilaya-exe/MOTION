@@ -290,10 +290,10 @@ export async function suite(win) {
     check("timer persists across navigation", !q("#classTimer").classList.contains("hidden"),
       "timer disappeared when leaving Schedule");
 
-    d.nav("Home");
+    d.nav("Today");
     await settle();
-    check("home shows the countdown too", !q("#homeTimer").classList.contains("hidden"),
-      q("#homeTimer").className);
+    check("Today names the class that is coming up", /Timed Class/.test(q("#nextClass").textContent),
+      q("#nextClass").textContent);
 
     click(q('#classTimer [data-action="hide-timer"]'));
     await settle();
@@ -302,24 +302,20 @@ export async function suite(win) {
 
   // ---- Home widgets ----
   group("Home widgets");
-  d.nav("Home");
+  d.nav("Today");
   await settle();
-  check("widget grid rendered", qa(".widgets .widget").length === 3,
-    String(qa(".widgets .widget").length));
-  check("up-next widget filled", q("#nextClass .next-class") || q("#nextClass .widget-empty"),
-    q("#nextClass").innerHTML.slice(0, 80));
-  check("the progress card and shortcut buttons are gone", !q("#dayRing") && !q("#quickActions"));
+  check("the date is the title, not a greeting", !/Good (morning|afternoon|evening)/.test(q("#greeting").textContent) &&
+    /\d/.test(q("#greeting").textContent), q("#greeting").textContent);
+  check("four numbers lead the page", qa(".stats .stat").length === 4, String(qa(".stats .stat").length));
   check("today's progress shows under Done today", q("#statDoneBar") &&
     /^\d+%$|^$/.test(q("#statDoneBar").style.width || ""), q("#statDoneBar")?.style.width);
-  check("Up next with no class left offers a next step",
-    !!q("#nextClass .next-class") || !!q("#nextClass .up-next-task, #nextClass [data-action='add-class']") ||
-    /No classes today|done for today/.test(q("#nextClass").textContent), q("#nextClass").textContent);
-  check("mini stats rendered", qa(".mini-stat").length === 6, String(qa(".mini-stat").length));
-  check("motto shown", q("#homeMotto").textContent.length > 0, q("#homeMotto").textContent);
+  check("the summary line counts today's classes", /class/.test(q("#todayLabel").textContent), q("#todayLabel").textContent);
+  check("due work is listed beside the day", !!q("#dueNext li"), q("#dueNext").innerHTML.slice(0, 80));
+  check("quick add sits with the due list", !!q(".today-side #quickTaskInput"));
 
   // ---- icons must actually draw ----
   group("Icons render");
-  d.nav("Home");
+  d.nav("Today");
   await settle();
 
   // The real defect was an <svg> with nothing inside it: valid markup, zero
@@ -332,17 +328,6 @@ export async function suite(win) {
   check("every phone tab has an icon that draws",
     tabs.length === 5 && tabs.every((t) => t.querySelector("svg")?.children.length > 0),
     tabs.map((t) => `${t.textContent.trim()}:${t.querySelector("svg")?.children.length ?? 0}`).join(" | "));
-
-  // ---- "Up next" must survive a narrow widget ----
-  group("Up next layout");
-  check("card wraps instead of crushing its text", /\.next-class \{[^}]*flex-wrap: wrap/.test(cssText),
-    "no flex-wrap on .next-class");
-  check("body has a width floor, not min-width:0",
-    /\.nc-body \{[^}]*min-width: 150px/.test(cssText), "nc-body can still collapse");
-  check("time and room stay on one line",
-    /\.nc-meta span \{[^}]*white-space: nowrap/.test(cssText), "meta can still break mid-phrase");
-  check("status pill cannot be squeezed",
-    /\.next-class \.cls-status \{[^}]*flex-shrink: 0/.test(cssText), "pill still shrinkable");
 
   // ---- Task + checklist state visuals ----
   group("State visuals");
@@ -361,9 +346,9 @@ export async function suite(win) {
 
   // --------------------------------------------------------- today timeline ---
   group("Today timeline");
-  d.nav("Home");
+  d.nav("Today");
   await settle();
-  check("timeline rendered", q("#todayTimeline .tl-list"), q("#todayTimeline").innerHTML.slice(0, 140));
+  check("the day is drawn as a timetable", q("#todayTimeline .tl-day"), q("#todayTimeline").innerHTML.slice(0, 140));
   check("the class appears on the spine",
     q(".tl-item .tl-title")?.textContent.includes("Psychology"), q(".tl-item")?.textContent);
   check("its time is shown", /\d/.test(q(".tl-time")?.textContent || ""), q(".tl-time")?.textContent);
@@ -375,7 +360,7 @@ export async function suite(win) {
       Number(q("#statClasses").textContent) >= 1,
     `${q("#statClasses").textContent} vs ${qa(".tl-item").length} timeline items`);
   check("today summary line written", q("#todayMeta").textContent.length > 0, q("#todayMeta").textContent);
-  check("a Now marker is placed", q(".tl-now"), "no now marker");
+  check("a Now marker is placed", q(".tl-now .mark"), "no now marker");
 
   // ticking from the timeline goes through the same rollover logic
   // Read the date from the Tasks view, which only re-renders when switched to —
@@ -387,7 +372,7 @@ export async function suite(win) {
   const dueOf = (text) => rowFor(text)?.querySelector("input[data-action=set-due]")?.value;
   const dueBefore = dueOf("Weekly reading");
 
-  d.nav("Home"); await settle();
+  d.nav("Today"); await settle();
   tick(q(".tl-item .tl-task input[type=checkbox]"));
   await settle();
 
@@ -399,7 +384,7 @@ export async function suite(win) {
     Math.round((new Date(dueAfter) - new Date(dueBefore)) / 86400000) === 7,
     `${dueBefore} -> ${dueAfter}`);
   check("…and it is still open", !rowFor("Weekly reading")?.classList.contains("done"), "row marked done");
-  d.nav("Home"); await settle();
+  d.nav("Today"); await settle();
 
   // ----------------------------------------------------------------- undo ---
   group("Undo (#5)");
@@ -427,7 +412,7 @@ export async function suite(win) {
 
   // ---------------------------------------------------------------- notes ---
   group("Notes — search & edited stamp (#4)");
-  d.nav("Home");
+  d.nav("Today");
   await settle();
   click(q("#pageList .page-item"));
   await settle();
@@ -923,7 +908,7 @@ export async function suite(win) {
     !(q(".task-row.is-overdue")?.style.boxShadow || "").includes("inset"),
     q(".task-row.is-overdue")?.style.boxShadow);
 
-  d.nav("Home");
+  d.nav("Today");
   await settle();
   check("timeline shows the day count too",
     qa("#todayTimeline .badge.overdue").some((b) => /days? overdue/.test(b.textContent)),
@@ -979,7 +964,7 @@ export async function suite(win) {
     await settle();
   };
 
-  d.nav("Home");
+  d.nav("Today");
   await settle();
   key(win.document.body, "k", { ctrlKey: true });
   await settle();

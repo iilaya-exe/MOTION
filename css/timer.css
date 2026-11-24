@@ -1,138 +1,112 @@
 /* ============================================================================
    Class countdown
    ----------------------------------------------------------------------------
-   Fixed to the viewport so it survives view switches, and colour-escalates as
-   the class approaches: soon → warn (30m) → urgent (15m) → critical (5m).
-   The ring is a conic gradient driven by one custom property, which keeps the
-   per-second update to a single text write.
+   Fixed to the viewport so it survives view switches. It is part of the
+   functional layer, so it is glass. The subject colour appears only as the
+   dot; the urgency shows in the label: Next class → Starts soon → Leave now
+   (red) → In class now, with a progress bar while the class runs.
    ========================================================================== */
 
 .class-timer {
   position: fixed;
-  right: var(--sp-5);
-  bottom: var(--sp-5);
+  right: 20px;
+  bottom: 20px;
   z-index: 140;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3);
-  max-width: min(380px, calc(100vw - 32px));
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--cc, var(--accent));
-  border-radius: var(--r-xl);
-  box-shadow: var(--shadow-lg);
-  animation: timerIn var(--dur-slow) var(--ease-spring);
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  padding: 14px 16px 16px;
+  border-radius: 18px;
+  animation: timerIn var(--dur-slow) var(--ease);
 }
 
 @keyframes timerIn {
-  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
 }
 
-.ct-ring {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: var(--cc, var(--accent));
-  box-shadow: 0 0 0 0 var(--cc, var(--accent));
-  animation: ctPulse 2s var(--ease) infinite;
-}
+.ct-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-right: 22px; }
+.ct-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text); }
+.ct-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc, var(--text)); flex-shrink: 0; }
+.ct-when { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); white-space: nowrap; }
 
-@keyframes ctPulse {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cc, var(--accent)) 55%, transparent); }
-  70% { box-shadow: 0 0 0 9px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-
-.ct-body { flex-shrink: 0; }
-
-.ct-label {
-  font-size: var(--fs-mini);
-  font-weight: 500;
-  color: var(--text-3);
-}
-
+.ct-main { display: flex; align-items: flex-end; gap: 14px; margin-top: 10px; }
 .ct-count {
-  font-size: var(--fs-h2);
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
   letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: var(--cc, var(--accent));
+  color: var(--text);
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
-
-.ct-class {
-  min-width: 0;
-  border-left: 1px solid var(--border);
-  padding-left: var(--sp-3);
-}
-
+.ct-class { min-width: 0; padding-bottom: 2px; }
 .ct-name {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--fs-body-s);
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.ct-emoji { font-size: 1em; line-height: 1; }
+.ct-meta { margin-top: 2px; font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.ct-emoji { font-size: 1.05em; line-height: 1; }
-
-.ct-meta {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-  font-size: var(--fs-tiny);
-  color: var(--text-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ct-meta .icon { width: 12px; height: 12px; }
+.ct-progress { height: 4px; border-radius: 2px; margin-top: 12px; background: var(--track); overflow: hidden; }
+.ct-progress i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--cc, var(--text)); transition: width 1s linear; }
 
 .ct-hide {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--r-sm);
-  color: var(--text-3);
+  border-radius: 50%;
+  color: var(--text-2);
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 }
-
 .ct-hide .icon { width: 12px; height: 12px; }
-.class-timer:hover .ct-hide { opacity: 1; }
+.class-timer:hover .ct-hide,
+.class-timer:focus-within .ct-hide { opacity: 1; }
 .ct-hide:hover { background: var(--hover); color: var(--text); }
+@media (hover: none) { .ct-hide { opacity: 1; } }
 
-/* Escalation. Each phase overrides --cc so the border, ring and digits all
-   shift together rather than needing three separate rules. */
-.class-timer.phase-warn { --cc: var(--amber); }
-.class-timer.phase-urgent { --cc: #ea580c; }
-.class-timer.phase-critical {
-  --cc: var(--danger);
-  background: var(--danger-soft);
+/* Escalation lives in the words; only the last five minutes turn red. */
+.class-timer.phase-critical .ct-label,
+.class-timer.phase-critical .ct-count { color: var(--danger); }
+.class-timer.phase-critical .ct-dot { background: var(--danger); animation: ctBlink 1s steps(2, start) infinite; }
+@keyframes ctBlink { to { opacity: 0.35; } }
+
+.class-timer.pulse { animation: ctAttention 0.6s var(--ease) 2; }
+@keyframes ctAttention {
+  0%, 100% { transform: none; }
+  50% { transform: translateY(-4px); }
 }
 
-:root[data-theme="dark"] .class-timer.phase-urgent { --cc: #fb923c; }
+@media (prefers-reduced-motion: reduce) {
+  .class-timer, .class-timer.pulse, .ct-dot { animation: none !important; }
+}
 
-.class-timer.phase-critical .ct-ring { animation-duration: 1s; }
-
-.class-timer.pulse { animation: ctAttention 0.7s var(--ease) 2; }
-
-@keyframes ctAttention {
-  0%, 100% { transform: none; box-shadow: var(--shadow-lg); }
-  50% { transform: scale(1.035); box-shadow: var(--shadow-lg), 0 0 0 6px color-mix(in srgb, var(--cc) 18%, transparent); }
+/* Phone: a strip that sits just above the tab bar. */
+@media (max-width: 768px) {
+  .class-timer {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    padding: 10px 14px;
+    border-radius: 16px;
+  }
+  .ct-main { margin-top: 6px; align-items: center; gap: 12px; }
+  .ct-count { font-size: 24px; }
+  .ct-progress { margin-top: 8px; }
+  .ct-hide { top: 6px; right: 6px; }
 }
 
 /* ---------------- In-view panel (Schedule + Home) ---------------- */
@@ -143,34 +117,34 @@
   gap: var(--sp-4);
   padding: 20px 24px;
   border-radius: var(--r-xl);
-  background: var(--cc-soft, var(--accent-soft));
-  border: 1px solid color-mix(in srgb, var(--cc, var(--accent)) 35%, transparent);
-  border-left: 4px solid var(--cc, var(--accent));
-  box-shadow: var(--shadow-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: inset 3px 0 0 var(--cc, var(--text));
   margin-bottom: var(--gap-card);
 }
 
 .timer-panel .tp-info { flex: 1; min-width: 0; }
 
 .timer-panel .tp-count {
-  font-size: var(--fs-display);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   line-height: 1;
-  color: var(--cc, var(--accent));
+  color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .timer-panel .tp-label {
   font-size: var(--fs-caption);
   font-weight: 500;
-  color: var(--cc, var(--accent));
+  color: var(--text-2);
   margin-bottom: 4px;
 }
 
 .timer-panel .tp-name {
   font-size: var(--fs-h3);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: -0.015em;
   display: flex;
   align-items: center;
