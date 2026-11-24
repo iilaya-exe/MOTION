@@ -7,7 +7,8 @@ import { CLASS_COLORS } from "./schedule.js";
 
 const WELCOME_CONTENT =
   "<h2>Welcome to Motion</h2>" +
-  "<p>This is your first note. Click into this text to start typing, or use the toolbar above for headings, bold, italic, lists and dividers.</p>" +
+  "<p>This is your first note. Click into this text to start typing, or use the toolbar above for headings, bold, italic, lists and dividers — it stays pinned while you scroll.</p>" +
+  "<p>Shortcuts work as you type: <code>#</code> and a space for a heading, <code>-</code> for a bullet list, <code>[]</code> for a checklist, <code>&gt;</code> for a quote.</p>" +
   "<p>Create more pages from the sidebar, and explore <b>Tasks</b>, <b>Calendar</b> and <b>Checklists</b> to get organized.</p>";
 
 export function defaultState() {
@@ -17,7 +18,8 @@ export function defaultState() {
     eventsList: [],
     checklists: [],
     classes: [],
-    pages: [{ id: welcomeId, title: "Welcome", content: WELCOME_CONTENT, updatedAt: Date.now() }],
+    pages: [{ id: welcomeId, title: "Welcome", content: WELCOME_CONTENT, updatedAt: Date.now(), folderId: null }],
+    folders: [],
     currentPageId: welcomeId,
   };
 }
@@ -98,6 +100,21 @@ function sanitizePages(parsed) {
       title: typeof p.title === "string" ? p.title : "",
       content: typeof p.content === "string" ? p.content : "",
       updatedAt: typeof p.updatedAt === "number" ? p.updatedAt : 0,
+      folderId: typeof p.folderId === "string" && p.folderId ? p.folderId : null,
+    }));
+}
+
+/** Note folders: one level, named, remembered open or closed. */
+function sanitizeFolders(parsed) {
+  if (!Array.isArray(parsed.folders)) return [];
+  const seen = new Set();
+
+  return parsed.folders
+    .filter((f) => f && typeof f.id === "string" && f.id && !seen.has(f.id) && seen.add(f.id))
+    .map((f) => ({
+      id: f.id,
+      name: typeof f.name === "string" && f.name.trim() ? f.name.trim().slice(0, 120) : "Untitled folder",
+      collapsed: Boolean(f.collapsed),
     }));
 }
 
@@ -135,6 +152,13 @@ export function sanitizeState(parsed) {
   if (!parsed || typeof parsed !== "object") return fallback;
 
   const pages = sanitizePages(parsed) || fallback.pages;
+  const folders = sanitizeFolders(parsed);
+
+  // A note filed in a folder that no longer exists is simply unfiled.
+  const folderIds = new Set(folders.map((f) => f.id));
+  pages.forEach((p) => {
+    if (p.folderId && !folderIds.has(p.folderId)) p.folderId = null;
+  });
 
   let currentPageId = parsed.currentPageId;
   if (!pages.length) {
@@ -153,6 +177,7 @@ export function sanitizeState(parsed) {
     checklists: sanitizeChecklists(parsed),
     classes,
     pages,
+    folders,
     currentPageId,
   };
 }

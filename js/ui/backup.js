@@ -48,6 +48,7 @@ function describe(state) {
     [state.tasks?.length, "task"],
     [state.classes?.length, "class", "classes"],
     [state.pages?.length, "note"],
+    [state.folders?.length, "folder"],
     [state.checklists?.length, "checklist"],
     [state.eventsList?.length, "event"],
   ];

@@ -61,9 +61,13 @@ textarea {
 }
 
 .content {
+  /* Side padding as a variable so full-bleed bands (the pinned notes ribbon)
+     can reach the edges with a matching negative margin. */
+  --content-pad-x: 48px;
+  --content-pad-top: 40px;
   flex: 1;
   overflow-y: auto;
-  padding: 40px 48px 72px;
+  padding: var(--content-pad-top) var(--content-pad-x) 72px;
 }
 
 .view {

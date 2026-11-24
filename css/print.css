@@ -157,6 +157,59 @@
     text-decoration: underline;
   }
 
+  .ps-body blockquote {
+    margin: 0 0 9pt;
+    padding: 1pt 0 1pt 10pt;
+    border-left: 2pt solid #c9c9d2;
+    color: #3f3f46;
+    break-inside: avoid;
+  }
+
+  .ps-body code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #f4f4f5;
+    border: 0.5pt solid #e4e4e7;
+    border-radius: 2pt;
+    padding: 0 2pt;
+  }
+
+  /* Note colours, always in their light-theme shades on paper. */
+  .ps-body [data-tc="gray"] { color: #71717a; }
+  .ps-body [data-tc="brown"] { color: #8a5a3c; }
+  .ps-body [data-tc="orange"] { color: #c2410c; }
+  .ps-body [data-tc="yellow"] { color: #a16207; }
+  .ps-body [data-tc="green"] { color: #15803d; }
+  .ps-body [data-tc="blue"] { color: #1d4ed8; }
+  .ps-body [data-tc="purple"] { color: #7e22ce; }
+  .ps-body [data-tc="pink"] { color: #be185d; }
+  .ps-body [data-tc="red"] { color: #b91c1c; }
+  .ps-body [data-hl="gray"] { background: #e9e9eb; }
+  .ps-body [data-hl="brown"] { background: #f1e6dc; }
+  .ps-body [data-hl="orange"] { background: #ffe4cc; }
+  .ps-body [data-hl="yellow"] { background: #fdf0a6; }
+  .ps-body [data-hl="green"] { background: #d3f5dd; }
+  .ps-body [data-hl="blue"] { background: #d6e6fd; }
+  .ps-body [data-hl="purple"] { background: #ece0fd; }
+  .ps-body [data-hl="pink"] { background: #fbdcec; }
+  .ps-body [data-hl="red"] { background: #fddcdc; }
+  .ps-body [data-hl] { border-radius: 2pt; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+
+  .ps-body ul.todo { list-style: none; padding-left: 2pt; }
+  .ps-body ul.todo > li { position: relative; padding-left: 15pt; }
+  .ps-body ul.todo > li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 2.6pt;
+    width: 8pt;
+    height: 8pt;
+    border: 0.8pt solid #71717a;
+    border-radius: 1.6pt;
+  }
+  .ps-body ul.todo > li[data-checked="true"] { color: #71717a; text-decoration: line-through; }
+  .ps-body ul.todo > li[data-checked="true"]::before { background: #18181b; border-color: #18181b; }
+
   .ps-empty { color: #8b8b96; font-style: italic; }
 
   /* ---------------- Footer ---------------- */

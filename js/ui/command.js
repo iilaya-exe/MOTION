@@ -237,7 +237,9 @@ function noteItems() {
     .map((p) => ({
       id: `note-${p.id}`,
       label: p.title || "Untitled",
-      keywords: plainText(p.content),
+      // The folder name both shows where the note lives and makes it searchable.
+      hint: store.state.folders?.find((f) => f.id === p.folderId)?.name || "",
+      keywords: `${plainText(p.content)} ${store.state.folders?.find((f) => f.id === p.folderId)?.name || ""}`,
       iconName: "page",
       run: () => {
         store.state.currentPageId = p.id;

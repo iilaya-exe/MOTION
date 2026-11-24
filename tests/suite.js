@@ -486,6 +486,166 @@ export async function suite(win) {
   check("undo restores the page", qa("#pageList .page-item").length === 2,
     String(qa("#pageList .page-item").length));
 
+  // -------------------------------------------------------- note editor ---
+  group("Notes — pinned ribbon & editor");
+  const ed = q("#pageContent");
+  const ribbon = q("#notesRibbon");
+  const btn = (action) => q(`.notes-toolbar [data-action="${action}"]`);
+  const edHtml = () => ed.innerHTML.replace(/​/g, "");
+  const select = (node, start, end = start) => {
+    const r = d.doc.createRange();
+    r.setStart(node, start);
+    r.setEnd(node, end);
+    win.getSelection().removeAllRanges();
+    win.getSelection().addRange(r);
+  };
+  /** Puts `html` in the note and the caret at the end of the last text. */
+  const setNote = async (html) => {
+    ed.focus();
+    ed.innerHTML = html;
+    const w = d.doc.createTreeWalker(ed, win.NodeFilter.SHOW_TEXT);
+    let last = null;
+    for (let n = w.nextNode(); n; n = w.nextNode()) last = n;
+    if (last) select(last, last.length);
+    ed.dispatchEvent(new win.InputEvent("input", { inputType: "insertFromPaste", bubbles: true }));
+    await settle();
+  };
+  /** What typing one character reports, after the browser has inserted it. */
+  const typed = async (data) => {
+    const sel = win.getSelection();
+    const node = sel.anchorNode;
+    const at = sel.anchorOffset;
+    node.insertData(at, data);
+    select(node, at + data.length);
+    ed.dispatchEvent(new win.InputEvent("input", { inputType: "insertText", data, bubbles: true }));
+    await settle();
+  };
+
+  check("the ribbon is sticky, so it stays in reach on a long note",
+    win.getComputedStyle(ribbon).position === "sticky", win.getComputedStyle(ribbon).position);
+  check("every ribbon button is labelled",
+    qa(".notes-toolbar button").every((b) => b.getAttribute("aria-label") && b.title),
+    qa(".notes-toolbar button").filter((b) => !b.title).map((b) => b.dataset.action).join(","));
+  check("shortcuts are shown in tooltips", /\(.*B\)/.test(btn("bold").title), btn("bold").title);
+
+  await setNote("<p>hello world</p>");
+  select(ed.querySelector("p").firstChild, 0, 5);
+  click(btn("bold"));
+  await settle();
+  check("Bold applies to the selection", /<b>hello<\/b> world/.test(edHtml()), edHtml());
+  check("and the button reads as on", btn("bold").classList.contains("active"));
+  click(btn("undo"));
+  await settle();
+  check("Undo reverts it", edHtml() === "<p>hello world</p>", edHtml());
+  click(btn("redo"));
+  await settle();
+  check("Redo reapplies it", /<b>hello<\/b>/.test(edHtml()), edHtml());
+
+  await setNote("<ul><li>one</li><li>two</li></ul>");
+  click(btn("h2"));
+  await settle();
+  check("Heading on a list item converts only that item",
+    /<ul><li>one<\/li><\/ul><h2>two<\/h2>/.test(edHtml()), edHtml());
+
+  await setNote("<ul><li>bullet</li></ul><p>task</p>");
+  click(btn("todo"));
+  await settle();
+  check("a checklist next to a bullet list stays separate",
+    /<ul><li>bullet<\/li><\/ul><ul class="todo"><li>task<\/li><\/ul>/.test(edHtml()), edHtml());
+  key(ed, "Enter", { ctrlKey: true, metaKey: true });
+  await settle();
+  check("Ctrl/⌘+Enter ticks a checklist item", /data-checked="true"/.test(edHtml()), edHtml());
+
+  await setNote("<p>#</p>");
+  await typed(" ");
+  check("typing '# ' starts a heading", /^<h2>(<br>)?<\/h2>$/.test(edHtml()), edHtml());
+  await setNote("<p>-</p>");
+  await typed(" ");
+  check("typing '- ' starts a bullet list", /^<ul><li>(<br>)?<\/li><\/ul>$/.test(edHtml()), edHtml());
+  await setNote("<p>[]</p>");
+  await typed(" ");
+  check("typing '[] ' starts a checklist", /^<ul class="todo"><li>(<br>)?<\/li><\/ul>$/.test(edHtml()), edHtml());
+  await setNote("<p>run `ls</p>");
+  await typed("`");
+  check("`backticks` make inline code", /<code>ls<\/code>/.test(edHtml()), edHtml());
+
+  await setNote("<p>x</p>");
+  const dt = new win.DataTransfer();
+  dt.setData("text/html",
+    '<h1 style="color:red">Big</h1><p><span style="font-weight:700">strong</span> <a href="javascript:x">bad</a></p><img src="x">');
+  dt.setData("text/plain", "Big strong bad");
+  ed.dispatchEvent(new win.ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
+  await settle();
+  check("pasted formatting is kept", /<h2>Big<\/h2>/.test(edHtml()) && /<b>strong<\/b>/.test(edHtml()), edHtml());
+  check("pasted styles, images and script links are dropped",
+    !/style=|<img|javascript:/.test(edHtml()), edHtml());
+
+  await setNote(Array.from({ length: 120 }, (_, i) => `<p>Line ${i}</p>`).join(""));
+  q(".content").scrollTop = 3000;
+  q(".content").dispatchEvent(new win.Event("scroll"));
+  await settle(60);
+  const pinTop = ribbon.getBoundingClientRect().top - q(".content").getBoundingClientRect().top;
+  check("scrolled deep into a long note, the ribbon is still at the top",
+    Math.abs(pinTop) < 1.5, String(pinTop));
+  check("and shows as pinned", ribbon.classList.contains("is-stuck"));
+  q(".content").scrollTop = 0;
+
+  // ------------------------------------------------------------ colours ---
+  group("Notes — text colour & highlight");
+  await setNote("<p>hello world</p>");
+  select(ed.querySelector("p").firstChild, 0, 5);
+  click(btn("color"));
+  await settle();
+  check("the colour button opens the palette", !q("#colorPopover").classList.contains("hidden"));
+  click(q('#cpText [data-tc="red"]'));
+  await settle();
+  check("a text colour is stored as a palette name, not a style",
+    /<span data-tc="red">hello<\/span>/.test(edHtml()) && !/style=/.test(edHtml()), edHtml());
+  check("the palette closes after a pick", q("#colorPopover").classList.contains("hidden"));
+  select(ed.querySelector("span").firstChild, 0, 5);
+  click(btn("color"));
+  await settle();
+  click(q('#cpHighlight [data-hl="yellow"]'));
+  await settle();
+  check("a highlight combines with the text colour",
+    /data-tc="red"/.test(edHtml()) && /data-hl="yellow"/.test(edHtml()), edHtml());
+  check("colours have a dark-theme shade", /\[data-theme="dark"\][^}]*--tc-red/s.test(cssText));
+
+  // ------------------------------------------------------------ folders ---
+  group("Notes — folders");
+  click(q("#newFolderBtn"));
+  await settle();
+  const folderInput = q("#pageList .folder-input");
+  check("a new folder opens for naming", !!folderInput && d.doc.activeElement === folderInput);
+  folderInput.value = "Lab work";
+  key(folderInput, "Enter");
+  await settle();
+  check("the folder appears in the sidebar", q("#pageList .folder-name")?.textContent === "Lab work",
+    q("#pageList").textContent);
+
+  const folderId = q("#pageList .folder").dataset.folder;
+  setValue(q("#pageFolderSelect"), folderId, "change");
+  await settle();
+  check("the picker files the open note in the folder",
+    !!q(`#pageList .folder[data-folder="${folderId}"] .page-item.nested`), q("#pageList").innerHTML.slice(0, 300));
+
+  click(q("#pageList .folder-row"));
+  await settle();
+  check("a folder collapses", !q("#pageList .folder").classList.contains("open"));
+  click(q("#pageList .folder-row"));
+  await settle();
+
+  click(q('#pageList [data-folder-action="delete"]'));
+  await confirmDialog(true);
+  await settle();
+  check("deleting a folder keeps its notes", !q("#pageList .folder") &&
+    qa("#pageList > .page-item").length === 2, q("#pageList").textContent);
+
+  // Leave the page as the later tests expect it: empty, and saved.
+  await setNote("");
+  ed.blur();
+  await settle();
+
   // ---------------------------------------------------------- sidebar collapse ---
   group("Collapsible sidebar");
   const root = d.doc.documentElement;

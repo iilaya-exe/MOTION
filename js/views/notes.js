@@ -1,17 +1,18 @@
 import { store } from "../store.js";
-import { $, $$, esc, isHidden } from "../dom.js";
+import { $, esc, isHidden } from "../dom.js";
 import { icon } from "../icons.js";
 import { uid } from "../lib/id.js";
 import { relativeTime } from "../lib/dates.js";
 import { printNote } from "../lib/note-print.js";
+import { countWords } from "../lib/rich-text.js";
+import * as editor from "./note-editor.js";
 import * as undo from "../ui/undo.js";
 import { ask } from "../ui/confirm.js";
 import { closeNav, isMobile, switchView } from "../ui/nav.js";
 import * as router from "../ui/router.js";
 
-/* Rich text is produced by document.execCommand. It is deprecated but remains
-   the only cross-browser way to get bold/lists/headings inside a contenteditable
-   region without pulling in an editor framework. */
+/* Page management: the sidebar list, titles, search, delete. The editing
+   surface itself — ribbon, shortcuts, history — lives in note-editor.js. */
 
 const currentPage = () =>
   store.state.pages.find((p) => p.id === store.state.currentPageId) || null;
@@ -39,151 +40,446 @@ function touch(page) {
   store.save();
 }
 
-/** The sidebar page list — rendered here because it mirrors notes state. */
-export function renderPageList() {
-  const list = $("pageList");
-  const { currentPageId } = store.state;
-  const pages = matchingPages();
+// ------------------------------------------------------------------ folders ---
+/* One level of folders, like Apple Notes: a note is in one folder or in none.
+   Deleting a folder never deletes notes — they move back out, with undo. */
 
-  if (!pages.length) {
-    list.innerHTML = `<div class="empty-hint">${
-      search.trim() ? "No notes match that search." : "No pages yet — click + to add one."
+const folders = () => store.state.folders;
+const folderById = (id) => (id ? folders().find((f) => f.id === id) || null : null);
+
+const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+const sortedFolders = () => [...folders()].sort(byName);
+
+/** "New folder", then "New folder 2", … so a fresh folder never shares a name. */
+function freeFolderName(base = "New folder") {
+  const taken = new Set(folders().map((f) => f.name.toLowerCase()));
+  if (!taken.has(base.toLowerCase())) return base;
+  let n = 2;
+  while (taken.has(`${base} ${n}`.toLowerCase())) n++;
+  return `${base} ${n}`;
+}
+
+/** Adds a folder and returns it. Shared with the command palette. */
+export function createFolder(name) {
+  const folder = { id: uid(), name: (name || "").trim().slice(0, 120) || freeFolderName(), collapsed: false };
+  folders().push(folder);
+  store.save();
+  return folder;
+}
+
+function movePage(pageId, folderId) {
+  const page = store.state.pages.find((p) => p.id === pageId);
+  if (!page) return;
+  const target = folderById(folderId);
+  if ((page.folderId || null) === (target ? target.id : null)) return;
+  page.folderId = target ? target.id : null;
+  if (target) target.collapsed = false; // show where it went
+  store.save();
+  renderPageList();
+  if (page === currentPage()) renderFolderPicker(page);
+}
+
+function toggleFolder(id) {
+  const folder = folderById(id);
+  if (!folder) return;
+  folder.collapsed = !folder.collapsed;
+  store.save();
+  renderPageList();
+}
+
+async function deleteFolder(id) {
+  const folder = folderById(id);
+  if (!folder) return;
+  const inside = store.state.pages.filter((p) => p.folderId === id);
+  const n = inside.length;
+
+  const ok = await ask({
+    title: `Delete folder "${folder.name}"?`,
+    message: n
+      ? `Its ${n} note${n === 1 ? "" : "s"} will not be deleted — ${n === 1 ? "it moves" : "they move"} out of the folder.`
+      : "The folder is empty.",
+    confirmLabel: "Delete folder",
+  });
+  if (!ok) return;
+
+  const index = folders().indexOf(folder);
+  folders().splice(index, 1);
+  inside.forEach((p) => (p.folderId = null));
+  store.save();
+  renderPageList();
+  renderFolderPicker(currentPage());
+
+  undo.offer(`Deleted folder "${folder.name}"`, () => {
+    folders().splice(index, 0, folder);
+    inside.forEach((p) => (p.folderId = folder.id));
+    store.save();
+    renderPageList();
+    renderFolderPicker(currentPage());
+  });
+}
+
+/** Id of the folder being renamed inline; the list is not redrawn under it. */
+let renaming = null;
+
+function startRename(id) {
+  const folder = folderById(id);
+  const row = $("pageList").querySelector(`.folder[data-folder="${CSS.escape(id)}"] .folder-name`);
+  if (!folder || !row) return;
+  renaming = id;
+
+  const input = document.createElement("input");
+  input.className = "folder-input";
+  input.value = folder.name;
+  input.maxLength = 120;
+  input.setAttribute("aria-label", "Folder name");
+  row.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let done = false;
+  const finish = (save) => {
+    if (done) return;
+    done = true;
+    renaming = null;
+    const name = input.value.trim();
+    if (save && name && name !== folder.name) {
+      folder.name = name.slice(0, 120);
+      store.save();
+    }
+    renderPageList();
+    renderFolderPicker(currentPage());
+  };
+
+  input.addEventListener("keydown", (e) => {
+    e.stopPropagation(); // Escape here must not close anything else
+    if (e.key === "Enter" && !e.isComposing) {
+      e.preventDefault();
+      finish(true);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      finish(false);
+    }
+  });
+  input.addEventListener("blur", () => finish(true));
+  input.addEventListener("click", (e) => e.stopPropagation());
+}
+
+// ---------------------------------------------------------------- sidebar ---
+
+function pageItem(p, active, nested) {
+  const title = esc(p.title) || "Untitled";
+  return (
+    `<div class="page-item${active ? " active" : ""}${nested ? " nested" : ""}" data-id="${esc(p.id)}" ` +
+    `draggable="true" title="${title}">${icon("page")}<span>${title}</span></div>`
+  );
+}
+
+function folderBlock(folder, pages, { open, total, isActive }) {
+  const name = esc(folder.name);
+  const actions =
+    `<span class="folder-actions">` +
+    `<button type="button" data-folder-action="new" title="New note in ${name}" aria-label="New note in ${name}">${icon("plus")}</button>` +
+    `<button type="button" data-folder-action="rename" title="Rename folder" aria-label="Rename ${name}">${icon("pencil")}</button>` +
+    `<button type="button" data-folder-action="delete" title="Delete folder" aria-label="Delete ${name}">${icon("trash")}</button>` +
+    `</span>`;
+
+  const body = open
+    ? `<div class="folder-pages">${
+        pages.length
+          ? pages.map((p) => pageItem(p, isActive(p), true)).join("")
+          : '<div class="folder-empty">Empty — drag a note here</div>'
+      }</div>`
+    : "";
+
+  return (
+    `<div class="folder${open ? " open" : ""}" data-folder="${esc(folder.id)}">` +
+    `<div class="folder-row" role="button" tabindex="0" aria-expanded="${open}" title="${name}">` +
+    icon("chevronRight", "icon folder-chevron") +
+    icon(open ? "folderOpen" : "folder", "icon folder-icon") +
+    `<span class="folder-name">${name}</span>` +
+    `<span class="folder-count">${total || ""}</span>` +
+    actions +
+    `</div>${body}</div>`
+  );
+}
+
+/** The sidebar notes tree — rendered here because it mirrors notes state. */
+export function renderPageList() {
+  if (renaming) return;
+
+  const list = $("pageList");
+  const { currentPageId, pages: allPages } = store.state;
+  const pages = matchingPages();
+  const searching = Boolean(search.trim());
+  const notesVisible = !isHidden($("view-notes"));
+  const isActive = (p) => p.id === currentPageId && notesVisible;
+  const known = new Set(folders().map((f) => f.id));
+
+  let html = "";
+  sortedFolders().forEach((folder) => {
+    const inside = pages.filter((p) => p.folderId === folder.id);
+    if (searching && !inside.length) return;
+    const total = allPages.filter((p) => p.folderId === folder.id).length;
+    // A search opens every folder it found something in.
+    html += folderBlock(folder, inside, { open: searching || !folder.collapsed, total, isActive });
+  });
+
+  html += pages
+    .filter((p) => !p.folderId || !known.has(p.folderId))
+    .map((p) => pageItem(p, isActive(p), false))
+    .join("");
+
+  if (!html) {
+    html = `<div class="empty-hint">${
+      searching ? "No notes match that search." : "No pages yet — click + to add one."
     }</div>`;
-    return;
   }
 
-  const notesVisible = !isHidden($("view-notes"));
+  // Only shown mid-drag, for taking a note back out of its folder.
+  html += '<div class="unfile-zone" aria-hidden="true">Drop here to take it out of the folder</div>';
+  list.innerHTML = html;
+}
 
-  list.innerHTML = pages
-    .map((p) => {
-      const active = p.id === currentPageId && notesVisible;
-      return (
-        `<div class="page-item${active ? " active" : ""}" data-id="${esc(p.id)}" title="${esc(p.title) || "Untitled"}">` +
-        `${icon("page")}<span>${esc(p.title) || "Untitled"}</span></div>`
-      );
-    })
-    .join("");
+// ----------------------------------------------------------- folder picker ---
+
+/** The "Folder" dropdown under the title — the way to file a note on a phone. */
+function renderFolderPicker(page) {
+  const select = $("pageFolderSelect");
+  $("folderPicker").classList.toggle("hidden", !page);
+  $("folderNewForm").classList.add("hidden");
+  if (!page) return;
+
+  const current = folderById(page.folderId);
+  select.innerHTML =
+    `<option value="">No folder</option>` +
+    sortedFolders()
+      .map((f) => `<option value="${esc(f.id)}">${esc(f.name)}</option>`)
+      .join("") +
+    `<option value="__new">New folder…</option>`;
+  select.value = current ? current.id : "";
+  $("folderPicker").classList.toggle("is-filed", Boolean(current));
+}
+
+function openNewFolderInput() {
+  $("folderPicker").classList.add("hidden");
+  $("folderNewForm").classList.remove("hidden");
+  const input = $("folderNewInput");
+  input.value = "";
+  input.focus();
+}
+
+/** "Edited 5 min ago · 312 words" under the title. */
+function renderMeta(page) {
+  if (!page) {
+    $("pageMeta").textContent = "";
+    return;
+  }
+  const words = countWords(page.content);
+  const parts = [];
+  if (page.updatedAt) parts.push(`Edited ${relativeTime(page.updatedAt)}`);
+  parts.push(`${words.toLocaleString()} word${words === 1 ? "" : "s"}`);
+  $("pageMeta").textContent = parts.join(" · ");
 }
 
 export function render() {
+  // Whatever was typed into the previous page is written before it is swapped out.
+  editor.flush();
+
   const page = currentPage();
   const titleEl = $("pageTitleInput");
-  const contentEl = $("pageContent");
-  const deleteBtn = $("deletePageBtn");
 
-  if (!page) {
-    titleEl.value = "";
-    titleEl.disabled = true;
-    contentEl.innerHTML = "";
-    contentEl.contentEditable = "false";
-    contentEl.setAttribute("data-placeholder", "Create a page from the sidebar to get started.");
-    deleteBtn.classList.add("hidden");
-    $("printPageBtn").classList.add("hidden");
-    $("pageMeta").textContent = "";
-    updateToolbar();
-    return;
+  titleEl.disabled = !page;
+  titleEl.value = page ? page.title : "";
+  $("deletePageBtn").classList.toggle("hidden", !page);
+  $("printPageBtn").classList.toggle("hidden", !page);
+
+  // Opening a note inside a closed folder opens the folder, so the sidebar
+  // always shows where the note lives.
+  const folder = page && folderById(page.folderId);
+  if (folder?.collapsed) {
+    folder.collapsed = false;
+    store.save();
   }
 
-  titleEl.disabled = false;
-  titleEl.value = page.title;
-  contentEl.contentEditable = "true";
-  contentEl.innerHTML = page.content;
-  contentEl.setAttribute("data-placeholder", "Start writing...");
-  deleteBtn.classList.remove("hidden");
-  $("printPageBtn").classList.remove("hidden");
-  $("pageMeta").textContent = page.updatedAt ? `Edited ${relativeTime(page.updatedAt)}` : "";
-  updateToolbar();
+  // Re-showing the note already in the editor keeps it as it is — caret,
+  // selection and all — instead of rebuilding it from storage.
+  if (!page || page !== editorPage) editor.load(page);
+  else editor.refreshRibbon();
+  editorPage = page;
+  renderMeta(page);
+  renderFolderPicker(page);
 }
 
-function savePageContent() {
-  const page = currentPage();
-  if (!page) return;
-  page.content = $("pageContent").innerHTML;
+/** The page the editor's content belongs to, for its debounced saves. */
+let editorPage = null;
+
+function commitContent(html) {
+  const page = editorPage;
+  if (!page || !store.state.pages.includes(page)) return;
+  if (page.content === html) return;
+  page.content = html;
   touch(page);
-}
-
-function currentBlockTag() {
-  try {
-    return (document.queryCommandValue("formatBlock") || "").toLowerCase().replace(/[<>]/g, "");
-  } catch {
-    return "";
-  }
-}
-
-function updateToolbar() {
-  if (isHidden($("view-notes"))) return;
-
-  const contentEl = $("pageContent");
-  const sel = window.getSelection();
-  const anchor = sel?.anchorNode;
-  const anchorEl = anchor?.nodeType === 3 ? anchor.parentNode : anchor;
-  const inEditor = Boolean(sel?.rangeCount && anchorEl && contentEl.contains(anchorEl));
-
-  $$(".notes-toolbar button[data-cmd]").forEach((btn) => {
-    let on = false;
-    if (inEditor) {
-      try {
-        on = document.queryCommandState(btn.dataset.cmd);
-      } catch {
-        on = false;
-      }
-    }
-    btn.classList.toggle("active", Boolean(on));
-  });
-
-  // Plain text with no block wrapper reports "" or "div" — both mean Body.
-  const block = inEditor ? currentBlockTag() : "";
-  $$(".notes-toolbar button[data-block]").forEach((btn) => {
-    const target = btn.dataset.block;
-    const on =
-      inEditor &&
-      (target === "p" ? block === "" || block === "p" || block === "div" : block === target);
-    btn.classList.toggle("active", on);
-  });
-}
-
-function insertDivider() {
-  const contentEl = $("pageContent");
-  contentEl.focus();
-  document.execCommand("insertHorizontalRule", false, null);
-
-  // A divider inserted at the very end leaves nowhere to type, so give it a
-  // trailing paragraph and drop the caret into it.
-  if (contentEl.lastElementChild?.tagName === "HR") {
-    const p = document.createElement("p");
-    p.appendChild(document.createElement("br"));
-    contentEl.appendChild(p);
-
-    const range = document.createRange();
-    range.setStart(p, 0);
-    range.collapse(true);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
-
-  savePageContent();
-  updateToolbar();
+  renderMeta(page);
 }
 
 /** Adds a page, opens it, and returns it. Shared with the command palette. */
-export function createPage(title = "") {
-  const page = { id: uid(), title, content: "", updatedAt: Date.now() };
+export function createPage(title = "", folderId = null) {
+  const page = { id: uid(), title, content: "", updatedAt: Date.now(), folderId: folderById(folderId)?.id || null };
   store.state.pages.push(page);
   store.state.currentPageId = page.id;
   store.save();
-  if (!router.go("notes", page.id)) switchView("notes");
+  // Show it now rather than when the hashchange lands, so anything typed in
+  // the meantime goes into the new note, not the one being left.
+  switchView("notes");
+  router.go("notes", page.id);
   return page;
 }
 
 export function mount() {
-  $("pageList").addEventListener("click", (e) => {
+  editor.mount({ commit: commitContent });
+
+  const list = $("pageList");
+
+  list.addEventListener("click", (e) => {
+    const action = e.target.closest("[data-folder-action]");
+    if (action) {
+      const id = action.closest(".folder").dataset.folder;
+      const kind = action.dataset.folderAction;
+      if (kind === "rename") startRename(id);
+      else if (kind === "delete") deleteFolder(id);
+      else if (kind === "new") {
+        createPage("", id);
+        if (isMobile()) closeNav();
+        else $("pageTitleInput").focus();
+      }
+      return;
+    }
+
+    const row = e.target.closest(".folder-row");
+    if (row) {
+      if (e.target.closest("input")) return;
+      const id = row.parentElement.dataset.folder;
+      // The first click of a double-click already toggled the folder and
+      // redrew the list, so no dblclick event would ever arrive: read the
+      // click count instead, undo that toggle, and rename.
+      if (e.detail === 2 && e.target.closest(".folder-name")) {
+        toggleFolder(id);
+        startRename(id);
+        return;
+      }
+      toggleFolder(id);
+      return;
+    }
+
     const item = e.target.closest(".page-item");
     if (!item) return;
     store.state.currentPageId = item.dataset.id;
     store.save();
     if (!router.go("notes", item.dataset.id)) switchView("notes");
     if (isMobile()) closeNav();
+  });
+
+  list.addEventListener("keydown", (e) => {
+    const row = e.target.closest(".folder-row");
+    if (!row || e.target !== row) return;
+    const id = row.parentElement.dataset.folder;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleFolder(id);
+      list.querySelector(`.folder[data-folder="${CSS.escape(id)}"] .folder-row`)?.focus();
+    } else if (e.key === "F2") {
+      e.preventDefault();
+      startRename(id);
+    }
+  });
+
+  // Drag a note onto a folder to file it, or onto the bottom strip to unfile it.
+  let dragId = null;
+  const clearDrop = () => list.querySelectorAll(".drop-target").forEach((el) => el.classList.remove("drop-target"));
+  const dropZone = (el) => el.closest(".folder") || el.closest(".unfile-zone") || null;
+
+  list.addEventListener("dragstart", (e) => {
+    const item = e.target.closest(".page-item");
+    if (!item) return;
+    dragId = item.dataset.id;
+    e.dataTransfer.effectAllowed = "move";
+    // A private type, so dropping into the editor does not paste anything.
+    e.dataTransfer.setData("application/x-motion-note", dragId);
+    const page = store.state.pages.find((p) => p.id === dragId);
+    list.classList.add("is-dragging");
+    list.classList.toggle("drag-from-folder", Boolean(page?.folderId));
+  });
+
+  list.addEventListener("dragover", (e) => {
+    if (!dragId) return;
+    const zone = dropZone(e.target);
+    if (!zone) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (!zone.classList.contains("drop-target")) {
+      clearDrop();
+      zone.classList.add("drop-target");
+    }
+  });
+
+  list.addEventListener("dragleave", (e) => {
+    if (!list.contains(e.relatedTarget)) clearDrop();
+  });
+
+  list.addEventListener("drop", (e) => {
+    if (!dragId) return;
+    const zone = dropZone(e.target);
+    if (!zone) return;
+    e.preventDefault();
+    const id = dragId;
+    dragId = null;
+    movePage(id, zone.classList.contains("folder") ? zone.dataset.folder : null);
+  });
+
+  list.addEventListener("dragend", () => {
+    dragId = null;
+    clearDrop();
+    list.classList.remove("is-dragging", "drag-from-folder");
+  });
+
+  $("newFolderBtn").addEventListener("click", () => {
+    const folder = createFolder();
+    renderPageList();
+    renderFolderPicker(currentPage());
+    startRename(folder.id);
+  });
+
+  $("pageFolderSelect").addEventListener("change", (e) => {
+    const page = currentPage();
+    if (!page) return;
+    if (e.target.value === "__new") {
+      openNewFolderInput();
+      return;
+    }
+    movePage(page.id, e.target.value || null);
+  });
+
+  const closeNewFolder = () => renderFolderPicker(currentPage());
+  $("folderNewForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const page = currentPage();
+    const name = $("folderNewInput").value.trim();
+    if (page && name) {
+      const folder = createFolder(name);
+      movePage(page.id, folder.id);
+    }
+    closeNewFolder();
+  });
+  $("folderNewInput").addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      closeNewFolder();
+    }
+  });
+  $("folderNewInput").addEventListener("blur", () => {
+    // Submitting already redrew the picker; a plain blur just cancels.
+    if (!$("folderNewForm").classList.contains("hidden")) closeNewFolder();
   });
 
   $("newPageBtn").addEventListener("click", () => {
@@ -201,46 +497,27 @@ export function mount() {
     renderPageList();
   });
 
-  $("pageContent").addEventListener("input", savePageContent);
-
-  // Keep the caret alive: without this, mousedown moves focus to the button and
-  // the command would apply to nothing.
-  $$(".notes-toolbar button").forEach((btn) => {
-    btn.addEventListener("mousedown", (e) => e.preventDefault());
+  // Enter in the title drops into the note, as in Notion and Apple Notes.
+  $("pageTitleInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.isComposing) {
+      e.preventDefault();
+      editor.focusStart();
+    }
   });
 
-  $$(".notes-toolbar button[data-cmd]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      $("pageContent").focus();
-      document.execCommand(btn.dataset.cmd, false, null);
-      savePageContent();
-      updateToolbar();
-    });
+  $("printPageBtn").addEventListener("click", () => {
+    editor.flush();
+    printNote(currentPage());
   });
-
-  $$(".notes-toolbar button[data-block]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      $("pageContent").focus();
-      document.execCommand("formatBlock", false, `<${btn.dataset.block}>`);
-      savePageContent();
-      updateToolbar();
-    });
-  });
-
-  $$('.notes-toolbar button[data-insert="divider"]').forEach((btn) => {
-    btn.addEventListener("click", insertDivider);
-  });
-
-  document.addEventListener("selectionchange", updateToolbar);
-
-  $("printPageBtn").addEventListener("click", () => printNote(currentPage()));
 
   $("pageSearch").addEventListener("input", (e) => {
+    editor.flush();
     search = e.target.value;
     renderPageList();
   });
 
   $("deletePageBtn").addEventListener("click", async () => {
+    editor.flush();
     const page = currentPage();
     if (!page) return;
 

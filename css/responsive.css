@@ -54,7 +54,7 @@
 /* ---------------- Tablet ---------------- */
 @media (max-width: 860px) {
   .sidebar { width: 210px; min-width: 210px; }
-  .content { padding: 28px 24px 56px; }
+  .content { --content-pad-x: 24px; --content-pad-top: 28px; padding: var(--content-pad-top) var(--content-pad-x) 56px; }
 }
 
 /* ---------------- Phone / small tablet: drawer nav ---------------- */
@@ -100,7 +100,8 @@
   .sidebar.open { transform: none; box-shadow: var(--shadow-lg); }
 
   .content {
-    padding: calc(54px + env(safe-area-inset-top) + 22px) 18px calc(48px + env(safe-area-inset-bottom));
+    --content-pad-x: 18px;
+    padding: calc(54px + env(safe-area-inset-top) + 22px) var(--content-pad-x) calc(48px + env(safe-area-inset-bottom));
     overflow: visible;
     height: auto;
   }
@@ -193,8 +194,32 @@
   .cal-nav .btn { flex: 1; }
   .new-event-btn { flex: 1 0 100%; }
 
-  .notes-toolbar { width: 100%; justify-content: flex-start; }
-  .notes-toolbar button { height: 34px; min-width: 36px; }
+  /* Phones: pinned under the fixed top bar, one scrollable row instead of
+     several wrapped ones, and docked above the keyboard while typing. */
+  .notes-ribbon { top: calc(54px + env(safe-area-inset-top)); }
+
+  /* No hover on touch: folder actions stay visible, sized for a finger. */
+  .folder-actions { display: flex; }
+  .folder-count { display: none; }
+  .folder-row { height: 38px; }
+  .folder-actions button { width: 30px; height: 30px; }
+  .notes-toolbar {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .notes-toolbar::-webkit-scrollbar { display: none; }
+  /* A soft fade on the right edge says "there is more this way". */
+  .notes-toolbar {
+    padding-right: 28px;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 30px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 30px), transparent);
+  }
+  .notes-toolbar button { height: 36px; min-width: 38px; flex-shrink: 0; }
+  .notes-ribbon.is-docked .notes-toolbar { border-radius: var(--r-md); }
 
   /* Modals become bottom sheets; raised above the fixed topbar/drawer. */
   .modal-overlay {

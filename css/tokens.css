@@ -142,11 +142,54 @@
 
 :root {
   color-scheme: light;
+
+  /* Note colours: text (tc) and highlight (hl). Named, not raw, so each has a
+     shade tuned for its theme and stays readable in both. */
+  --tc-gray: #71717a;
+  --tc-brown: #8a5a3c;
+  --tc-orange: #c2410c;
+  --tc-yellow: #a16207;
+  --tc-green: #15803d;
+  --tc-blue: #1d4ed8;
+  --tc-purple: #7e22ce;
+  --tc-pink: #be185d;
+  --tc-red: #b91c1c;
+
+  --hl-gray: #e9e9eb;
+  --hl-brown: #f1e6dc;
+  --hl-orange: #ffe4cc;
+  --hl-yellow: #fdf0a6;
+  --hl-green: #d3f5dd;
+  --hl-blue: #d6e6fd;
+  --hl-purple: #ece0fd;
+  --hl-pink: #fbdcec;
+  --hl-red: #fddcdc;
 }
 
 /* ---------------- Dark theme ---------------- */
 :root[data-theme="dark"] {
   color-scheme: dark;
+
+  --tc-gray: #a1a1aa;
+  --tc-brown: #c9a07f;
+  --tc-orange: #fb923c;
+  --tc-yellow: #facc15;
+  --tc-green: #4ade80;
+  --tc-blue: #60a5fa;
+  --tc-purple: #c084fc;
+  --tc-pink: #f472b6;
+  --tc-red: #f87171;
+
+  --hl-gray: rgba(161, 161, 170, 0.24);
+  --hl-brown: rgba(180, 120, 70, 0.3);
+  --hl-orange: rgba(249, 115, 22, 0.28);
+  --hl-yellow: rgba(234, 179, 8, 0.3);
+  --hl-green: rgba(34, 197, 94, 0.26);
+  --hl-blue: rgba(59, 130, 246, 0.3);
+  --hl-purple: rgba(168, 85, 247, 0.3);
+  --hl-pink: rgba(236, 72, 153, 0.28);
+  --hl-red: rgba(239, 68, 68, 0.28);
+
   --bg: #09090b;
   --surface: #111113;
   --surface-2: #18181b;

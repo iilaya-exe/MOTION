@@ -156,6 +156,9 @@ if (location.protocol === "file:") {
     <div class="nav-section">
       <div class="nav-section-header">
         <span>Notes</span>
+        <button id="newFolderBtn" class="new-folder-btn" title="New folder" aria-label="New folder">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.6l2 2.2h7a2.2 2.2 0 0 1 2.2 2.2v7.9a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2Z"/><path d="M12 10.5v5M9.5 13h5"/></svg>
+        </button>
         <button id="newPageBtn" title="New page" aria-label="New page">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
@@ -381,29 +384,72 @@ if (location.protocol === "file:") {
     </section>
 
     <section id="view-notes" class="view hidden">
-      <div class="notes-toolbar">
-        <button data-block="h2" title="Heading">Heading</button>
-        <button data-block="h3" title="Subheading">Subheading</button>
-        <button data-block="p" title="Body text">Body</button>
-        <span class="toolbar-sep"></span>
-        <button data-cmd="bold" title="Bold"><b>B</b></button>
-        <button data-cmd="italic" title="Italic"><i>I</i></button>
-        <button data-cmd="underline" title="Underline"><u>U</u></button>
-        <span class="toolbar-sep"></span>
-        <button data-cmd="insertUnorderedList" title="Bullet list">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.2" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.2" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.2" cy="18" r="1.3" fill="currentColor" stroke="none"/></svg>
-        </button>
-        <button data-cmd="insertOrderedList" title="Numbered list">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6h11M10 12h11M10 18h11M3.4 5.2 4.8 4.6V9M3.2 14.4c0-.9 1.9-1.1 1.9 0 0 .8-1.9 1.6-1.9 2.9h2.1"/></svg>
-        </button>
-        <span class="toolbar-sep"></span>
-        <button data-insert="divider" title="Insert divider">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 12h18"/><path d="M6 7h12M6 17h12" opacity=".33"/></svg>
-        </button>
+      <!-- Sentinel + sticky band: the ribbon stays in reach however long the note
+           gets. The sentinel marks where it sits unpinned, which is how the
+           editor knows when to show it as pinned. -->
+      <div class="notes-ribbon-sentinel" id="notesRibbonSentinel" aria-hidden="true"></div>
+      <div class="notes-ribbon" id="notesRibbon">
+        <div class="notes-toolbar" role="toolbar" aria-label="Formatting" aria-controls="pageContent">
+          <button type="button" data-action="undo" data-label="Undo" data-keys="mod+z"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+          <button type="button" data-action="redo" data-label="Redo" data-keys="mod+shift+z"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+          <span class="toolbar-sep" aria-hidden="true"></span>
+          <button type="button" data-action="h2" data-label="Heading" data-keys="mod+alt+1" data-hint="“# ”" aria-pressed="false" class="text-btn">Heading</button>
+          <button type="button" data-action="h3" data-label="Subheading" data-keys="mod+alt+2" data-hint="“## ”" aria-pressed="false" class="text-btn">Subheading</button>
+          <button type="button" data-action="p" data-label="Body text" data-keys="mod+alt+0" aria-pressed="false" class="text-btn">Body</button>
+          <span class="toolbar-sep" aria-hidden="true"></span>
+          <button type="button" data-action="bold" data-label="Bold" data-keys="mod+b" data-hint="**bold**" aria-pressed="false"><b>B</b></button>
+          <button type="button" data-action="italic" data-label="Italic" data-keys="mod+i" aria-pressed="false"><i>I</i></button>
+          <button type="button" data-action="underline" data-label="Underline" data-keys="mod+u" aria-pressed="false"><u>U</u></button>
+          <button type="button" data-action="strike" data-label="Strikethrough" data-keys="mod+shift+x" data-hint="~~text~~" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4.5H9.5a3.2 3.2 0 0 0-2.9 4.6"/><path d="M14.5 12a4 4 0 0 1-.6 8H6"/><path d="M4 12h16"/></svg></button>
+          <button type="button" data-action="code" data-label="Inline code" data-keys="mod+e" data-hint="`code`" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg></button>
+          <button type="button" data-action="color" data-label="Text colour &amp; highlight" data-keys="mod+shift+h" data-keys-label="highlights" aria-haspopup="dialog" aria-expanded="false" class="color-btn">
+            <span class="color-glyph" aria-hidden="true">A</span><span class="color-bar" aria-hidden="true"></span>
+          </button>
+          <span class="toolbar-sep" aria-hidden="true"></span>
+          <button type="button" data-action="ul" data-label="Bullet list" data-keys="mod+shift+8" data-hint="“- ”" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.2" cy="6" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.2" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="4.2" cy="18" r="1.3" fill="currentColor" stroke="none"/></svg></button>
+          <button type="button" data-action="ol" data-label="Numbered list" data-keys="mod+shift+7" data-hint="“1. ”" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h11M10 12h11M10 18h11M3.4 5.2 4.8 4.6V9M3.2 14.4c0-.9 1.9-1.1 1.9 0 0 .8-1.9 1.6-1.9 2.9h2.1"/></svg></button>
+          <button type="button" data-action="todo" data-label="Checklist" data-keys="mod+shift+9" data-hint="“[] ”" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="6.5" height="6.5" rx="1.6"/><path d="m3.6 16.6 1.9 1.9 3.4-3.6"/><path d="M13 7.2h8M13 17h8"/></svg></button>
+          <button type="button" data-action="quote" data-label="Quote" data-hint="“> ”" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5v14"/><path d="M9 7h11M9 12h11M9 17h7"/></svg></button>
+          <span class="toolbar-sep" aria-hidden="true"></span>
+          <button type="button" data-action="link" data-label="Link" data-hint="or paste a URL over text" aria-pressed="false"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+          <button type="button" data-action="divider" data-label="Divider" data-hint="“---”"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18"/><path d="M6 7h12M6 17h12" opacity=".33"/></svg></button>
+          <button type="button" data-action="clear" data-label="Clear formatting" data-keys="mod+\"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4.5h16V7"/><path d="M9 20h4"/><path d="M13.5 4.5 10 15"/><path d="m15 15 5 5M20 15l-5 5"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Colour palette: text colours and highlights, filled by note-editor.js. -->
+      <div class="color-popover hidden" id="colorPopover" role="dialog" aria-label="Text colour and highlight">
+        <div class="cp-label">Text colour</div>
+        <div class="cp-row" id="cpText"></div>
+        <div class="cp-label">Highlight</div>
+        <div class="cp-row" id="cpHighlight"></div>
+      </div>
+
+      <!-- Link card: shows where a link goes when the caret is in it, and edits it. -->
+      <div class="link-popover hidden" id="linkPopover" data-mode="">
+        <div class="lp-view">
+          <a id="linkOpen" class="lp-url" target="_blank" rel="noopener noreferrer"></a>
+          <button type="button" class="lp-btn" id="linkEditBtn">Edit</button>
+          <button type="button" class="lp-btn" id="linkUnlinkBtn">Remove</button>
+        </div>
+        <form class="lp-edit" id="linkForm" autocomplete="off">
+          <input type="text" id="linkInput" class="field" placeholder="Paste or type a link" spellcheck="false" aria-label="Link address">
+          <button type="submit" class="btn">Apply</button>
+          <button type="button" class="btn secondary hidden" id="linkRemoveBtn">Remove</button>
+        </form>
       </div>
       <input type="text" class="page-title-input" id="pageTitleInput" placeholder="Untitled">
-      <div class="page-meta" id="pageMeta"></div>
-      <div class="page-content" id="pageContent" contenteditable="true" data-placeholder="Start writing..."></div>
+      <div class="page-meta-row">
+        <label class="folder-picker" id="folderPicker" title="Move to a folder">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.6l2 2.2h7a2.2 2.2 0 0 1 2.2 2.2v7.9a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2Z"/></svg>
+          <select id="pageFolderSelect" aria-label="Folder"></select>
+        </label>
+        <form class="folder-new hidden" id="folderNewForm" autocomplete="off">
+          <input type="text" id="folderNewInput" class="field" placeholder="New folder name" maxlength="120" aria-label="New folder name">
+        </form>
+        <div class="page-meta" id="pageMeta"></div>
+      </div>
+      <div class="page-content" id="pageContent" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Note" data-placeholder="Start writing..."></div>
       <div class="notes-footer">
         <button class="btn secondary" id="printPageBtn" title="Open the print dialog — choose “Save as PDF” there">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8" rx="2"/><path d="M7 13.5h10V21H7z"/></svg>

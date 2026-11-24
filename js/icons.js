@@ -26,6 +26,10 @@ const ICON_PATHS = {
   printer: '<path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8" rx="2"/><path d="M7 13.5h10V21H7z"/>',
   sidebar: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9.5 4v16"/>',
   arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  folder: '<path d="M3.5 7.2A2.2 2.2 0 0 1 5.7 5h3.6l2 2.2h7a2.2 2.2 0 0 1 2.2 2.2v7.9a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2Z"/>',
+  folderOpen: '<path d="M3.5 17V7.2A2.2 2.2 0 0 1 5.7 5h3.6l2 2.2h6.2a2.2 2.2 0 0 1 2.2 2.2v.9"/><path d="M3.6 18.3 6 11.6a1.6 1.6 0 0 1 1.5-1.1h12.6a1 1 0 0 1 .95 1.3l-2.2 6.4a1.6 1.6 0 0 1-1.5 1.1H5a1.4 1.4 0 0 1-1.4-1Z"/>',
+  chevronRight: '<path d="m9.5 6 6 6-6 6"/>',
+  pencil: '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
   book: '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H18a1 1 0 0 1 1 1v14.5a1 1 0 0 1-1 1H6.5A1.5 1.5 0 0 1 5 18V4.5Z"/><path d="M5 16.5h13.5"/>',
 };
 
