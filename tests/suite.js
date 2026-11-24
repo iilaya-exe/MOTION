@@ -304,20 +304,16 @@ export async function suite(win) {
   group("Home widgets");
   d.nav("Home");
   await settle();
-  check("widget grid rendered", qa(".widgets .widget").length >= 4,
+  check("widget grid rendered", qa(".widgets .widget").length === 3,
     String(qa(".widgets .widget").length));
   check("up-next widget filled", q("#nextClass .next-class") || q("#nextClass .widget-empty"),
     q("#nextClass").innerHTML.slice(0, 80));
-  check("progress ring rendered", q("#dayRing"), "no ring");
-  check("ring shows a percentage", /%$/.test(q("#dayRingPct")?.textContent || ""),
-    q("#dayRingPct")?.textContent);
-  check("ring legend filled", q("#dayRingLegend").textContent.includes("completed"),
-    q("#dayRingLegend").textContent);
-  check("quick actions rendered", qa("#quickActions .quick-action").length === 4,
-    String(qa("#quickActions .quick-action").length));
-  check("quick actions link to hash routes",
-    q("#quickActions .quick-action")?.getAttribute("href")?.startsWith("#/"),
-    q("#quickActions .quick-action")?.getAttribute("href"));
+  check("the progress card and shortcut buttons are gone", !q("#dayRing") && !q("#quickActions"));
+  check("today's progress shows under Done today", q("#statDoneBar") &&
+    /^\d+%$|^$/.test(q("#statDoneBar").style.width || ""), q("#statDoneBar")?.style.width);
+  check("Up next with no class left offers a next step",
+    !!q("#nextClass .next-class") || !!q("#nextClass .up-next-task, #nextClass [data-action='add-class']") ||
+    /No classes today|done for today/.test(q("#nextClass").textContent), q("#nextClass").textContent);
   check("mini stats rendered", qa(".mini-stat").length === 6, String(qa(".mini-stat").length));
   check("motto shown", q("#homeMotto").textContent.length > 0, q("#homeMotto").textContent);
 
@@ -332,15 +328,10 @@ export async function suite(win) {
   check("no empty <svg> anywhere on Home", emptySvgs.length === 0,
     `${emptySvgs.length} empty: ` + emptySvgs.map((s) => s.parentElement?.textContent?.trim().slice(0, 14)).join(", "));
 
-  const actions = qa("#quickActions .quick-action");
-  check("every quick action has an icon",
-    actions.length === 4 && actions.every((a) => a.querySelector("svg")?.children.length > 0),
-    actions.map((a) => `${a.textContent.trim()}:${a.querySelector("svg")?.children.length ?? 0}`).join(" | "));
-
-  check("the two icons that were missing now draw",
-    actions.filter((a) => /All tasks|Checklists/.test(a.textContent))
-           .every((a) => a.querySelector("svg").children.length > 0),
-    "checkSquare/checklist still empty");
+  const tabs = qa("#tabBar .tab");
+  check("every phone tab has an icon that draws",
+    tabs.length === 5 && tabs.every((t) => t.querySelector("svg")?.children.length > 0),
+    tabs.map((t) => `${t.textContent.trim()}:${t.querySelector("svg")?.children.length ?? 0}`).join(" | "));
 
   // ---- "Up next" must survive a narrow widget ----
   group("Up next layout");
@@ -1131,4 +1122,138 @@ export async function suite(win) {
   check("toasts can be dismissed", !q("#reminderStack .reminder-toast"));
   win.localStorage.removeItem("motionReminders_e2e");
   win.localStorage.removeItem("motionRemindersFired_e2e");
+
+  // ------------------------------------------------------- redesign pass ---
+  group("Tasks — calm rows and due date picker");
+  d.nav("Tasks");
+  await settle();
+  check("no subtitle under the Tasks title", !q("#view-tasks .subtitle"));
+  const calmRow = q(".task-row");
+  // Completed rows play a brief "done" flash on render, so they're left out.
+  const openRows = qa(".task-row:not(.done)");
+  check("rows carry no tinted background",
+    openRows.length > 0 && openRows.every((r) => ["rgba(0, 0, 0, 0)", "transparent"].includes(win.getComputedStyle(r).backgroundColor)),
+    openRows.map((r) => win.getComputedStyle(r).backgroundColor).join(","));
+  const ghost = q(".task-row .badge.ghost");
+  check("empty fields stay hidden until hover", !ghost || win.getComputedStyle(ghost).opacity === "0",
+    ghost && win.getComputedStyle(ghost).opacity);
+
+  const dueBtn = q("#taskComposer .datepick-btn");
+  check("the raw date box is replaced by a button", !!dueBtn && /Due date/.test(dueBtn.textContent), dueBtn?.textContent);
+  click(dueBtn);
+  await settle();
+  check("it opens quick picks and a month", !q(".datepick-pop").classList.contains("hidden") &&
+    qa(".dp-quick button").length === 3 && qa(".dp-day").length >= 28);
+  click(qa(".dp-quick button")[1]);
+  await settle();
+  const tomorrow = new win.Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tKey = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+  check("Tomorrow sets the due date", q("#taskDueInput").value === tKey, q("#taskDueInput").value);
+  check("and the button says so", /Tomorrow/.test(dueBtn.textContent), dueBtn.textContent);
+  check("picking closes it", q(".datepick-pop").classList.contains("hidden"));
+  setValue(q("#taskTextInput"), "Picked with the date picker");
+  click(q("#addTaskBtn"));
+  await settle();
+  const pickedRow = qa(".task-row").find((r) => r.textContent.includes("Picked with the date picker"));
+  check("the task is added with that date", pickedRow?.querySelector('input[data-action="set-due"]')?.value === tKey,
+    pickedRow?.querySelector('input[data-action="set-due"]')?.value);
+  check("the picker resets after adding", /Due date/.test(dueBtn.textContent), dueBtn.textContent);
+
+  group("Calendar — task labels and holiday note");
+  d.nav("Calendar");
+  await settle();
+  const ind = q(".cal-task-indicator");
+  check("task counts read as words", !ind || /^\d+ tasks?$/.test(ind.textContent.trim()), ind?.textContent);
+  check("the holiday explanation is a footnote", !q("#view-calendar .subtitle") && /estimates/.test(q(".cal-note")?.textContent || ""));
+
+  group("Schedule — week, day and list");
+  win.localStorage.removeItem("motionScheduleView");
+  d.nav("Schedule");
+  await settle();
+  const sv = () => q("#view-schedule").dataset.schedView;
+  check("starts on the week timetable", sv() === "week", sv());
+  check("each class appears as a block", qa("#weekTimetable .tt-block").length > 0, q("#weekTimetable").textContent.slice(0, 80));
+  check("the day list is out of the way", win.getComputedStyle(q("#dayClassList")).display === "none");
+  click(q('#schedViewSwitch [data-view="list"]'));
+  await settle();
+  check("List shows only the table", sv() === "list" &&
+    win.getComputedStyle(q("#weekWrap")).display === "none" && win.getComputedStyle(q("#allClassesTable")).display !== "none");
+  click(q('#schedViewSwitch [data-view="day"]'));
+  await settle();
+  check("Day brings back the day picker", sv() === "day" && win.getComputedStyle(q("#dayPicker")).display !== "none");
+  check("the choice is remembered", win.localStorage.getItem("motionScheduleView") === "day");
+  click(q('#schedViewSwitch [data-view="week"]'));
+  await settle();
+  click(q("#weekTimetable .tt-block"));
+  await settle();
+  check("clicking a block opens that class", !q("#classModalOverlay").classList.contains("hidden"));
+  key(d.doc.body, "Escape");
+  await settle();
+
+  group("Notes — page menu");
+  click(q("#pageList .page-item"));
+  await settle();
+  check("page actions live in a ⋯ menu", q("#pageMenu").classList.contains("hidden") && !!q("#pageMenuBtn"));
+  click(q("#pageMenuBtn"));
+  await settle();
+  check("the menu opens", !q("#pageMenu").classList.contains("hidden") && q("#pageMenuBtn").getAttribute("aria-expanded") === "true");
+  const pagesBefore = qa("#pageList .page-item").length;
+  const srcTitle = q("#pageTitleInput").value;
+  click(q("#duplicatePageBtn"));
+  await settle(80);
+  check("Duplicate makes a copy and opens it", qa("#pageList .page-item").length === pagesBefore + 1 &&
+    q("#pageTitleInput").value === `${srcTitle} (copy)`, q("#pageTitleInput").value);
+  check("with the same content", q("#pageContent").textContent.length > 0);
+  check("the menu closed", q("#pageMenu").classList.contains("hidden"));
+  click(q("#deletePageBtn"));
+  await confirmDialog(true);
+  await settle();
+  check("Delete still works from the menu", qa("#pageList .page-item").length === pagesBefore, String(qa("#pageList .page-item").length));
+
+  group("Notes — empty folder");
+  click(q("#newFolderBtn"));
+  await settle();
+  const fin = q("#pageList .folder-input");
+  fin.value = "Empty one";
+  key(fin, "Enter");
+  await settle();
+  const emptyBtn = q("#pageList .folder-empty");
+  check("an empty folder offers a new note", !!emptyBtn && /New note here/.test(emptyBtn.textContent), emptyBtn?.textContent);
+  click(emptyBtn);
+  await settle(80);
+  check("which lands inside that folder", !!q("#pageList .folder .page-item.nested"));
+  click(q("#deletePageBtn"));
+  await confirmDialog(true);
+  await settle();
+  click(q('#pageList [data-folder-action="delete"]'));
+  await confirmDialog(true);
+  await settle();
+
+  group("Settings menu");
+  check("one Settings button in the sidebar footer", !!q("#settingsBtn") && q("#settingsMenu").classList.contains("hidden"));
+  click(q("#settingsBtn"));
+  await settle();
+  check("it opens with theme, reminders, export and import",
+    !q("#settingsMenu").classList.contains("hidden") &&
+    ["#themeToggle", "#remindersBtn", "#exportDataBtn", "#importDataBtn"].every((sel) => q("#settingsMenu " + sel)));
+  check("it sits inside the window", (() => {
+    const r = q("#settingsMenu").getBoundingClientRect();
+    return r.top >= 0 && r.left >= 0 && r.bottom <= win.innerHeight && r.width > 150;
+  })(), JSON.stringify(q("#settingsMenu").getBoundingClientRect()));
+  q("#settingsMenu").dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  await settle();
+  check("Escape closes it", q("#settingsMenu").classList.contains("hidden"));
+
+  group("Phone tab bar");
+  check("five tabs and an add button exist", qa("#tabBar .tab").length === 5 && !!q("#fabBtn"));
+  check("hidden on a wide screen", win.getComputedStyle(q("#tabBar")).display === "none");
+  d.nav("Calendar");
+  await settle();
+  check("the current screen's tab is marked", q('#tabBar [aria-current="page"]')?.dataset.view === "calendar",
+    q('#tabBar [aria-current="page"]')?.dataset.view);
+  check("+ is labelled for the screen", q("#fabBtn").getAttribute("aria-label") === "New event", q("#fabBtn").getAttribute("aria-label"));
+  d.nav("Checklists");
+  await settle();
+  check("screens without a tab mark none", !q('#tabBar [aria-current="page"]'));
 }

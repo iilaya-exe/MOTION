@@ -1,5 +1,6 @@
 import { $, $$ } from "../dom.js";
 import * as router from "./router.js";
+import { bindMenu } from "./menu.js";
 
 /* View switching and the mobile drawer. The view modules register their render
    functions here rather than nav importing all six, which would create an import
@@ -84,6 +85,19 @@ export function mount() {
   $("menuBtn").addEventListener("click", () => setNavOpen(!isNavOpen()));
 
   $("sidebarToggle").addEventListener("click", () => setSidebarCollapsed(!isSidebarCollapsed()));
+  // The sidebar clips overflow (it scrolls, and the rail hides its sides), so
+  // the Settings menu is placed against the window, beside or above its button.
+  bindMenu($("settingsBtn"), $("settingsMenu"), {
+    onOpen() {
+      const r = $("settingsBtn").getBoundingClientRect();
+      const menu = $("settingsMenu");
+      const rail = isSidebarCollapsed() && !isMobile();
+      const edge = $("sidebar").getBoundingClientRect().right;
+      menu.style.left = `${Math.round(rail ? edge + 8 : r.left)}px`;
+      menu.style.width = rail ? "" : `${Math.round(Math.max(r.width, 210))}px`;
+      menu.style.bottom = `${Math.round(window.innerHeight - (rail ? r.bottom : r.top - 6))}px`;
+    },
+  });
 
   // ⌘B / Ctrl+B, the convention in editors and Notion alike. Ignored while
   // typing, so it cannot fire from inside the note editor or a text field.

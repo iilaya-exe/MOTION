@@ -8,6 +8,7 @@ import {
   advanceDateKey, daysFromToday, formatDateLabel, formatShortDate, overdueLabel, todayKey,
 } from "../lib/dates.js";
 import { colorClass } from "../lib/schedule.js";
+import { attachDatePicker } from "../ui/date-picker.js";
 
 /* View state. Deliberately not persisted: filters and grouping are how you are
    looking at the list right now, not part of the workspace. */
@@ -589,12 +590,14 @@ export function mount() {
   const textEl = $("taskTextInput");
   const dueEl = $("taskDueInput");
   const priEl = $("taskPriorityInput");
+  const duePicker = attachDatePicker(dueEl);
 
   const submit = () => {
     if (!textEl.value.trim()) return;
     addTask(textEl.value, dueEl.value, priEl.value);
     textEl.value = "";
     dueEl.value = "";
+    duePicker.sync();
     render();
     textEl.focus();
   };
@@ -604,10 +607,12 @@ export function mount() {
     if (e.key === "Enter") submit();
   });
 
-  $$(".filter-tab").forEach((tab) => {
+  // Scoped to Tasks: the Schedule's Week/Day/List switch shares the look.
+  const filterTabs = $$("#view-tasks .filter-tab[data-filter]");
+  filterTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
       view.filter = tab.dataset.filter;
-      $$(".filter-tab").forEach((t) => t.classList.toggle("active", t === tab));
+      filterTabs.forEach((t) => t.classList.toggle("active", t === tab));
       render();
     });
   });

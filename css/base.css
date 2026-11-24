@@ -86,6 +86,17 @@ textarea {
   margin: 0 0 6px;
 }
 
+/* Times, dates and counts use equal-width digits, so "10:00 AM" and "1:00 PM"
+   line up down a list and numbers don't shift as they change. */
+.tl-time, .class-when, .nc-meta, .now-meta, .sched-table, .cal-daynum,
+.badge.due, .badge.overdue, .page-meta, .folder-count, .list-summary,
+.widget-meta, .today-meta, .ct-count, .tt-meta {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A title with no subtitle under it still needs room before the content. */
+.view h1.page-title { margin-bottom: 20px; }
+
 .view .subtitle {
   color: var(--text-3);
   font-size: var(--fs-body-s);

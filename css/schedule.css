@@ -507,3 +507,140 @@
 .export-actions .btn { height: 32px; padding: 0 12px; gap: 6px; }
 .export-actions .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .export-actions .btn:disabled:hover { background: var(--field-bg-solid); }
+
+/* ---------------- Week / Day / List ----------------
+   One attribute on the section decides which parts show. Day is the original
+   layout; Week swaps the day list for a timetable; List keeps only the table. */
+.sched-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sched-switch { margin-bottom: 0; }
+
+#view-schedule[data-sched-view="week"] .day-picker,
+#view-schedule[data-sched-view="week"] #dayHeading,
+#view-schedule[data-sched-view="week"] #dayClassList,
+#view-schedule[data-sched-view="week"] .now-card:not(.live) { display: none; }
+
+#view-schedule[data-sched-view="day"] #weekWrap { display: none; }
+
+#view-schedule[data-sched-view="list"] .day-picker,
+#view-schedule[data-sched-view="list"] .now-card,
+#view-schedule[data-sched-view="list"] #weekWrap,
+#view-schedule[data-sched-view="list"] #dayHeading,
+#view-schedule[data-sched-view="list"] #dayClassList { display: none; }
+
+/* ---------------- Week timetable ----------------
+   A grid of day columns over an hour scale. Classes are placed by percentage
+   of the visible hours, so the scale fits whatever span the classes cover. */
+.timetable-scroll {
+  overflow-x: auto;
+  margin-bottom: var(--gap-section);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.tt-grid {
+  --hour: 58px;
+  display: grid;
+  grid-template-columns: 58px repeat(var(--days), minmax(110px, 1fr));
+  grid-template-rows: auto calc(var(--hours) * var(--hour));
+  min-width: calc(58px + var(--days) * 110px);
+}
+
+.tt-corner,
+.tt-dayname {
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+}
+
+.tt-dayname {
+  padding: 10px 12px;
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--text-2);
+  border-left: 1px solid var(--border);
+}
+.tt-dayname small { display: block; font-weight: 400; color: var(--text-3); font-size: var(--fs-mini); }
+.tt-dayname.today { color: var(--text); }
+.tt-dayname.today small { color: var(--text-2); font-weight: 500; }
+
+.tt-hours { position: relative; }
+.tt-hour {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: var(--fs-mini);
+  color: var(--text-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.tt-hour.is-first { transform: translateY(4px); }
+
+.tt-col {
+  position: relative;
+  border-left: 1px solid var(--border);
+  cursor: copy;
+}
+.tt-col.today { background: var(--hover-subtle); }
+.tt-line { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--border); pointer-events: none; }
+
+.tt-block {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-height: 22px;
+  padding: 5px 8px;
+  overflow: hidden;
+  text-align: left;
+  border-radius: var(--r-md);
+  background: var(--cc-soft, var(--muted));
+  box-shadow: inset 3px 0 0 var(--cc, var(--text-3));
+  color: var(--text);
+  font-size: var(--fs-caption);
+  line-height: 1.3;
+  cursor: pointer;
+  transition: box-shadow var(--dur-fast) var(--ease), filter var(--dur-fast) var(--ease);
+}
+.tt-block:hover { box-shadow: inset 3px 0 0 var(--cc, var(--text-3)), var(--shadow-md); }
+.tt-block:focus-visible { outline: none; box-shadow: inset 3px 0 0 var(--cc, var(--text-3)), var(--ring); }
+.tt-block.is-past { opacity: 0.6; }
+.tt-name { font-weight: 600; display: flex; gap: 4px; align-items: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-meta { color: var(--text-3); font-size: var(--fs-mini); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tt-tasks { color: var(--cc, var(--text-2)); font-size: var(--fs-mini); font-weight: 600; }
+
+/* The current time, across today's column. */
+.tt-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--danger);
+  z-index: 2;
+  pointer-events: none;
+}
+.tt-now::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.tt-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 36px 20px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--fs-body-s);
+}
+.tt-empty p { margin: 0; }

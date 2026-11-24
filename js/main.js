@@ -12,6 +12,7 @@ import * as backup from "./ui/backup.js";
 import * as theme from "./ui/theme.js";
 import * as command from "./ui/command.js";
 import * as reminders from "./ui/reminders.js";
+import * as tabbar from "./ui/tabbar.js";
 
 import * as dashboard from "./views/dashboard.js";
 import * as tasks from "./views/tasks.js";
@@ -52,11 +53,15 @@ async function boot() {
   nav.registerView("checklists", checklists.render);
   nav.registerView("notes", notes.render);
 
-  // The sidebar's page list highlights the open page, so it follows every switch.
-  nav.setAfterSwitch(notes.renderPageList);
+  // The sidebar's page list highlights the open page, and the phone tab bar
+  // marks the current screen, so both follow every switch.
+  nav.setAfterSwitch(() => {
+    notes.renderPageList();
+    tabbar.sync();
+  });
 
   [
-    nav, theme, modal, undo, pwa, classTimer, confirmDialog, backup, reminders, command,
+    nav, theme, modal, undo, pwa, classTimer, confirmDialog, backup, reminders, command, tabbar,
     dashboard, tasks, calendar, schedule, checklists, notes,
     dayModal, eventEditor, classEditor, fullSchedule,
   ].forEach((module) => module.mount());

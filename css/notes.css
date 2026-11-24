@@ -43,6 +43,9 @@
   will-change: transform;
 }
 
+/* Centred over the note's reading column. */
+.notes-ribbon .notes-toolbar { margin-left: auto; margin-right: auto; }
+
 .notes-ribbon.is-disabled .notes-toolbar { opacity: 0.5; pointer-events: none; }
 
 /* ToggleGroup in a bordered bar, like shadcn's editor toolbars: ghost items
@@ -130,15 +133,27 @@
 .lp-edit .field { width: 260px; max-width: 60vw; height: 34px; }
 .lp-edit .btn { height: 34px; }
 
+/* A note reads as a document: title, meta and text share one centred column
+   about 70 characters wide, while the ribbon above stays full width. */
+.page-title-input,
+.page-meta-row,
+.page-content {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .page-title-input {
+  display: block;
   font-family: inherit;
-  font-size: var(--fs-display);
+  font-size: clamp(28px, 1.2vw + 22px, 42px);
+  line-height: 1.15;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   border: none;
   outline: none;
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   padding: 2px 0;
   color: var(--text);
   background: transparent;
@@ -205,13 +220,6 @@
 .page-content ol { list-style-type: decimal; }
 .page-content li { margin-bottom: 3px; }
 .page-content > *:first-child { margin-top: 0; }
-
-.notes-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--sp-2);
-  margin-top: 26px;
-}
 
 /* "Edited 5 min ago" — small enough to ignore, present enough to reassure. */
 .page-meta {
@@ -432,10 +440,28 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 10px;
-  margin: -4px 0 14px;
+  margin: -4px auto 14px;
   min-height: 26px;
 }
 .page-meta-row .page-meta { margin: 0; }
+
+/* Page actions (⋯): export, duplicate, move, delete. */
+.page-actions { position: relative; margin-left: auto; }
+.page-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  border-radius: var(--r-md);
+  color: var(--text-3);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.page-menu-btn:hover,
+.page-menu-btn[aria-expanded="true"] { background: var(--hover); color: var(--text); }
+.page-menu-btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.page-menu-btn .icon { width: 18px; height: 18px; }
+.page-actions .menu { right: 0; top: calc(100% + 6px); }
 
 .folder-picker {
   display: inline-flex;

@@ -48,7 +48,7 @@ export function render() {
         `<div class="cal-dayhead-top"><span class="cal-daynum">${Number(key.split("-")[2])}</span>`;
 
       if (count) {
-        head += `<span class="cal-task-indicator"><span class="cal-task-dot"></span>${count}</span>`;
+        head += `<span class="cal-task-indicator">${count} task${count === 1 ? "" : "s"}</span>`;
       }
       head += "</div>";
 

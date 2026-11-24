@@ -8,6 +8,8 @@ import {
 } from "../lib/schedule.js";
 import { formatCountdown, timerState } from "../ui/class-timer.js";
 import { addTask, toggleTaskDone } from "./tasks.js";
+import { openNewClass } from "../modals/class-editor.js";
+import { friendlyDate } from "../ui/date-picker.js";
 
 /* The Today timeline is the one place the four separate lists meet: the class
    schedule provides the spine, and tasks hang off the class they belong to.
@@ -59,6 +61,32 @@ function renderStats(dueToday, overdue, eventsThisWeek, classesToday, doneToday)
   $("statDoneToday").textContent = doneToday.length;
 }
 
+/**
+ * "Up next" with no class left today: point at the next piece of work instead,
+ * or, for someone with no timetable yet, at adding one.
+ */
+function upNextEmpty(hadClassesToday) {
+  if (!store.state.classes.length) {
+    return (
+      '<div class="widget-empty">No classes yet. Add your timetable once and Motion shows what&rsquo;s next.' +
+      `<button type="button" class="btn secondary up-next-action" data-action="add-class">${icon("plus")}Add a class</button></div>`
+    );
+  }
+
+  const lead = hadClassesToday ? "Classes are done for today." : "No classes today.";
+  const task = store.state.tasks
+    .filter((t) => !t.done && t.due)
+    .sort((a, b) => a.due.localeCompare(b.due))[0];
+  if (!task) return `<div class="widget-empty">${lead}</div>`;
+
+  const late = task.due < todayKey();
+  return (
+    `<div class="widget-empty">${lead}` +
+    `<a class="up-next-task" href="#/tasks">${icon("circle")}<span><b>${esc(task.text)}</b>` +
+    `<small class="${late ? "is-late" : ""}">${late ? esc(overdueLabel(task.due)) : `Due ${esc(friendlyDate(task.due).toLowerCase())}`}</small></span></a></div>`
+  );
+}
+
 /** "Up next": the ongoing class, else the next one today, else tomorrow's first. */
 function renderNextClass(classesToday) {
   const host = $("nextClass");
@@ -69,9 +97,7 @@ function renderNextClass(classesToday) {
 
   if (!next) {
     $("nextMeta").textContent = "";
-    host.innerHTML = classesToday.length
-      ? '<div class="widget-empty">All done for today.</div>'
-      : '<div class="widget-empty">No classes today.</div>';
+    host.innerHTML = upNextEmpty(classesToday.length > 0);
     return;
   }
 
@@ -93,31 +119,17 @@ function renderNextClass(classesToday) {
     }</span></div>`;
 }
 
-/** Share of today's work already ticked off, as a conic-gradient ring. */
-function renderDayRing(dueToday, overdue, doneToday) {
+/** Share of today's work already ticked off, as a bar under "Done today". */
+function renderDayProgress(dueToday, overdue, doneToday) {
   const open = dueToday.length + overdue.length;
   const total = open + doneToday.length;
   const pct = total ? Math.round((doneToday.length / total) * 100) : 0;
 
-  $("dayRing").style.setProperty("--pct", pct);
-  $("dayRingPct").textContent = `${pct}%`;
-  $("dayRing").classList.toggle("is-complete", total > 0 && pct === 100);
-
-  $("dayRingLegend").innerHTML =
-    `<div><b>${doneToday.length}</b> completed</div>` +
-    `<div><b>${open}</b> remaining</div>` +
-    (overdue.length ? `<div class="legend-warn"><b>${overdue.length}</b> overdue</div>` : "");
-}
-
-function renderQuickActions() {
-  $("quickActions").innerHTML = [
-    ["#/tasks", "checkSquare", "All tasks"],
-    ["#/schedule", "clock", "Schedule"],
-    ["#/calendar", "calendarSm", "Calendar"],
-    ["#/checklists", "checklist", "Checklists"],
-  ]
-    .map(([href, ic, label]) => `<a class="quick-action" href="${href}">${icon(ic)}${label}</a>`)
-    .join("");
+  $("statDonePct").textContent = total ? `· ${pct}%` : "";
+  $("statDoneBar").style.width = `${pct}%`;
+  $("statDoneBar").parentElement.title = total
+    ? `${doneToday.length} of ${total} done today${overdue.length ? `, ${overdue.length} overdue` : ""}`
+    : "Nothing due today";
 }
 
 /** Countdown panel at the top of Home; digits are refreshed by the ticker. */
@@ -259,8 +271,7 @@ export function render() {
 
   renderStats(dueToday, overdue, eventsThisWeek, classesToday, doneToday);
   renderNextClass(classesToday);
-  renderDayRing(dueToday, overdue, doneToday);
-  renderQuickActions();
+  renderDayProgress(dueToday, overdue, doneToday);
   renderHomeTimer();
   $("homeMotto").textContent = mottoForToday();
 
@@ -309,6 +320,9 @@ export function mount() {
   };
 
   $("quickTaskBtn").addEventListener("click", submit);
+  $("nextClass").addEventListener("click", (e) => {
+    if (e.target.closest('[data-action="add-class"]')) openNewClass(new Date().getDay());
+  });
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") submit();
   });

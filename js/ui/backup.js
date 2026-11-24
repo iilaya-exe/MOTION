@@ -110,6 +110,7 @@ export async function importFile(file) {
 
 export function mount() {
   $("exportDataBtn").addEventListener("click", exportData);
+  $("importDataBtn").addEventListener("click", () => $("importDataInput").click());
 
   $("importDataInput").addEventListener("change", async (e) => {
     const file = e.target.files?.[0];

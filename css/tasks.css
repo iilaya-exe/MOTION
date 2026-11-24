@@ -29,6 +29,99 @@
   min-width: 200px;
 }
 
+/* ---------------- Due date picker (js/ui/date-picker.js) ---------------- */
+.datepick { position: relative; display: inline-flex; }
+
+/* The real date input stays as the value holder, out of sight. */
+.datepick-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  padding: 0;
+}
+
+.datepick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 132px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.datepick-btn .icon { width: 15px; height: 15px; color: var(--text-3); }
+.datepick-btn.is-empty { color: var(--placeholder); }
+.datepick-btn.is-past { color: var(--danger); }
+.datepick-btn[aria-expanded="true"] { border-color: var(--ring-color); box-shadow: var(--ring); }
+
+.datepick-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 70;
+  width: 272px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  animation: menuIn 0.12s var(--ease);
+}
+.datepick-pop.hidden { display: none; }
+
+.dp-quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+.dp-quick button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 8px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+}
+.dp-quick button small { font-size: var(--fs-mini); font-weight: 400; color: var(--text-3); white-space: nowrap; }
+.dp-quick button:hover { background: var(--hover); }
+.dp-quick button.is-picked { border-color: var(--text); }
+
+.dp-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px; }
+.dp-title { font-size: var(--fs-caption); font-weight: 600; }
+.dp-nav { width: 28px; height: 28px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; color: var(--text-2); }
+.dp-nav:hover { background: var(--hover); }
+.dp-prev { transform: rotate(90deg); width: 16px; height: 16px; }
+.dp-next { transform: rotate(-90deg); width: 16px; height: 16px; }
+
+.dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.dp-dow { font-size: var(--fs-micro); color: var(--text-3); text-align: center; padding: 4px 0; }
+.dp-day {
+  height: 32px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-caption);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.dp-day:hover { background: var(--hover); color: var(--text); }
+.dp-day:focus-visible { outline: none; box-shadow: var(--ring); }
+.dp-day.is-today { font-weight: 700; color: var(--text); box-shadow: inset 0 0 0 1px var(--border-hover); }
+.dp-day.is-picked { background: var(--accent-fill); color: var(--on-accent); font-weight: 600; }
+
+.dp-clear {
+  margin-top: 8px;
+  width: 100%;
+  height: 32px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+}
+.dp-clear:hover { background: var(--hover); color: var(--danger); }
+
 .list-toolbar {
   display: flex;
   align-items: center;
@@ -319,11 +412,8 @@
 
 .task-row:hover { background: var(--hover-subtle); }
 
-/* Overdue is a row tint, not a left bar: the left edge already carries the
-   priority stripe, and two indicators stacked in the same 3px just overpaint
-   each other. The red "N days overdue" chip does the explicit work. */
-.task-row.is-overdue { background: color-mix(in srgb, var(--danger-soft) 40%, transparent); }
-.task-row.is-overdue:hover { background: color-mix(in srgb, var(--danger-soft) 68%, transparent); }
+/* Rows carry no tint of their own: with every row coloured, none stood out.
+   The red overdue date and the High flag do that job now. */
 
 .cell-name {
   display: flex;
@@ -558,36 +648,67 @@
   font-size: var(--fs-caption);
 }
 
-/* ---------------- Task state treatment ----------------
-   Pending, in-progress and complete need to be tellable apart at a glance and
-   not only by reading the Status chip, so state also drives the row itself. */
+/* ---------------- Calm row treatment ----------------
+   Properties read as plain text with a small dot, not as bordered chips, so a
+   row is mostly its title. Colour is kept for what needs attention: an overdue
+   date, High and Medium priority, and a status that isn't "To Do". */
+.task-row { position: relative; }
+.task-row.done { opacity: 0.62; }
 
-/* A priority stripe, subtle enough to scan without shouting. */
-.task-row::after {
+.task-row .badge {
+  background: transparent;
+  border-color: transparent;
+  padding-left: 0;
+  padding-right: 2px;
+  transition: opacity var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.task-row .badge.subject-chip { color: var(--text-2); background: transparent; }
+.task-row .badge.due { color: var(--text-2); }
+.task-row .badge.overdue { color: var(--danger); font-weight: 600; }
+.task-row .badge.repeat-on { color: var(--text); background: transparent; }
+
+.task-row .badge.priority-high { color: var(--danger); font-weight: 600; }
+.task-row .badge.priority-medium { color: var(--amber); }
+.task-row .badge.priority-low { color: var(--text-3); }
+.task-row .badge.priority-high::before,
+.task-row .badge.priority-medium::before,
+.task-row .badge.priority-low::before {
   content: "";
-  position: absolute;
-  left: 0;
-  top: 6px;
-  bottom: 6px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  opacity: 0;
-  transition: opacity var(--dur) var(--ease);
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: currentColor;
+  margin-right: 2px;
 }
 
-.task-row { position: relative; }
-.task-row.p-high::after { background: var(--danger); opacity: 1; }
-.task-row.p-medium::after { background: var(--amber); opacity: 0.85; }
-.task-row.p-low::after { background: var(--success); opacity: 0.6; }
+.task-row .badge[class*="status-"] { background: transparent; border-color: transparent; }
+.task-row .badge.status-todo { color: var(--text-3); }
+.task-row .badge[class*="status-"]::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 3px;
+}
 
-/* In-progress work gets a tinted rail so it stands out from untouched rows. */
-.task-row.active { background: color-mix(in srgb, var(--info-soft) 45%, transparent); }
-.task-row.active:hover { background: color-mix(in srgb, var(--info-soft) 70%, transparent); }
-.task-row.st-stuck { background: color-mix(in srgb, var(--danger-soft) 55%, transparent); }
-.task-row.st-hold { background: color-mix(in srgb, var(--amber-soft) 55%, transparent); }
+/* Empty fields ("Subject", "Date", "Once") and the default Low priority stay
+   out of sight until the row is hovered or focused. They are still there, and
+   still clickable: each sits under its own invisible select or date input. */
+.task-row .badge.ghost,
+.task-row .badge.priority-low { opacity: 0; }
+.task-row:hover .badge.ghost,
+.task-row:hover .badge.priority-low,
+.task-row:focus-within .badge.ghost,
+.task-row:focus-within .badge.priority-low { opacity: 1; }
+.task-row .badge.ghost { border: none; }
 
-.task-row.done { opacity: 0.62; }
-.task-row.done::after { opacity: 0.3; }
+@media (hover: none) {
+  /* Touch has no hover, and these chips are the only way to set the field,
+     so they stay visible there, just faint. */
+  .task-row .badge.ghost,
+  .task-row .badge.priority-low { opacity: 0.5; }
+}
 
 /* Completion feedback: the row settles and the box pops once. */
 @keyframes taskComplete {

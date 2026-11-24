@@ -10,6 +10,7 @@ import * as undo from "../ui/undo.js";
 import { ask } from "../ui/confirm.js";
 import { closeNav, isMobile, switchView } from "../ui/nav.js";
 import * as router from "../ui/router.js";
+import { bindMenu } from "../ui/menu.js";
 
 /* Page management: the sidebar list, titles, search, delete. The editing
    surface itself — ribbon, shortcuts, history — lives in note-editor.js. */
@@ -187,7 +188,8 @@ function folderBlock(folder, pages, { open, total, isActive }) {
     ? `<div class="folder-pages">${
         pages.length
           ? pages.map((p) => pageItem(p, isActive(p), true)).join("")
-          : '<div class="folder-empty">Empty — drag a note here</div>'
+          : '<button type="button" class="folder-empty" data-folder-action="new">' +
+            `${icon("plus")}<span>New note here <small>or drag one in</small></span></button>`
       }</div>`
     : "";
 
@@ -292,6 +294,7 @@ export function render() {
   titleEl.value = page ? page.title : "";
   $("deletePageBtn").classList.toggle("hidden", !page);
   $("printPageBtn").classList.toggle("hidden", !page);
+  document.querySelector(".page-actions").classList.toggle("hidden", !page);
 
   // Opening a note inside a closed folder opens the folder, so the sidebar
   // always shows where the note lives.
@@ -323,8 +326,8 @@ function commitContent(html) {
 }
 
 /** Adds a page, opens it, and returns it. Shared with the command palette. */
-export function createPage(title = "", folderId = null) {
-  const page = { id: uid(), title, content: "", updatedAt: Date.now(), folderId: folderById(folderId)?.id || null };
+export function createPage(title = "", folderId = null, content = "") {
+  const page = { id: uid(), title, content, updatedAt: Date.now(), folderId: folderById(folderId)?.id || null };
   store.state.pages.push(page);
   store.state.currentPageId = page.id;
   store.save();
@@ -502,6 +505,26 @@ export function mount() {
     if (e.key === "Enter" && !e.isComposing) {
       e.preventDefault();
       editor.focusStart();
+    }
+  });
+
+  bindMenu($("pageMenuBtn"), $("pageMenu"));
+
+  $("duplicatePageBtn").addEventListener("click", () => {
+    editor.flush();
+    const page = currentPage();
+    if (!page) return;
+    createPage(page.title ? `${page.title} (copy)` : "", page.folderId, page.content);
+  });
+
+  // Opens the folder dropdown under the title, where filing already lives.
+  $("movePageBtn").addEventListener("click", () => {
+    const select = $("pageFolderSelect");
+    select.focus();
+    try {
+      select.showPicker();
+    } catch {
+      /* older browsers: focus is enough, the arrow keys change it */
     }
   });
 

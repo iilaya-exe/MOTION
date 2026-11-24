@@ -143,6 +143,52 @@
 .page-item.active { background: var(--hover); color: var(--text); font-weight: 500; }
 .page-item.active .icon { color: var(--text); }
 
+/* ---------------- Menu ----------------
+   Dropdown list of actions (js/ui/menu.js). Positioned by its wrapper. */
+.menu {
+  position: absolute;
+  z-index: 60;
+  min-width: 200px;
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  animation: menuIn 0.12s var(--ease);
+}
+.menu.hidden { display: none; }
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
+.menu [role="menuitem"] {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  font: inherit;
+  font-size: var(--fs-body-s);
+  color: var(--text-2);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.menu [role="menuitem"]:hover,
+.menu [role="menuitem"]:focus-visible { background: var(--hover); color: var(--text); outline: none; }
+.menu [role="menuitem"] .icon { width: 16px; height: 16px; color: var(--text-3); }
+.menu [role="menuitem"].danger,
+.menu [role="menuitem"].danger .icon { color: var(--danger); }
+.menu [role="menuitem"].danger:hover { background: var(--danger-soft); }
+.menu [role="menuitem"] .menu-hint { margin-left: auto; padding-left: 16px; font-size: var(--fs-mini); color: var(--text-3); }
+.menu-sep { height: 1px; margin: 4px 2px; background: var(--border); }
+@media (prefers-reduced-motion: reduce) { .menu { animation: none; } }
+
 /* ---------------- Note folders ---------------- */
 .nav-section-header .new-folder-btn { margin-left: auto; margin-right: 2px; }
 
@@ -213,7 +259,22 @@
   border-left: 1px solid var(--border);
 }
 .page-item.nested { padding-left: 8px; }
-.folder-empty { padding: 5px 8px; font-size: var(--fs-caption); color: var(--text-3); }
+/* An empty folder offers to start a note in it. */
+.folder-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  text-align: left;
+}
+.folder-empty:hover { background: var(--hover); color: var(--text); }
+.folder-empty .icon { width: 14px; height: 14px; }
+.folder-empty small { color: var(--text-3); font-size: var(--fs-mini); }
 
 /* Drag and drop. */
 .page-item[draggable="true"] { -webkit-user-drag: element; }
@@ -247,7 +308,6 @@
   border-top: 1px solid var(--border);
 }
 
-.theme-toggle,
 .footer-btn {
   position: relative;
   display: flex;
@@ -262,12 +322,17 @@
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.theme-toggle .icon,
 .footer-btn .icon { width: 16px; height: 16px; }
-.theme-toggle:hover,
-.footer-btn:hover { background: var(--hover); color: var(--text); }
+.footer-btn:hover,
+.footer-btn[aria-expanded="true"] { background: var(--hover); color: var(--text); }
 
-/* "On" marker for the Reminders button: a dot that also survives the rail. */
+/* Settings opens upwards from the bottom of the sidebar. */
+.settings { position: relative; }
+.settings-menu { position: fixed; min-width: 210px; z-index: 125; }
+.settings-menu .on-label { display: none; color: var(--success); font-weight: 600; }
+#remindersBtn.is-on .on-label { display: inline; }
+
+/* "Reminders on" shows as a dot on Settings, so it is visible with the menu shut. */
 .footer-btn .on-dot {
   display: none;
   width: 6px;
@@ -277,7 +342,8 @@
   background: var(--success);
 }
 
-.footer-btn.is-on .on-dot { display: block; }
+.footer-btn.is-on .on-dot,
+.settings:has(#remindersBtn.is-on) #settingsBtn .on-dot { display: block; }
 
 /* Sidebar search trigger: shadcn's SidebarInput look, but a button that opens
    the command palette, with the shortcut shown as a Kbd. */
@@ -1074,34 +1140,6 @@ body.is-offline .app { padding-top: 30px; }
 
 .modal.modal-confirm .modal-footer { margin-top: 24px; }
 
-/* ---------------- Backup row ----------------
-   Sits with the theme toggle rather than behind a settings screen: the whole
-   point is that it is found before it is needed. */
-.backup-row {
-  display: flex;
-  gap: var(--sp-1);
-  margin-bottom: var(--sp-1);
-}
-
-.backup-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex: 1;
-  height: 32px;
-  padding: 0 8px;
-  border-radius: var(--r-md);
-  font-size: var(--fs-caption);
-  font-weight: 500;
-  color: var(--text-2);
-  cursor: pointer;
-  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
-}
-
-.backup-btn .icon { width: 15px; height: 15px; }
-.backup-btn:hover { background: var(--hover); color: var(--text); }
-
 /* ---------------- Collapsible sidebar ----------------
    Collapses to an icon rail rather than disappearing, so navigation stays one
    click away. Scoped to min-width 769px on purpose: below that the sidebar is
@@ -1154,7 +1192,6 @@ body.is-offline .app { padding-top: 30px; }
   :root[data-sidebar="collapsed"] .brand-text,
   :root[data-sidebar="collapsed"] .nav-section-header span,
   :root[data-sidebar="collapsed"] .nav-search,
-  :root[data-sidebar="collapsed"] .theme-toggle span,
   :root[data-sidebar="collapsed"] .footer-btn span,
   :root[data-sidebar="collapsed"] .cmdk-trigger .kbd,
   :root[data-sidebar="collapsed"] .page-item span,
@@ -1174,8 +1211,6 @@ body.is-offline .app { padding-top: 30px; }
   :root[data-sidebar="collapsed"] .nav-item,
   :root[data-sidebar="collapsed"] .page-item,
   :root[data-sidebar="collapsed"] .nav-section-header button,
-  :root[data-sidebar="collapsed"] .backup-btn,
-  :root[data-sidebar="collapsed"] .theme-toggle,
   :root[data-sidebar="collapsed"] .footer-btn,
   :root[data-sidebar="collapsed"] .cmdk-trigger {
     flex: none;
@@ -1192,8 +1227,6 @@ body.is-offline .app { padding-top: 30px; }
   :root[data-sidebar="collapsed"] .nav-item .icon,
   :root[data-sidebar="collapsed"] .page-item .icon,
   :root[data-sidebar="collapsed"] .nav-section-header .icon,
-  :root[data-sidebar="collapsed"] .backup-btn .icon,
-  :root[data-sidebar="collapsed"] .theme-toggle .icon,
   :root[data-sidebar="collapsed"] .footer-btn .icon,
   :root[data-sidebar="collapsed"] .cmdk-trigger .icon {
     width: 18px;
@@ -1245,11 +1278,7 @@ body.is-offline .app { padding-top: 30px; }
     padding-top: 12px;
   }
 
-  :root[data-sidebar="collapsed"] .backup-row {
-    flex-direction: column;
-    gap: 4px;
-    margin: 0;
-  }
+  /* In the rail, Settings opens beside its button (placed by nav.js). */
 
   /* Folders in the rail: just the folder icon, and their notes under it. */
   :root[data-sidebar="collapsed"] .folder-row {
@@ -1274,3 +1303,8 @@ body.is-offline .app { padding-top: 30px; }
     gap: 4px;
   }
 }
+
+/* ---------------- Phone tab bar + add button ----------------
+   Hidden here; responsive.css shows them at phone width. */
+.tabbar,
+.fab { display: none; }

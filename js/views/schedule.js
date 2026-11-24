@@ -17,6 +17,7 @@ import { openEditClass, openNewClass } from "../modals/class-editor.js";
 
 import { openFullSchedule } from "../modals/full-schedule.js";
 import { formatCountdown, timerState } from "../ui/class-timer.js";
+import { isMobile } from "../ui/nav.js";
 
 const STATUS_LABEL = { ongoing: "Ongoing", soon: "Starting soon", upcoming: "Upcoming", done: "Done" };
 
@@ -31,6 +32,164 @@ const openTaskCount = (classId) =>
 
 let selectedDay = new Date().getDay();
 let ticker = null;
+
+// ------------------------------------------------------------- view switch ---
+/* Week (timetable), Day (the day picker and list) or List (the table only).
+   Remembered per device; phones start on Day, where a timetable is cramped. */
+const VIEWS = ["week", "day", "list"];
+const VIEW_KEY = "motionScheduleView";
+
+function savedView() {
+  try {
+    const v = localStorage.getItem(VIEW_KEY);
+    if (VIEWS.includes(v)) return v;
+  } catch {
+    /* storage blocked: fall through to the default */
+  }
+  return isMobile() ? "day" : "week";
+}
+
+let view = savedView();
+
+function setView(next) {
+  if (!VIEWS.includes(next)) return;
+  view = next;
+  try {
+    localStorage.setItem(VIEW_KEY, next);
+  } catch {
+    /* not remembered, still applied */
+  }
+  applyView();
+}
+
+function applyView() {
+  $("view-schedule").dataset.schedView = view;
+  document.querySelectorAll("#schedViewSwitch [data-view]").forEach((b) => {
+    const on = b.dataset.view === view;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-checked", String(on));
+    b.tabIndex = on ? 0 : -1;
+  });
+}
+
+// ----------------------------------------------------------- week timetable ---
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]; // timetables start on Monday
+const DAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** Lays overlapping classes side by side: each gets a lane and a lane count. */
+function layoutDay(items) {
+  const sorted = [...items].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+  const placed = [];
+  let cluster = [];
+  let clusterEnd = -1;
+
+  const flush = () => {
+    const lanes = Math.max(1, ...cluster.map((p) => p.lane + 1));
+    cluster.forEach((p) => (p.lanes = lanes));
+    cluster = [];
+  };
+
+  sorted.forEach((c) => {
+    const start = toMinutes(c.start);
+    const end = Math.max(toMinutes(c.end), start + 15);
+    if (start >= clusterEnd) {
+      flush();
+      clusterEnd = end;
+    } else {
+      clusterEnd = Math.max(clusterEnd, end);
+    }
+    const busy = new Set(cluster.filter((p) => p.end > start).map((p) => p.lane));
+    let lane = 0;
+    while (busy.has(lane)) lane++;
+    const entry = { c, start, end, lane, lanes: 1 };
+    cluster.push(entry);
+    placed.push(entry);
+  });
+  flush();
+  return placed;
+}
+
+function hourLabel(h) {
+  const suffix = h >= 12 && h < 24 ? "PM" : "AM";
+  return `${((h + 11) % 12) + 1} ${suffix}`;
+}
+
+function renderWeek() {
+  const host = $("weekTimetable");
+  const { classes } = store.state;
+
+  if (!classes.length) {
+    host.innerHTML =
+      '<div class="tt-empty"><p>No classes yet. Add your timetable once and it repeats every week.</p>' +
+      `<button type="button" class="btn" data-action="tt-add">${icon("plus")}Add a class</button></div>`;
+    return;
+  }
+
+  // Weekends only appear when something is scheduled on them.
+  const days = WEEK_ORDER.filter((d) => d >= 1 && d <= 5 || classes.some((c) => c.days.includes(d)));
+
+  const starts = classes.map((c) => toMinutes(c.start));
+  const ends = classes.map((c) => toMinutes(c.end));
+  const first = Math.max(0, Math.floor(Math.min(...starts) / 60));
+  const last = Math.min(24, Math.ceil(Math.max(...ends) / 60));
+  const hours = Math.max(last - first, 1);
+
+  const now = new Date();
+  const today = now.getDay();
+  const nowMin = nowMinutes();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+
+  const pct = (min) => ((min - first * 60) / (hours * 60)) * 100;
+
+  let html = `<div class="tt-grid" style="--days:${days.length};--hours:${hours}">`;
+
+  // Header row.
+  html += '<div class="tt-corner"></div>';
+  days.forEach((d) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + ((d + 6) % 7));
+    const label = date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    html += `<div class="tt-dayname${d === today ? " today" : ""}">${DAY_SHORT[d]}<small>${esc(label)}</small></div>`;
+  });
+
+  // Hour labels.
+  html += '<div class="tt-hours">';
+  // The first hour sits on the top edge, so its label hangs below the line.
+  html += `<span class="tt-hour is-first" style="top:0">${hourLabel(first)}</span>`;
+  for (let h = first + 1; h < last; h++) {
+    html += `<span class="tt-hour" style="top:${pct(h * 60)}%">${hourLabel(h)}</span>`;
+  }
+  html += "</div>";
+
+  // Day columns.
+  days.forEach((d) => {
+    html += `<div class="tt-col${d === today ? " today" : ""}" data-day="${d}" title="Add a class on ${DAY_FULL[d]}">`;
+    for (let h = first + 1; h < last; h++) {
+      html += `<span class="tt-line" style="top:${pct(h * 60)}%"></span>`;
+    }
+    layoutDay(classesOnDay(classes, d)).forEach(({ c, start, end, lane, lanes }) => {
+      const tasks = openTaskCount(c.id);
+      const past = d === today && end <= nowMin;
+      html +=
+        `<button type="button" class="tt-block ${colorClass(c)}${past ? " is-past" : ""}" data-id="${esc(c.id)}" ` +
+        `style="top:${pct(start)}%;height:${pct(end) - pct(start)}%;` +
+        `left:calc(${(lane / lanes) * 100}% + 4px);width:calc(${100 / lanes}% - 8px)" ` +
+        `title="${esc(c.subject)}, ${esc(formatTime(c.start))} – ${esc(formatTime(c.end))}${c.room ? ", " + esc(c.room) : ""}">` +
+        `<span class="tt-name">${c.emoji ? `<span class="class-emoji">${esc(c.emoji)}</span>` : ""}${esc(c.subject)}</span>` +
+        `<span class="tt-meta">${esc(formatTime(c.start))}${c.room ? " · " + esc(c.room) : ""}</span>` +
+        (tasks ? `<span class="tt-tasks">${tasks} task${tasks === 1 ? "" : "s"}</span>` : "") +
+        "</button>";
+    });
+    if (d === today && nowMin > first * 60 && nowMin < last * 60) {
+      html += `<span class="tt-now" style="top:${pct(nowMin)}%" aria-hidden="true"></span>`;
+    }
+    html += "</div>";
+  });
+
+  html += "</div>";
+  host.innerHTML = html;
+}
 
 function renderNowCard() {
   const card = $("nowCard");
@@ -91,7 +250,9 @@ function renderDayClasses() {
   const list = $("dayClassList");
 
   if (!items.length) {
-    list.innerHTML = `<li class="sched-empty">No classes on ${DAY_FULL[selectedDay]}.</li>`;
+    list.innerHTML =
+      `<li class="sched-empty">No classes on ${DAY_FULL[selectedDay]}. ` +
+      `<button type="button" class="link-btn" data-action="add-on-day">Add one</button></li>`;
     return;
   }
 
@@ -185,10 +346,12 @@ function renderTimerPanel() {
 }
 
 export function render() {
+  applyView();
   renderTimerPanel();
   renderNowCard();
   renderDayPicker();
   renderDayClasses();
+  renderWeek();
   renderAllClasses();
 }
 
@@ -209,6 +372,7 @@ function startTicker() {
     renderTimerPanel();
     renderNowCard();
     renderDayClasses();
+    renderWeek();
   }, 30000);
 }
 
@@ -222,6 +386,7 @@ export function mount() {
   });
 
   $("dayClassList").addEventListener("click", (e) => {
+    if (e.target.closest('[data-action="add-on-day"]')) return openNewClass(selectedDay);
     const row = e.target.closest(".class-row");
     if (row) openEditClass(row.dataset.id);
   });
@@ -232,6 +397,28 @@ export function mount() {
   });
 
   $("addClassBtn").addEventListener("click", () => openNewClass(selectedDay));
+
+  $("schedViewSwitch").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-view]");
+    if (btn) setView(btn.dataset.view);
+  });
+  // Arrow keys move between the three options, as in any radio group.
+  $("schedViewSwitch").addEventListener("keydown", (e) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    setView(VIEWS[(VIEWS.indexOf(view) + step + VIEWS.length) % VIEWS.length]);
+    document.querySelector(`#schedViewSwitch [data-view="${view}"]`)?.focus();
+  });
+
+  $("weekTimetable").addEventListener("click", (e) => {
+    const block = e.target.closest(".tt-block");
+    if (block) return openEditClass(block.dataset.id);
+    if (e.target.closest('[data-action="tt-add"]')) return openNewClass(selectedDay);
+    // An empty spot in a day's column starts a class on that day.
+    const col = e.target.closest(".tt-col");
+    if (col) openNewClass(Number(col.dataset.day));
+  });
   $("fullSchedBtn").addEventListener("click", openFullSchedule);
 
   startTicker();

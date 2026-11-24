@@ -101,7 +101,8 @@
 
   .content {
     --content-pad-x: 18px;
-    padding: calc(54px + env(safe-area-inset-top) + 22px) var(--content-pad-x) calc(48px + env(safe-area-inset-bottom));
+    /* The bottom clears the tab bar and the floating add button. */
+    padding: calc(54px + env(safe-area-inset-top) + 22px) var(--content-pad-x) calc(var(--tabbar-h) + 84px);
     overflow: visible;
     height: auto;
   }
@@ -145,7 +146,8 @@
      with the button on its own full-width line. */
   .composer { gap: 8px; }
   .composer .field.grow { min-width: 100%; }
-  .composer .field.task-due { flex: 1; min-width: 145px; }
+  .composer .datepick { flex: 1; min-width: 145px; }
+  .composer .datepick-btn { width: 100%; }
   .composer select.field { flex: 1; min-width: 110px; }
   .composer .btn { flex: 1 0 100%; }
 
@@ -184,6 +186,11 @@
   .modal.modal-wide { width: 100%; max-height: 92vh; max-height: 92dvh; }
   .sched-bar { gap: 10px; }
   .day-picker { flex: 1; justify-content: space-between; }
+  /* Schedule bar: the view switch above a single row of day buttons. */
+  .sched-left { flex: 1 0 100%; flex-direction: column; align-items: stretch; }
+  .sched-switch { align-self: flex-start; }
+  .sched-left .day-picker { flex-wrap: nowrap; gap: 4px; }
+  .sched-left .day-chip { flex: 1; width: auto; min-width: 0; }
   .add-class-btn { flex: 1 0 100%; }
   .class-where { min-width: 0; }
   .cl-items li .icon-btn { opacity: 1; }
@@ -197,6 +204,73 @@
   /* Phones: pinned under the fixed top bar, one scrollable row instead of
      several wrapped ones, and docked above the keyboard while typing. */
   .notes-ribbon { top: calc(54px + env(safe-area-inset-top)); }
+
+  /* ---- Bottom tab bar and add button ----
+     The five main screens sit where a thumb reaches; "+" adds what belongs on
+     the current screen. Both step aside while the keyboard is up. */
+  :root { --tabbar-h: calc(60px + env(safe-area-inset-bottom)); }
+
+  .tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 105;
+    height: var(--tabbar-h);
+    padding: 0 max(6px, env(safe-area-inset-left)) env(safe-area-inset-bottom) max(6px, env(safe-area-inset-right));
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    background: var(--topbar-bg);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-top: 1px solid var(--border);
+  }
+
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--text-3);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab .icon { width: 22px; height: 22px; stroke-width: 1.8; }
+  .tab[aria-current="page"] { color: var(--text); }
+  .tab[aria-current="page"] .icon { stroke-width: 2.2; }
+  .tab:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ring-color); border-radius: var(--r-md); }
+
+  .fab {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: calc(var(--tabbar-h) + 14px);
+    z-index: 106;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    background: var(--accent-fill);
+    color: var(--on-accent);
+    box-shadow: var(--shadow-lg);
+    transition: transform var(--dur-fast) var(--ease);
+  }
+  .fab.hidden { display: none; }
+  .fab:active { transform: scale(0.94); }
+  .fab .icon { width: 24px; height: 24px; stroke-width: 2.2; }
+
+  body.is-typing .tabbar,
+  body.is-typing .fab,
+  body.nav-open .fab { display: none; }
+
+  /* Floating things lifted above the bar. */
+  .undo-toast { bottom: calc(var(--tabbar-h) + 12px); }
+  body.is-typing .undo-toast { bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .class-timer { bottom: calc(var(--tabbar-h) + 80px); }
 
   /* No hover on touch: folder actions stay visible, sized for a finger. */
   .folder-actions { display: flex; }
