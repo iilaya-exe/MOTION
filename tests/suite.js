@@ -349,12 +349,14 @@ export async function suite(win) {
   d.nav("Today");
   await settle();
   check("the day is drawn as a timetable", q("#todayTimeline .tl-day"), q("#todayTimeline").innerHTML.slice(0, 140));
-  check("the class appears on the spine",
-    q(".tl-item .tl-title")?.textContent.includes("Psychology"), q(".tl-item")?.textContent);
-  check("its time is shown", /\d/.test(q(".tl-time")?.textContent || ""), q(".tl-time")?.textContent);
+  // Found by name: the timer test's "Timed Class" can sort ahead of it early in the day.
+  const psych = qa(".tl-item").find((el) => el.querySelector(".tl-title")?.textContent.includes("Psychology"));
+  check("the class appears on the spine", psych, q("#todayTimeline")?.textContent);
+  check("its time is shown", /\d/.test(psych?.querySelector(".tl-time")?.textContent || ""),
+    psych?.querySelector(".tl-time")?.textContent);
   check("the linked task hangs off the class",
-    q(".tl-item .tl-tasks .tl-task-text")?.textContent === "Weekly reading",
-    q(".tl-item .tl-tasks")?.textContent);
+    psych?.querySelector(".tl-tasks .tl-task-text")?.textContent === "Weekly reading",
+    psych?.querySelector(".tl-tasks")?.textContent);
   check("classes-today stat matches the timeline",
     Number(q("#statClasses").textContent) === qa(".tl-item").length &&
       Number(q("#statClasses").textContent) >= 1,

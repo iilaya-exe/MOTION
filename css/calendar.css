@@ -92,7 +92,7 @@
 
 /* Today gets the highlighter, the one place it appears on this screen. */
 .cal-dayhead.today .cal-daynum { color: var(--hl-ink); font-weight: 500; }
-.cal-daynum { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.cal-daynum { font-variant-numeric: tabular-nums; font-variant-numeric: tabular-nums; }
 
 /* "3 tasks", with a small box drawn like a checkbox. */
 .cal-task-indicator {
@@ -201,7 +201,7 @@
   margin-top: 28px;
 }
 .ca-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
-.ca-head h3 { margin: 0; font: 500 20px/1.2 var(--font-serif); letter-spacing: -0.01em; }
+.ca-head h3 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.3; letter-spacing: -0.015em; }
 .ca-head .mark { font-size: 12px; }
 .ca-sec + .ca-sec { margin-top: 12px; }
 .ca-sec h4 { margin: 0 0 4px; font-size: 12px; font-weight: 500; color: var(--text-3); }

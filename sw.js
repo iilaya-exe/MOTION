@@ -6,7 +6,7 @@
    which is what makes a deploy actually reach people instead of being masked by
    a stale cache forever. */
 
-const CACHE = "motion-v17";
+const CACHE = "motion-v18";
 
 const ASSETS = [
   "./",
@@ -17,8 +17,6 @@ const ASSETS = [
   "./icons/icon-512.png",
   "./icons/maskable-512.png",
   "./fonts/Geist-Variable.woff2",
-  "./fonts/GeistMono-Variable.woff2",
-  "./fonts/Newsreader-Variable.woff2",
 
   "./css/tokens.css",
   "./css/base.css",

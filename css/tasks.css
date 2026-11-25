@@ -154,7 +154,7 @@
 }
 .list-toolbar .filter-tab:hover { color: var(--text); background: none; }
 .list-toolbar .filter-tab.active { color: var(--text); background: none; box-shadow: none; border-bottom-color: var(--text); }
-.list-toolbar .filter-tab .count { font-family: var(--font-mono); font-size: 12px; color: var(--text-3); background: none; padding: 0 0 0 4px; }
+.list-toolbar .filter-tab .count { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-3); background: none; padding: 0 0 0 4px; }
 
 .toolbar-end {
   display: flex;

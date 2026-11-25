@@ -15,22 +15,6 @@
    ========================================================================== */
 
 @font-face {
-  font-family: "Newsreader";
-  src: url("../fonts/Newsreader-Variable.woff2") format("woff2");
-  font-weight: 200 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Geist Mono";
-  src: url("../fonts/GeistMono-Variable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
   font-family: "Geist";
   src: url("../fonts/Geist-Variable.woff2") format("woff2");
   font-weight: 100 900;
@@ -40,8 +24,7 @@
 
 :root {
   --font-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: "Newsreader", "Iowan Old Style", Georgia, serif;
-  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --bg: #f8f8f7;
   --surface: #ffffff;

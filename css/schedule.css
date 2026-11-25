@@ -28,14 +28,15 @@
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc, var(--text)); flex-shrink: 0; }
 
 .now-title {
-  font: 500 22px/1.2 var(--font-serif);
-  letter-spacing: -0.01em;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  letter-spacing: -0.015em;
   margin-bottom: 6px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.now-title .class-section { font: 400 13px var(--font-mono); color: var(--text-2); }
+.now-title .class-section { font-size: 13px; font-weight: 400; color: var(--text-2); }
 
 .now-meta {
   display: flex;
@@ -48,7 +49,7 @@
 .now-meta span { display: flex; align-items: center; gap: 6px; }
 .now-meta .icon { width: 14px; height: 14px; color: var(--text-3); }
 
-.now-remaining { margin-top: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--text); }
+.now-remaining { margin-top: 10px; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text); }
 
 .now-next { margin-top: 4px; font-size: 13px; color: var(--text-2); }
 .now-next b { color: var(--text); font-weight: 500; }
@@ -533,7 +534,7 @@
   color: var(--text-2);
   border-left: 1px solid var(--border);
 }
-.tt-dayname small { display: block; font-weight: 400; color: var(--text-3); font-size: 12px; font-family: var(--font-mono); margin-top: 2px; }
+.tt-dayname small { display: block; font-weight: 400; color: var(--text-3); font-size: 12px; font-variant-numeric: tabular-nums; margin-top: 2px; }
 .tt-dayname.today { color: var(--text); }
 .tt-dayname.today small { color: var(--hl-ink); }
 
@@ -542,7 +543,7 @@
   position: absolute;
   right: 8px;
   transform: translateY(-50%);
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   color: var(--text-2);
   white-space: nowrap;
@@ -583,7 +584,7 @@
 .tt-block.is-past { opacity: 0.6; }
 .tt-name { font-weight: 500; display: flex; gap: 4px; align-items: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tt-meta { color: var(--text-2); font-size: var(--fs-mini); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.tt-tasks { color: var(--text-2); font-family: var(--font-mono); font-size: 11px; margin-top: auto; }
+.tt-tasks { color: var(--text-2); font-variant-numeric: tabular-nums; font-size: 11px; margin-top: auto; }
 
 /* The current time, across today's column. */
 .tt-now {
@@ -599,7 +600,7 @@
   position: absolute;
   left: 6px;
   top: -9px;
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   font-weight: 500;
   line-height: 1.5;

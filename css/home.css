@@ -18,7 +18,7 @@
 }
 
 .panel-h h3 { margin: 0; font-size: 14px; font-weight: 500; }
-.panel-meta { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); text-align: right; font-variant-numeric: tabular-nums; }
+.panel-meta { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-2); text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ---------------- Stats ---------------- */
 .stats {
@@ -41,7 +41,7 @@
 .stat-num.is-late { color: var(--danger); }
 .stat-of { font-size: 16px; color: var(--text-2); }
 .stat-meta {
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 12px;
   color: var(--text-2);
   white-space: nowrap;
@@ -88,7 +88,7 @@
 .week-list li + li { border-top: 1px solid var(--border); }
 .due-list input[type="checkbox"] { width: 16px; height: 16px; margin: 0; flex-shrink: 0; }
 .due-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.due-when { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); white-space: nowrap; }
+.due-when { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-2); white-space: nowrap; }
 .due-when.is-late { color: var(--danger); }
 .due-empty { color: var(--text-2); font-size: 13px; padding: 12px; }
 
@@ -96,7 +96,7 @@
 .week-list li { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 12px; }
 .wk-date { width: 40px; text-align: center; line-height: 1.1; flex-shrink: 0; }
 .wk-date b { display: block; font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums; }
-.wk-date small { font-family: var(--font-mono); font-size: 11px; color: var(--text-2); }
+.wk-date small { font-variant-numeric: tabular-nums; font-size: 11px; color: var(--text-2); }
 .wk-text { min-width: 0; }
 .wk-text small { display: block; color: var(--text-2); font-size: 12px; }
 
@@ -108,7 +108,7 @@
   align-items: center;
   padding: 20px 4px 8px;
 }
-.fr-text h3 { font: 500 30px/1.12 var(--font-serif); letter-spacing: -0.015em; margin: 0 0 12px; }
+.fr-text h3 { font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -0.025em; margin: 0 0 12px; }
 .fr-text p { color: var(--text-2); font-size: 15px; line-height: 24px; margin: 0 0 20px; max-width: 46ch; }
 .fr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .fr-sketch { position: relative; height: 260px; border-radius: var(--r-xl); border: 1px dashed var(--border-strong); overflow: hidden; }

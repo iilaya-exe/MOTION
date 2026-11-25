@@ -77,14 +77,11 @@ textarea {
   container-type: inline-size;
 }
 
-/* Page titles are set in the serif, at a reading weight: hierarchy comes from
-   size and colour, not boldness. */
 .view h1 {
-  font-family: var(--font-serif);
-  font-size: clamp(28px, 1.1vw + 20px, 36px);
-  font-weight: 500;
-  line-height: 1.12;
-  letter-spacing: -0.015em;
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
   margin: 0 0 6px;
 }
 
@@ -167,7 +164,7 @@ textarea {
   transform: skewX(-10deg) rotate(-1.2deg);
 }
 
-.mono { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+.mono { font-size: 12px; font-variant-numeric: tabular-nums; }
 
 /* Times, dates and counts use equal-width digits, so "10:00 AM" and "1:00 PM"
    line up down a list and numbers don't shift as they change. */

@@ -145,11 +145,11 @@
 
 .page-title-input {
   display: block;
-  font-family: var(--font-serif);
-  font-size: clamp(30px, 1.2vw + 24px, 44px);
-  line-height: 1.12;
-  font-weight: 500;
-  letter-spacing: -0.015em;
+  font-family: inherit;
+  font-size: clamp(28px, 1.2vw + 22px, 42px);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.035em;
   border: none;
   outline: none;
   width: 100%;
@@ -165,10 +165,9 @@
   position: relative;
   min-height: 340px;
   outline: none;
-  font-family: var(--font-serif);
-  font-size: 19px;
-  line-height: 1.65;
-  color: var(--text);
+  font-size: var(--fs-body-l);
+  line-height: 1.7;
+  color: var(--text-2);
   padding: 2px 0;
 }
 
@@ -192,8 +191,8 @@
 }
 
 .page-content h2 {
-  font-size: 26px;
-  font-weight: 500;
+  font-size: var(--fs-h2);
+  font-weight: 600;
   margin: 24px 0 7px;
   line-height: 1.3;
   letter-spacing: -0.02em;
@@ -201,8 +200,8 @@
 }
 
 .page-content h3 {
-  font-size: 21px;
-  font-weight: 500;
+  font-size: var(--fs-h3);
+  font-weight: 600;
   margin: 18px 0 5px;
   line-height: 1.35;
   letter-spacing: -0.012em;
@@ -232,7 +231,7 @@
 
 /* ---------------- Inline marks ---------------- */
 .page-content b,
-.page-content strong { font-weight: 600; color: var(--text); }
+.page-content strong { font-weight: 650; color: var(--text); }
 
 .page-content s { text-decoration-thickness: 1px; }
 
@@ -260,7 +259,6 @@
   padding: 2px 0 2px 16px;
   border-left: 2px solid var(--text);
   color: var(--text-2);
-  font-style: italic;
 }
 
 /* ---------------- Checklist ----------------
