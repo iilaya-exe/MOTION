@@ -1,0 +1,767 @@
+/* ============================================================================
+   Tasks
+   ----------------------------------------------------------------------------
+   Two presentations of the same data. The list is a full-width property table
+   grouped into labelled sections; the board turns those same groups into
+   columns. Neither is width-capped — the columns are what use the space.
+
+   Properties (date, priority, status) are edited in place: each chip has a real
+   native control stretched invisibly over it, so a click opens the browser's own
+   date picker or select menu with no custom popup to build or keyboard-trap.
+   ========================================================================== */
+
+/* ---------------- Composer + toolbar (shared with Checklists) ---------------- */
+.composer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px;
+  margin-bottom: var(--gap-card);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+}
+
+.composer .field { height: 36px; }
+.composer select.field { width: auto; min-width: 0; }
+.composer #taskSubjectInput[hidden] { display: none; }
+
+.composer .field.grow {
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+
+/* ---------------- Due date picker (js/ui/date-picker.js) ---------------- */
+.datepick { position: relative; display: inline-flex; }
+
+/* The real date input stays as the value holder, out of sight. */
+.datepick-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  padding: 0;
+}
+
+.datepick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 132px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.datepick-btn .icon { width: 15px; height: 15px; color: var(--text-3); }
+.datepick-btn.is-empty { color: var(--placeholder); }
+.datepick-btn.is-past { color: var(--danger); }
+.datepick-btn[aria-expanded="true"] { border-color: var(--ring-color); box-shadow: var(--ring); }
+
+.datepick-pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 70;
+  width: 272px;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  animation: menuIn 0.12s var(--ease);
+}
+.datepick-pop.hidden { display: none; }
+
+.dp-quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+.dp-quick button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 8px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+}
+.dp-quick button small { font-size: var(--fs-mini); font-weight: 400; color: var(--text-3); white-space: nowrap; }
+.dp-quick button:hover { background: var(--hover); }
+.dp-quick button.is-picked { border-color: var(--text); }
+
+.dp-head { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px; }
+.dp-title { font-size: var(--fs-caption); font-weight: 600; }
+.dp-nav { width: 28px; height: 28px; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; color: var(--text-2); }
+.dp-nav:hover { background: var(--hover); }
+.dp-prev { transform: rotate(90deg); width: 16px; height: 16px; }
+.dp-next { transform: rotate(-90deg); width: 16px; height: 16px; }
+
+.dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.dp-dow { font-size: var(--fs-micro); color: var(--text-3); text-align: center; padding: 4px 0; }
+.dp-day {
+  height: 32px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-caption);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.dp-day:hover { background: var(--hover); color: var(--text); }
+.dp-day:focus-visible { outline: none; box-shadow: var(--ring); }
+.dp-day.is-today { font-weight: 700; color: var(--text); box-shadow: inset 0 0 0 1px var(--border-hover); }
+.dp-day.is-picked { background: var(--accent-fill); color: var(--on-accent); font-weight: 600; }
+
+.dp-clear {
+  margin-top: 8px;
+  width: 100%;
+  height: 32px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+}
+.dp-clear:hover { background: var(--hover); color: var(--danger); }
+
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.list-toolbar .filter-tabs {
+  margin-bottom: 0;
+  gap: 16px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+.list-toolbar .filter-tab {
+  height: 32px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--text-2);
+  border-bottom: 1.5px solid transparent;
+}
+.list-toolbar .filter-tab:hover { color: var(--text); background: none; }
+.list-toolbar .filter-tab.active { color: var(--text); background: none; box-shadow: none; border-bottom-color: var(--text); }
+.list-toolbar .filter-tab .count { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-3); background: none; padding: 0 0 0 4px; }
+
+.toolbar-end {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 36px;
+  background: var(--field-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+.search-field:focus-within {
+  border-color: var(--ring-color);
+  box-shadow: var(--ring);
+}
+
+.search-field input:focus-visible { outline: none; }
+
+.search-field .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-3);
+}
+
+.search-field input {
+  border: none;
+  outline: none;
+  background: none;
+  width: 168px;
+  min-width: 0;
+  font-size: var(--fs-body-s);
+}
+
+.search-field input::placeholder { color: var(--text-3); }
+.search-field input::-webkit-search-cancel-button { cursor: pointer; }
+
+.select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 0 0 12px;
+  background: var(--field-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+.select-wrap:focus-within { border-color: var(--ring-color); box-shadow: var(--ring); }
+
+.select-wrap span {
+  font-size: var(--fs-body-s);
+  font-weight: 400;
+  color: var(--text-3);
+}
+
+.select-wrap select {
+  height: 100%;
+  padding: 0 32px 0 0;
+  border: none;
+  outline: none;
+  background-color: transparent;
+  font-size: var(--fs-body-s);
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Segmented list/board switch — the same TabsList track, icon-sized. */
+.seg {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 3px;
+  background: var(--muted);
+  border-radius: var(--r-lg);
+}
+
+.seg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  color: var(--text-3);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.seg-btn .icon { width: 16px; height: 16px; }
+.seg-btn:hover { color: var(--text); }
+.seg-btn.active {
+  background: var(--tab-active);
+  border-color: var(--tab-active-border);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.list-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  margin-bottom: 14px;
+}
+
+.list-summary b {
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.link-btn {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border-hover);
+  padding: 2px 6px;
+  margin: -2px -6px;
+  border-radius: var(--r-sm);
+  transition: text-decoration-color var(--dur-fast) var(--ease);
+}
+
+.link-btn:hover { text-decoration-color: currentColor; }
+
+/* The list scrolls horizontally rather than compressing past the point of
+   legibility. With the column drops below, this rarely engages. */
+#taskList { overflow-x: auto; }
+
+/* ---------------- Grouped table ----------------
+   Laid out with CSS grid rather than a <table>: the same column template is
+   applied to the header and to every row in every group, so columns line up
+   across group boundaries — something a real table cannot do once rows are
+   split into separate <tbody> sections. It also lets the whole thing become a
+   stacked flex layout on a phone, which a table would fight. */
+
+.task-table {
+  /* Name takes the slack, but never below 170px — a minmax(0,1fr) track will
+     collapse to zero before any fixed column yields, which wraps the title one
+     character per line and slides the headers over each other. */
+  --cols: minmax(170px, 1fr) 128px 104px 148px 106px 128px 30px;
+  min-width: 620px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.task-head,
+.task-row {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  gap: 10px;
+  /* Extra on the left so the 3px priority stripe never crowds the checkbox. */
+  padding: 0 12px 0 16px;
+}
+
+/* TableHead: h-10, medium weight, muted, sentence case. */
+.task-head {
+  height: 40px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-body-s);
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.task-head .col-name { padding-left: 27px; }
+
+/* Grid children default to min-width:auto, which lets a long chip push the
+   track wider than its declared size and skew every column after it. */
+.col-subject,
+.col-priority,
+.col-date,
+.col-repeat,
+.col-status { min-width: 0; }
+
+.task-group + .task-group .group-head { border-top: 1px solid var(--border); }
+
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--surface-2);
+  text-align: left;
+  color: var(--text-3);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.group-head:hover { background: var(--hover); color: var(--text-2); }
+
+.group-head .chev {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.15s var(--ease);
+}
+
+.task-group.collapsed .group-head .chev { transform: rotate(-90deg); }
+
+.group-name {
+  font-size: var(--fs-body-s);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.group-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  /* --cc is set by the .c-<colour> class on subject groups; --gc by .g-<key>. */
+  background: var(--cc, var(--gc, var(--text-3)));
+  flex-shrink: 0;
+}
+
+.group-count {
+  font-size: var(--fs-mini);
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--muted);
+  border-radius: var(--r-md);
+  padding: 0 7px;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.task-group.collapsed .task-list { display: none; }
+
+/* Group accents, used by the dot and the board column header. */
+.g-overdue { --gc: var(--danger); }
+.g-today { --gc: var(--info); }
+.g-tomorrow { --gc: var(--amber); }
+.g-week { --gc: var(--success); }
+.g-later { --gc: var(--text-3); }
+.g-none { --gc: var(--border-strong); }
+.g-done, .g-complete { --gc: var(--success); }
+.g-high, .g-stuck { --gc: var(--danger); }
+.g-medium, .g-hold { --gc: var(--amber); }
+.g-low { --gc: var(--success); }
+.g-todo { --gc: var(--text-3); }
+.g-progress { --gc: var(--info); }
+.g-review { --gc: #a855f7; }
+
+/* ---------------- Task row ---------------- */
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-row {
+  min-height: 44px;
+  border-top: 1px solid var(--border);
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.task-row:hover { background: var(--hover-subtle); }
+
+/* Rows carry no tint of their own: with every row coloured, none stood out.
+   The red overdue date and the High flag do that job now. */
+
+.cell-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Click-to-edit, so the padding/margin pair keeps the hover target generous
+   without shifting the text when it swaps to an input. */
+.task-row .task-text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-body-s);
+  font-weight: 500;
+  /* anywhere, not break-word: break-word will split mid-word even when the line
+     could simply wrap, which is what produced one letter per row. */
+  overflow-wrap: anywhere;
+  cursor: text;
+  border-radius: var(--r-sm);
+  padding: 3px 5px;
+  margin: -3px -5px;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.task-row .task-text:hover { background: var(--hover); }
+.task-row.done .task-text { text-decoration: line-through; color: var(--text-3); font-weight: 400; }
+
+.task-edit {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-body-s);
+  padding: 3px 5px;
+  margin: -3px -5px;
+  border: none;
+  outline: none;
+  background: var(--surface);
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 0 1px var(--ring-color), var(--ring);
+  color: var(--text);
+}
+
+/* A chip with a real control laid invisibly on top of it. */
+.prop-cell {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  border-radius: var(--r-md);
+}
+
+.prop-cell .prop-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.prop-cell .badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.prop-cell:hover .badge { border-color: var(--border-hover); }
+.prop-cell:focus-within { box-shadow: var(--ring); }
+
+.badge.ghost {
+  background: none;
+  color: var(--text-3);
+  border: 1px dashed var(--control-border);
+  font-weight: 400;
+}
+
+.prop-cell:hover .badge.ghost { color: var(--text-2); }
+
+/* Status chips */
+.badge.subject-chip {
+  background: var(--cc-soft, var(--surface-2));
+  color: var(--cc, var(--text-2));
+  border-color: transparent;
+  gap: 5px;
+}
+
+.badge.subject-chip .subject-dot { width: 6px; height: 6px; border-radius: 2px; background: var(--cc); }
+
+.badge.repeat-on { background: var(--muted); color: var(--text); border-color: transparent; }
+
+.badge.status-todo { background: transparent; color: var(--text-2); border-color: var(--border); }
+.badge.status-progress { background: var(--info-soft); color: var(--info); border-color: var(--info-border); }
+.badge.status-review { background: color-mix(in srgb, #a855f7 12%, transparent); color: #8b3fd9; border-color: color-mix(in srgb, #a855f7 28%, transparent); }
+.badge.status-stuck { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-border); }
+.badge.status-hold { background: var(--amber-soft); color: var(--amber); border-color: var(--amber-border); }
+.badge.status-complete { background: var(--success-soft); color: var(--success); border-color: var(--success-border); }
+
+:root[data-theme="dark"] .badge.status-review { color: #c9a2ff; }
+
+.task-row .icon-btn {
+  opacity: 0;
+  width: 28px;
+  height: 28px;
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.task-row:hover .icon-btn,
+.task-row:focus-within .icon-btn { opacity: 1; }
+
+/* Notion's "+ New" affordance: sends focus to the composer at the top. */
+.task-new-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-body-s);
+  font-weight: 500;
+  color: var(--text-3);
+  text-align: left;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.task-new-row .icon { width: 16px; height: 16px; }
+.task-new-row:hover { background: var(--hover-subtle); color: var(--text-2); }
+
+.task-empty {
+  padding: 30px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--fs-body-s);
+  border-top: 1px solid var(--border);
+  list-style: none;
+}
+
+/* ---------------- Board ---------------- */
+/* Columns stretch to the tallest, so the board reads as one even row. */
+.task-board {
+  display: flex;
+  gap: var(--gap-card);
+  align-items: stretch;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.board-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 268px;
+  max-width: 340px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 8px;
+}
+
+.board-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 12px;
+}
+
+.board-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.board-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.board-card:hover { border-color: var(--border-strong); }
+
+.board-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.board-card .task-text {
+  flex: 1;
+  font-size: var(--fs-body-s);
+  font-weight: 500;
+  word-break: break-word;
+  line-height: 1.45;
+}
+
+.board-card.done .task-text { text-decoration: line-through; color: var(--text-3); }
+
+.board-card input[type="checkbox"] { margin-top: 2px; }
+
+.board-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Floats over the corner rather than taking a slot in the title row, so it
+   never squeezes the title onto a second line just by existing. */
+.board-card .icon-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  opacity: 0;
+  background: var(--surface);
+  box-shadow: 0 0 0 4px var(--surface);
+}
+.board-card:hover .icon-btn,
+.board-card:focus-within .icon-btn { opacity: 1; }
+
+.board-empty {
+  padding: 16px 4px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: var(--fs-caption);
+}
+
+/* ---------------- Calm row treatment ----------------
+   Properties read as plain text with a small dot, not as bordered chips, so a
+   row is mostly its title. Colour is kept for what needs attention: an overdue
+   date, High and Medium priority, and a status that isn't "To Do". */
+.task-row { position: relative; }
+.task-row.done { opacity: 0.62; }
+
+.task-row .badge {
+  background: transparent;
+  border-color: transparent;
+  padding-left: 0;
+  padding-right: 2px;
+  transition: opacity var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.task-row .badge.subject-chip { color: var(--text-2); background: transparent; }
+.task-row .badge.due { color: var(--text-2); }
+.task-row .badge.overdue { color: var(--danger); font-weight: 600; }
+.task-row .badge.repeat-on { color: var(--text); background: transparent; }
+
+.task-row .badge.priority-high { color: var(--danger); font-weight: 600; }
+.task-row .badge.priority-medium { color: var(--amber); }
+.task-row .badge.priority-low { color: var(--text-3); }
+/* Priority reads as three small bars filled to its level, like signal strength. */
+.pri-bars { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 12px; margin-right: 3px; }
+.pri-bars i { width: 3px; border-radius: 1px; background: var(--border-strong); }
+.pri-bars i:nth-child(1) { height: 5px; }
+.pri-bars i:nth-child(2) { height: 8px; }
+.pri-bars i:nth-child(3) { height: 12px; }
+.pri-bars.pri-low i:nth-child(1),
+.pri-bars.pri-medium i:nth-child(-n+2),
+.pri-bars.pri-high i { background: currentColor; }
+.task-row .badge.priority-medium { color: var(--text); }
+.task-row .badge.priority-high { color: var(--danger); font-weight: 500; }
+
+.task-row .badge[class*="status-"] { background: transparent; border-color: transparent; }
+.task-row .badge.status-todo { color: var(--text-3); }
+.task-row .badge[class*="status-"]::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  margin-right: 3px;
+}
+
+/* Empty fields ("Subject", "Date", "Once") and the default Low priority stay
+   out of sight until the row is hovered or focused. They are still there, and
+   still clickable: each sits under its own invisible select or date input. */
+.task-row .badge.ghost,
+.task-row .badge.priority-low { opacity: 0; }
+.task-row:hover .badge.ghost,
+.task-row:hover .badge.priority-low,
+.task-row:focus-within .badge.ghost,
+.task-row:focus-within .badge.priority-low { opacity: 1; }
+.task-row .badge.ghost { border: none; }
+
+@media (hover: none) {
+  /* Touch has no hover, and these chips are the only way to set the field,
+     so they stay visible there, just faint. */
+  .task-row .badge.ghost,
+  .task-row .badge.priority-low { opacity: 0.5; }
+}
+
+/* Completion feedback: the row settles and the box pops once. */
+@keyframes taskComplete {
+  0% { transform: none; }
+  35% { transform: scale(0.995); background: color-mix(in srgb, var(--success-soft) 80%, transparent); }
+  100% { transform: none; }
+}
+
+@keyframes checkPop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+.task-row.done { animation: taskComplete var(--dur-slow) var(--ease); }
+.task-row input[type="checkbox"]:checked,
+.board-card input[type="checkbox"]:checked { animation: checkPop var(--dur-slow) var(--ease-spring); }
+
+/* ---------------- Board cards ---------------- */
+.board-card { position: relative; overflow: hidden; }
+
+.board-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+}
+
+.board-card.p-high::before { background: var(--danger); }
+.board-card.p-medium::before { background: var(--amber); }
+.board-card.p-low::before { background: var(--success); }
+.board-card.active { border-color: var(--info-border); }
+.board-card.done { opacity: 0.62; }
+
+.board-col { transition: background var(--dur) var(--ease); }

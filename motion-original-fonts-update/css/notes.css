@@ -1,0 +1,498 @@
+/* Rich-text page editor. The body is a contenteditable region, so its child
+   elements are styled by tag rather than by class. */
+
+/* ---------------- Ribbon ----------------
+   A full-bleed sticky band holding the toolbar. Unpinned it is invisible —
+   just the bordered toolbar, as before. Once a long note scrolls under it, the
+   band gets the frosted top-bar treatment so text never shows through. */
+.notes-ribbon-sentinel { height: 0; }
+
+.notes-ribbon {
+  position: sticky;
+  /* Sticky offsets count from inside the scroller's padding, so pull back by
+     it to pin flush with the top edge rather than 40px below it. */
+  top: calc(var(--content-pad-top, 0px) * -1);
+  z-index: 20;
+  margin: -8px calc(var(--content-pad-x, 0px) * -1) 12px;
+  padding: 8px var(--content-pad-x, 0px);
+  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.notes-ribbon.is-stuck {
+  background: var(--topbar-bg);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  box-shadow: 0 1px 0 var(--border);
+}
+
+/* Phone keyboard open: parked on the keyboard's top edge. The transform is
+   set from the visual viewport in note-editor.js. */
+.notes-ribbon.is-docked {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px 8px;
+  z-index: 115;
+  background: var(--topbar-bg);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  box-shadow: 0 -1px 0 var(--border);
+  transition: none;
+  will-change: transform;
+}
+
+/* Centred over the note's reading column. */
+.notes-ribbon .notes-toolbar { margin-left: auto; margin-right: auto; }
+
+.notes-ribbon.is-disabled .notes-toolbar { opacity: 0.5; pointer-events: none; }
+
+/* ToggleGroup in a bordered bar, like shadcn's editor toolbars: ghost items
+   with the active one on the muted accent. */
+.notes-toolbar {
+  display: flex;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 4px;
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.notes-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--text-2);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.notes-toolbar button.text-btn { padding: 0 10px; }
+.notes-toolbar button .icon { width: 16px; height: 16px; }
+.notes-toolbar button:hover { background: var(--hover); color: var(--text); }
+.notes-toolbar button:focus-visible { outline: none; box-shadow: var(--ring); }
+.notes-toolbar button.active { background: var(--muted); color: var(--text); }
+.notes-toolbar button.active:hover { background: var(--hover-strong); }
+.notes-toolbar button:disabled { opacity: 0.38; pointer-events: none; }
+
+.toolbar-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+
+/* ---------------- Link card ---------------- */
+.link-popover {
+  position: fixed;
+  z-index: 130;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  max-width: min(420px, calc(100vw - 16px));
+}
+
+.link-popover .lp-view,
+.link-popover .lp-edit { display: none; align-items: center; gap: 6px; }
+.link-popover[data-mode="view"] .lp-view,
+.link-popover[data-mode="edit"] .lp-edit { display: flex; }
+
+.lp-url {
+  flex: 1;
+  min-width: 0;
+  max-width: 260px;
+  padding: 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-caption);
+  color: var(--info);
+  text-decoration: none;
+}
+.lp-url:hover { text-decoration: underline; }
+
+.lp-btn {
+  height: 28px;
+  padding: 0 9px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--text-2);
+}
+.lp-btn:hover { background: var(--hover); color: var(--text); }
+
+.lp-edit .field { width: 260px; max-width: 60vw; height: 34px; }
+.lp-edit .btn { height: 34px; }
+
+/* A note reads as a document: title, meta and text share one centred column
+   about 70 characters wide, while the ribbon above stays full width. */
+.page-title-input,
+.page-meta-row,
+.page-content {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-title-input {
+  display: block;
+  font-family: inherit;
+  font-size: clamp(28px, 1.2vw + 22px, 42px);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  border: none;
+  outline: none;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 2px 0;
+  color: var(--text);
+  background: transparent;
+}
+
+.page-title-input::placeholder { color: var(--placeholder); }
+
+.page-content {
+  position: relative;
+  min-height: 340px;
+  outline: none;
+  font-size: var(--fs-body-l);
+  line-height: 1.7;
+  color: var(--text-2);
+  padding: 2px 0;
+}
+
+/* The placeholder overlays the first line rather than sitting before it, so
+   an empty <p><br></p> (what Chrome leaves) still shows a single line. */
+.page-content:empty::before,
+.page-content.is-empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  top: 2px;
+  left: 0;
+  right: 0;
+  color: var(--placeholder);
+  pointer-events: none;
+}
+
+.page-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 22px 0;
+}
+
+.page-content h2 {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  margin: 24px 0 7px;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.page-content h3 {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  margin: 18px 0 5px;
+  line-height: 1.35;
+  letter-spacing: -0.012em;
+  color: var(--text);
+}
+
+.page-content p { margin: 0 0 10px; }
+
+.page-content ul,
+.page-content ol {
+  margin: 0 0 10px;
+  padding-left: 24px;
+}
+
+.page-content ul { list-style-type: disc; }
+.page-content ol { list-style-type: decimal; }
+.page-content li { margin-bottom: 3px; }
+.page-content > *:first-child { margin-top: 0; }
+
+/* "Edited 5 min ago" — small enough to ignore, present enough to reassure. */
+.page-meta {
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  margin: -4px 0 14px;
+  min-height: 1em;
+}
+
+/* ---------------- Inline marks ---------------- */
+.page-content b,
+.page-content strong { font-weight: 650; color: var(--text); }
+
+.page-content s { text-decoration-thickness: 1px; }
+
+.page-content code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.08em 0.36em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.page-content a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* ---------------- Quote ---------------- */
+.page-content blockquote {
+  margin: 0 0 10px;
+  padding: 2px 0 2px 16px;
+  border-left: 2px solid var(--text);
+  color: var(--text-2);
+}
+
+/* ---------------- Checklist ----------------
+   A plain <ul class="todo">; each <li data-checked> draws its own box, which
+   note-editor.js turns into a click target. */
+.page-content ul.todo {
+  list-style: none;
+  padding-left: 2px;
+}
+
+.page-content ul.todo > li {
+  position: relative;
+  padding-left: 30px;
+}
+
+.page-content ul.todo > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc((1.7em - 17px) / 2);
+  width: 17px;
+  height: 17px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--control-border);
+  border-radius: 5px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.page-content ul.todo > li:hover::before { border-color: var(--text-3); }
+
+.page-content ul.todo > li[data-checked="true"]::before {
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
+}
+
+/* The tick: two borders of a rotated box, in the accent's foreground. */
+.page-content ul.todo > li[data-checked="true"]::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: calc((1.7em - 17px) / 2 + 3px);
+  width: 5px;
+  height: 9px;
+  border: solid var(--on-accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.page-content ul.todo > li[data-checked="true"] {
+  color: var(--text-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--placeholder);
+}
+
+/* Nested lists (Tab) keep a little room. */
+.page-content ul ul,
+.page-content ol ol,
+.page-content ul ol,
+.page-content ol ul { margin: 3px 0 3px; }
+.page-content ul ul { list-style-type: circle; }
+.page-content ul.todo ul.todo,
+.page-content ul.todo { list-style: none; }
+
+/* ---------------- Colours ----------------
+   Each palette name sets a variable; one rule per kind paints it. The swatches
+   in the colour picker reuse the same attributes. */
+[data-tc="gray"] { --tc: var(--tc-gray); }
+[data-tc="brown"] { --tc: var(--tc-brown); }
+[data-tc="orange"] { --tc: var(--tc-orange); }
+[data-tc="yellow"] { --tc: var(--tc-yellow); }
+[data-tc="green"] { --tc: var(--tc-green); }
+[data-tc="blue"] { --tc: var(--tc-blue); }
+[data-tc="purple"] { --tc: var(--tc-purple); }
+[data-tc="pink"] { --tc: var(--tc-pink); }
+[data-tc="red"] { --tc: var(--tc-red); }
+[data-hl="gray"] { --hl: var(--hl-gray); }
+[data-hl="brown"] { --hl: var(--hl-brown); }
+[data-hl="orange"] { --hl: var(--hl-orange); }
+[data-hl="yellow"] { --hl: var(--hl-yellow); }
+[data-hl="green"] { --hl: var(--hl-green); }
+[data-hl="blue"] { --hl: var(--hl-blue); }
+[data-hl="purple"] { --hl: var(--hl-purple); }
+[data-hl="pink"] { --hl: var(--hl-pink); }
+[data-hl="red"] { --hl: var(--hl-red); }
+
+.page-content [data-tc] { color: var(--tc); }
+.page-content [data-hl] {
+  background: var(--hl);
+  border-radius: 3px;
+  padding: 0.08em 0;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+/* A coloured link keeps its colour but stays visibly a link. */
+.page-content a[data-tc],
+.page-content [data-tc] a { color: var(--tc); }
+
+/* The ribbon's colour button: an "A" over a bar in the colour at the caret. */
+.notes-toolbar .color-btn {
+  position: relative;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 9px;
+}
+.color-btn .color-glyph {
+  font-weight: 650;
+  font-size: 14px;
+  line-height: 1;
+  padding: 1px 3px 0;
+  border-radius: 3px;
+  color: var(--cur-tc, currentColor);
+  background: var(--cur-hl, transparent);
+}
+.color-btn .color-bar {
+  width: 14px;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: 2px;
+  background: var(--cur-tc, currentColor);
+  opacity: 0.85;
+}
+
+.color-popover {
+  position: fixed;
+  z-index: 130;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 10px;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+}
+.cp-label {
+  font-size: var(--fs-mini);
+  font-weight: 500;
+  color: var(--text-3);
+  margin: 0 2px 6px;
+}
+.cp-row {
+  display: grid;
+  grid-template-columns: repeat(10, 28px);
+  gap: 4px;
+}
+.cp-row + .cp-label { margin-top: 10px; }
+
+.cp-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text);
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.cp-swatch:hover { transform: scale(1.08); }
+.cp-swatch:focus-visible { outline: none; box-shadow: var(--ring); }
+.cp-swatch.active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ring-color); }
+.cp-tc[data-tc] { color: var(--tc); }
+.cp-hl[data-hl] { background: var(--hl); border-color: transparent; }
+.cp-hl:not([data-hl]) { color: var(--text-3); }
+.cp-hl .icon { width: 16px; height: 16px; }
+
+@media (max-width: 400px) {
+  .cp-row { grid-template-columns: repeat(5, 34px); }
+  .cp-swatch { width: 34px; height: 34px; }
+}
+
+/* ---------------- Folder picker (under the title) ---------------- */
+.page-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: -4px auto 14px;
+  min-height: 26px;
+}
+.page-meta-row .page-meta { margin: 0; }
+
+/* Page actions (⋯): export, duplicate, move, delete. */
+.page-actions { position: relative; margin-left: auto; }
+.page-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  border-radius: var(--r-md);
+  color: var(--text-3);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.page-menu-btn:hover,
+.page-menu-btn[aria-expanded="true"] { background: var(--hover); color: var(--text); }
+.page-menu-btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.page-menu-btn .icon { width: 18px; height: 18px; }
+.page-actions .menu { right: 0; top: calc(100% + 6px); }
+
+.folder-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 4px 0 7px;
+  border-radius: var(--r-md);
+  color: var(--text-3);
+  font-size: var(--fs-caption);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.folder-picker:hover,
+.folder-picker:focus-within { background: var(--hover); color: var(--text-2); }
+.folder-picker.is-filed { color: var(--text-2); }
+.folder-picker .icon { width: 14px; height: 14px; }
+.folder-picker select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0 14px 0 0;
+  max-width: 200px;
+  cursor: pointer;
+  background-image: var(--chevron);
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 12px;
+}
+.folder-picker select:focus-visible { outline: none; }
+.folder-new .field { height: 28px; width: 200px; font-size: var(--fs-caption); }
