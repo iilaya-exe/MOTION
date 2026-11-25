@@ -1,0 +1,228 @@
+/* Month grid. Each week is its own grid: day boxes span the full week height on
+   row 1, while event bars occupy explicit 26px lane rows above them. */
+
+.cal-nav .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+.cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); }
+
+.cal-dow {
+  text-align: center;
+  font-size: var(--fs-caption);
+  font-weight: 400;
+  color: var(--text-3);
+  padding-bottom: 8px;
+}
+
+.cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+/* Marked with explicit classes rather than :first-of-type / :last-of-type: the
+   day-of-week header is also a div and sits first, so :first-of-type never
+   matched a week and only the bottom corners were ever rounded. */
+.cal-week.is-first {
+  border-top-left-radius: var(--r-xl);
+  border-top-right-radius: var(--r-xl);
+}
+
+.cal-week.is-last {
+  border-bottom-left-radius: var(--r-xl);
+  border-bottom-right-radius: var(--r-xl);
+}
+
+/* The day boxes paint the corner cells, so they need the same rounding or
+   their backgrounds poke out past the rounded border. */
+.cal-week.is-first > .cal-daybox:first-child { border-top-left-radius: var(--r-xl); }
+.cal-week.is-first > .cal-daybox:nth-child(7) { border-top-right-radius: var(--r-xl); }
+.cal-week.is-last > .cal-daybox:first-child { border-bottom-left-radius: var(--r-xl); }
+.cal-week.is-last > .cal-daybox:nth-child(7) { border-bottom-right-radius: var(--r-xl); }
+
+.cal-week:not(.is-first) { margin-top: -1px; }
+
+.cal-daybox {
+  grid-row: 1 / -1;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.13s var(--ease);
+}
+
+.cal-daybox:hover { background: var(--hover-subtle); }
+.cal-daybox.blank { cursor: default; background: var(--surface-2); }
+.cal-daybox.today { background: transparent; }
+.cal-daybox.selected { background: var(--hover); box-shadow: inset 0 0 0 1.5px var(--text); position: relative; z-index: 0; }
+
+/* Weekends (Sunday and Saturday columns) sit back slightly. */
+.cal-daybox:nth-child(7n + 1):not(.blank):not(.today),
+.cal-daybox:nth-child(7n):not(.blank):not(.today):not(.selected) { background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+.cal-daybox:nth-child(7n + 1):not(.blank):hover,
+.cal-daybox:nth-child(7n):not(.blank):not(.selected):hover { background: var(--hover-subtle); }
+
+.cal-dayhead {
+  grid-row: 1;
+  padding: 7px 8px 2px;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  z-index: 1;
+}
+
+.cal-dayhead-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.cal-daynum {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--text-2);
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Today gets the highlighter, the one place it appears on this screen. */
+.cal-dayhead.today .cal-daynum { color: var(--hl-ink); font-weight: 500; }
+.cal-daynum { font-variant-numeric: tabular-nums; font-variant-numeric: tabular-nums; }
+
+/* "3 tasks", with a small box drawn like a checkbox. */
+.cal-task-indicator {
+  font-size: var(--fs-tiny);
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  font-weight: 500;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-task-indicator::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Holidays are a dot and a name, not a filled chip. */
+.cal-holiday-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-micro);
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cal-holiday-chip i { width: 6px; height: 6px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+.cal-holiday-chip.special i { background: var(--amber); }
+
+/* Events are neutral pills; colour is reserved for subjects and warnings. */
+.cal-event-bar {
+  background: var(--hover);
+  color: var(--text);
+  box-shadow: inset 2px 0 0 var(--text-3);
+  font-size: var(--fs-mini);
+  font-weight: 500;
+  line-height: 1;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  z-index: 1;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.cal-event-bar:hover { background: var(--active, var(--border)); }
+.cal-event-bar:not(.cap-start) { box-shadow: none; }
+
+.cal-event-bar.cap-start {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  margin-left: 4px;
+}
+
+.cal-event-bar.cap-end {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  margin-right: 4px;
+}
+
+.cal-more-events {
+  font-size: var(--fs-tiny);
+  color: var(--text-3);
+  font-weight: 500;
+  padding: 0 8px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cal-note {
+  margin: 12px 2px 0;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  max-width: 80ch;
+}
+
+/* ---------------- Month plus the selected day ---------------- */
+
+.cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.cal-week { background: var(--surface); }
+
+.cal-aside {
+  position: sticky;
+  top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 16px;
+  margin-top: 28px;
+}
+.ca-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.ca-head h3 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.3; letter-spacing: -0.015em; }
+.ca-head .mark { font-size: 12px; }
+.ca-sec + .ca-sec { margin-top: 12px; }
+.ca-sec h4 { margin: 0 0 4px; font-size: 12px; font-weight: 500; color: var(--text-3); }
+.ca-sec ul { list-style: none; margin: 0; padding: 0; }
+.ca-sec li { display: flex; align-items: center; gap: 8px; min-height: 32px; font-size: 13px; }
+.ca-sec li + li { border-top: 1px solid var(--border); }
+.ca-sec li > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ca-sec li small { color: var(--text-2); font-size: 12px; white-space: nowrap; }
+.ca-sec li small.is-late { color: var(--danger); }
+.ca-sec li > i { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ca-hol > i { background: var(--danger); }
+.ca-hol.special > i { background: var(--amber); }
+.ca-sec .ca-cls > i { width: 3px; height: 16px; border-radius: 2px; background: var(--cc); }
+.ca-ev { cursor: pointer; }
+.ca-ev:hover span { text-decoration: underline; text-underline-offset: 3px; }
+.ca-task.done span { color: var(--text-3); text-decoration: line-through; }
+.ca-empty { color: var(--text-2); font-size: 13px; margin: 0; }
+.ca-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.ca-actions .btn { height: 32px; flex: 1; }
+
+@container (max-width: 960px) {
+  .cal-layout { grid-template-columns: minmax(0, 1fr); }
+  .cal-aside { display: none; }
+}

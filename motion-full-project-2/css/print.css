@@ -1,0 +1,223 @@
+/* ============================================================================
+   Print / PDF
+   ----------------------------------------------------------------------------
+   The printed note is a separate document, not a screenshot of the app. Every
+   value here is in physical units (pt/mm) because a PDF has no viewport, and
+   every colour is literal rather than a theme token — printing a dark-mode note
+   should still produce a black-on-white page.
+   ========================================================================== */
+
+/* Never visible on screen; print.css is the only thing that reveals it. */
+.print-sheet {
+  display: none;
+}
+
+@page {
+  /* No `size`, so the user's chosen paper (A4 or Letter) is respected. Wider
+     outer margin at the top leaves room for the browser's own header. */
+  margin: 18mm 16mm 16mm;
+}
+
+@media print {
+  /* Hide the entire app; the sheet is the document. */
+  body > *,
+  .topbar,
+  .app,
+  .modal-overlay,
+  .class-timer,
+  .undo-toast,
+  .offline-bar,
+  .sidebar-backdrop,
+  .loading-overlay {
+    display: none !important;
+  }
+
+  body > .print-sheet {
+    display: block !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    margin: 0;
+    padding: 0;
+    height: auto;
+    overflow: visible;
+  }
+
+  .ps-doc {
+    color: #14161a;
+    font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.62;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---------------- Masthead ---------------- */
+  .ps-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 5pt;
+    border-bottom: 1.2pt solid #18181b;
+    margin-bottom: 16pt;
+  }
+
+  .ps-brand {
+    font-size: 10pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #18181b;
+  }
+
+  .ps-printed {
+    font-size: 8.5pt;
+    color: #6b6b76;
+  }
+
+  /* ---------------- Title block ---------------- */
+  .ps-title {
+    font-size: 22pt;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0 0 4pt;
+    color: #0d0f13;
+    /* A title stranded at the foot of a page is the classic print defect. */
+    break-after: avoid-page;
+  }
+
+  .ps-meta {
+    margin: 0 0 18pt;
+    font-size: 8.5pt;
+    color: #6b6b76;
+    break-after: avoid-page;
+  }
+
+  /* ---------------- Body ---------------- */
+  .ps-body > *:first-child { margin-top: 0; }
+
+  .ps-body p {
+    margin: 0 0 9pt;
+    /* Never leave one line of a paragraph alone on a page. */
+    orphans: 3;
+    widows: 3;
+  }
+
+  .ps-body h2,
+  .ps-body h3 {
+    color: #0d0f13;
+    line-height: 1.3;
+    break-after: avoid-page;
+    break-inside: avoid;
+  }
+
+  .ps-body h2 {
+    font-size: 14pt;
+    font-weight: 680;
+    letter-spacing: -0.01em;
+    margin: 18pt 0 6pt;
+  }
+
+  .ps-body h3 {
+    font-size: 11.5pt;
+    font-weight: 660;
+    margin: 14pt 0 4pt;
+  }
+
+  .ps-body ul,
+  .ps-body ol {
+    margin: 0 0 9pt;
+    padding-left: 16pt;
+  }
+
+  .ps-body ul { list-style-type: disc; }
+  .ps-body ol { list-style-type: decimal; }
+
+  .ps-body li {
+    margin-bottom: 2.5pt;
+    orphans: 2;
+    widows: 2;
+    break-inside: avoid;
+  }
+
+  .ps-body hr {
+    border: none;
+    border-top: 0.6pt solid #c9c9d2;
+    margin: 14pt 0;
+  }
+
+  .ps-body b,
+  .ps-body strong { font-weight: 680; }
+
+  .ps-body a {
+    color: #18181b;
+    text-decoration: underline;
+  }
+
+  .ps-body blockquote {
+    margin: 0 0 9pt;
+    padding: 1pt 0 1pt 10pt;
+    border-left: 2pt solid #c9c9d2;
+    color: #3f3f46;
+    break-inside: avoid;
+  }
+
+  .ps-body code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: #f4f4f5;
+    border: 0.5pt solid #e4e4e7;
+    border-radius: 2pt;
+    padding: 0 2pt;
+  }
+
+  /* Note colours, always in their light-theme shades on paper. */
+  .ps-body [data-tc="gray"] { color: #71717a; }
+  .ps-body [data-tc="brown"] { color: #8a5a3c; }
+  .ps-body [data-tc="orange"] { color: #c2410c; }
+  .ps-body [data-tc="yellow"] { color: #a16207; }
+  .ps-body [data-tc="green"] { color: #15803d; }
+  .ps-body [data-tc="blue"] { color: #1d4ed8; }
+  .ps-body [data-tc="purple"] { color: #7e22ce; }
+  .ps-body [data-tc="pink"] { color: #be185d; }
+  .ps-body [data-tc="red"] { color: #b91c1c; }
+  .ps-body [data-hl="gray"] { background: #e9e9eb; }
+  .ps-body [data-hl="brown"] { background: #f1e6dc; }
+  .ps-body [data-hl="orange"] { background: #ffe4cc; }
+  .ps-body [data-hl="yellow"] { background: #fdf0a6; }
+  .ps-body [data-hl="green"] { background: #d3f5dd; }
+  .ps-body [data-hl="blue"] { background: #d6e6fd; }
+  .ps-body [data-hl="purple"] { background: #ece0fd; }
+  .ps-body [data-hl="pink"] { background: #fbdcec; }
+  .ps-body [data-hl="red"] { background: #fddcdc; }
+  .ps-body [data-hl] { border-radius: 2pt; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+
+  .ps-body ul.todo { list-style: none; padding-left: 2pt; }
+  .ps-body ul.todo > li { position: relative; padding-left: 15pt; }
+  .ps-body ul.todo > li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 2.6pt;
+    width: 8pt;
+    height: 8pt;
+    border: 0.8pt solid #71717a;
+    border-radius: 1.6pt;
+  }
+  .ps-body ul.todo > li[data-checked="true"] { color: #71717a; text-decoration: line-through; }
+  .ps-body ul.todo > li[data-checked="true"]::before { background: #18181b; border-color: #18181b; }
+
+  .ps-empty { color: #8b8b96; font-style: italic; }
+
+  /* ---------------- Footer ---------------- */
+  .ps-foot {
+    margin-top: 20pt;
+    padding-top: 5pt;
+    border-top: 0.6pt solid #d9d9e0;
+    font-size: 8pt;
+    color: #8b8b96;
+  }
+}

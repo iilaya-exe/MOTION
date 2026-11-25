@@ -1,0 +1,164 @@
+/* ============================================================================
+   Class countdown
+   ----------------------------------------------------------------------------
+   Fixed to the viewport so it survives view switches. It is part of the
+   functional layer, so it is glass. The subject colour appears only as the
+   dot; the urgency shows in the label: Next class → Starts soon → Leave now
+   (red) → In class now, with a progress bar while the class runs.
+   ========================================================================== */
+
+.class-timer {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 140;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  padding: 14px 16px 16px;
+  border-radius: 18px;
+  animation: timerIn var(--dur-slow) var(--ease);
+}
+
+@keyframes timerIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+.ct-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-right: 22px; }
+.ct-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text); }
+.ct-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cc, var(--text)); flex-shrink: 0; }
+.ct-when { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-2); white-space: nowrap; }
+
+.ct-main { display: flex; align-items: flex-end; gap: 14px; margin-top: 10px; }
+.ct-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.ct-class { min-width: 0; padding-bottom: 2px; }
+.ct-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-emoji { font-size: 1em; line-height: 1; }
+.ct-meta { margin-top: 2px; font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ct-progress { height: 4px; border-radius: 2px; margin-top: 12px; background: var(--track); overflow: hidden; }
+.ct-progress i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--cc, var(--text)); transition: width 1s linear; }
+
+.ct-hide {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--text-2);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.ct-hide .icon { width: 12px; height: 12px; }
+.class-timer:hover .ct-hide,
+.class-timer:focus-within .ct-hide { opacity: 1; }
+.ct-hide:hover { background: var(--hover); color: var(--text); }
+@media (hover: none) { .ct-hide { opacity: 1; } }
+
+/* Escalation lives in the words; only the last five minutes turn red. */
+.class-timer.phase-critical .ct-label,
+.class-timer.phase-critical .ct-count { color: var(--danger); }
+.class-timer.phase-critical .ct-dot { background: var(--danger); animation: ctBlink 1s steps(2, start) infinite; }
+@keyframes ctBlink { to { opacity: 0.35; } }
+
+.class-timer.pulse { animation: ctAttention 0.6s var(--ease) 2; }
+@keyframes ctAttention {
+  0%, 100% { transform: none; }
+  50% { transform: translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .class-timer, .class-timer.pulse, .ct-dot { animation: none !important; }
+}
+
+/* Phone: a strip that sits just above the tab bar. */
+@media (max-width: 768px) {
+  .class-timer {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    padding: 10px 14px;
+    border-radius: 16px;
+  }
+  .ct-main { margin-top: 6px; align-items: center; gap: 12px; }
+  .ct-count { font-size: 24px; }
+  .ct-progress { margin-top: 8px; }
+  .ct-hide { top: 6px; right: 6px; }
+}
+
+/* ---------------- In-view panel (Schedule + Home) ---------------- */
+.timer-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  padding: 20px 24px;
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: inset 3px 0 0 var(--cc, var(--text));
+  margin-bottom: var(--gap-card);
+}
+
+.timer-panel .tp-info { flex: 1; min-width: 0; }
+
+.timer-panel .tp-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-panel .tp-label {
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+
+.timer-panel .tp-name {
+  font-size: var(--fs-h3);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.timer-panel .tp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 4px;
+  font-size: var(--fs-body-s);
+  color: var(--text-2);
+}
+
+.timer-panel .tp-meta span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.timer-panel .tp-meta .icon { width: 14px; height: 14px; color: var(--text-3); }

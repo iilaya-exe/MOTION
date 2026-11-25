@@ -1,0 +1,283 @@
+/* ============================================================================
+   Command palette and reminder toasts
+   ----------------------------------------------------------------------------
+   The palette follows shadcn's CommandDialog: a popover pinned near the top of
+   the screen, an input row, grouped results with muted headings, and a single
+   highlighted row driven by the keyboard. Reminder toasts follow Sonner, stacked
+   top-right so they never collide with the undo toast or the class timer, which
+   both live along the bottom edge.
+   ========================================================================== */
+
+/* ---------------- Palette ---------------- */
+.modal-overlay.cmdk-overlay {
+  align-items: flex-start;
+  padding-top: max(12vh, 24px);
+  z-index: 160;
+}
+
+.cmdk {
+  display: flex;
+  flex-direction: column;
+  width: 600px;
+  max-width: 100%;
+  max-height: min(520px, 76vh);
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  animation: modalIn 0.16s var(--ease);
+}
+
+.cmdk-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  flex-shrink: 0;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cmdk-input-row .icon { width: 18px; height: 18px; color: var(--text-3); }
+
+.cmdk-input-row input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: var(--fs-body);
+  color: var(--text);
+}
+
+.cmdk-input-row input::placeholder { color: var(--text-3); }
+.cmdk-input-row input:focus-visible { outline: none; }
+
+.cmdk-list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  scroll-padding: 8px;
+}
+
+.cmdk-group { padding: 4px 0; }
+.cmdk-group + .cmdk-group { border-top: 1px solid var(--border); }
+
+.cmdk-heading {
+  padding: 6px 10px 4px;
+  font-size: var(--fs-mini);
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.cmdk-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 6px 10px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-body-s);
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.cmdk-item[aria-selected="true"] { background: var(--hover); }
+.cmdk-item .icon { width: 16px; height: 16px; color: var(--text-3); }
+.cmdk-item[aria-selected="true"] .icon { color: var(--text); }
+
+.cmdk-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cmdk-hint {
+  flex-shrink: 0;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+}
+
+.cmdk-hint.is-danger { color: var(--danger); }
+
+/* What Enter will do, shown only on the highlighted row. */
+.cmdk-action {
+  display: none;
+  flex-shrink: 0;
+  font-size: var(--fs-mini);
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.cmdk-item[aria-selected="true"] .cmdk-action { display: inline; }
+
+.cmdk-swatch {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.cmdk-swatch::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--cc);
+}
+
+.cmdk-emoji {
+  width: 16px;
+  flex-shrink: 0;
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
+}
+
+.cmdk-empty {
+  padding: 36px 16px;
+  text-align: center;
+  font-size: var(--fs-body-s);
+  color: var(--text-3);
+}
+
+.cmdk-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 0 14px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: var(--fs-mini);
+  color: var(--text-3);
+}
+
+.cmdk-foot span { display: inline-flex; align-items: center; gap: 4px; }
+.cmdk-foot span:last-child { margin-left: auto; }
+
+/* ---------------- Reminder toasts ---------------- */
+.reminder-stack {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 210;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(380px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.reminder-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 10px 14px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: reminderIn 0.24s var(--ease);
+}
+
+@keyframes reminderIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.reminder-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--r-md);
+  background: var(--muted);
+  color: var(--text);
+}
+
+.reminder-icon .icon { width: 16px; height: 16px; }
+
+.reminder-body { flex: 1; min-width: 0; padding-top: 1px; }
+
+.reminder-title {
+  font-size: var(--fs-body-s);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.reminder-text {
+  margin-top: 2px;
+  font-size: var(--fs-caption);
+  color: var(--text-3);
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.reminder-view {
+  flex-shrink: 0;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--on-accent);
+  background: var(--accent-fill);
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.reminder-view:hover { background: var(--accent-fill-hover); }
+
+.reminder-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  color: var(--text-3);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.reminder-close .icon { width: 14px; height: 14px; }
+.reminder-close:hover { background: var(--hover); color: var(--text); }
+
+@media (max-width: 768px) {
+  /* Pinned to the top, not turned into a bottom sheet: the keyboard opens from
+     the bottom and would cover the results. */
+  .modal-overlay.cmdk-overlay {
+    align-items: flex-start;
+    padding: calc(10px + env(safe-area-inset-top)) 10px 10px;
+  }
+
+  .cmdk { max-height: 70vh; max-height: 70dvh; }
+  .cmdk-input-row input { font-size: 16px; }
+  .cmdk-input-row .kbd { display: none; }
+  .cmdk-foot { display: none; }
+  .cmdk-item { min-height: 44px; }
+
+  .reminder-stack {
+    top: calc(54px + env(safe-area-inset-top) + 8px);
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .setting-row { padding: 12px; }
+  .setting-row .field { width: 148px; }
+}
+
+@media print {
+  .reminder-stack { display: none; }
+}

@@ -1,0 +1,163 @@
+import { defaultState, sanitizeState } from "./defaults.js";
+
+/* Persistence. IndexedDB is the primary store because it has no practical size
+   cap for notes; localStorage is the fallback for private-mode browsers where
+   IndexedDB is blocked. Data from the original single-file version of the app
+   lives under LS_KEY and is migrated across on first run. */
+
+/* tests.html loads the app with ?e2e=1 so the suite gets its own database and
+   can never touch real notes. Nothing else reads this flag. */
+const E2E = new URLSearchParams(window.location.search).has("e2e");
+
+const LS_KEY = E2E ? "motionE2E" : "myNotionCloneData_v1";
+const DB_NAME = E2E ? "MotionDB_e2e" : "MyNotionCloneDB";
+const DB_VERSION = 1;
+const STORE_NAME = "appState";
+const STATE_KEY = "state";
+
+let usingIndexedDB = true;
+let dbPromise = null;
+
+/* Nothing in the boot path may hang — but a timeout that is too eager is worse
+   than a hang, because falling back to an empty localStorage shows the user a
+   blank workspace while their real data sits untouched in IndexedDB, and any
+   edits they then make are written to the *other* store. Ten seconds, and a
+   timeout is reported as a failure rather than quietly guessing. */
+const OPEN_TIMEOUT_MS = 10000;
+
+/** Marks the "IndexedDB should work but did not answer" case specifically. */
+export const IDB_TIMEOUT = "IDB_TIMEOUT";
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+
+  dbPromise = new Promise((resolve, reject) => {
+    if (!window.indexedDB) {
+      reject(new Error("IndexedDB not supported"));
+      return;
+    }
+
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+
+    // Guard against a late success arriving after the timeout has already
+    // rejected: without it the connection opens fine but nobody is listening,
+    // and the app spends the session writing to the wrong store.
+    let settled = false;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      fn(value);
+    };
+
+    // Fires instead of onsuccess/onerror when another tab holds an older version
+    // of the database open. Without this the request settles neither way.
+    req.onblocked = () =>
+      finish(reject, new Error("IndexedDB is blocked by another open tab of this app"));
+
+    req.onupgradeneeded = () => req.result.createObjectStore(STORE_NAME);
+    req.onsuccess = () => finish(resolve, req.result);
+    req.onerror = () => finish(reject, req.error);
+
+    setTimeout(() => {
+      const err = new Error("IndexedDB did not respond in time");
+      err.code = IDB_TIMEOUT;
+      finish(reject, err);
+    }, OPEN_TIMEOUT_MS);
+  });
+
+  return dbPromise;
+}
+
+function idbGet(key) {
+  return openDB().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const req = tx.objectStore(STORE_NAME).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      })
+  );
+}
+
+function idbSet(key, value) {
+  return openDB().then(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        tx.objectStore(STORE_NAME).put(value, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      })
+  );
+}
+
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? sanitizeState(JSON.parse(raw)) : defaultState();
+  } catch (e) {
+    console.warn("Saved data could not be read, starting with a fresh workspace.", e);
+    return defaultState();
+  }
+}
+
+function saveToLocalStorage(state) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error("Could not save to localStorage.", e);
+  }
+}
+
+export function loadState() {
+  return idbGet(STATE_KEY)
+    .then((existing) => {
+      if (existing) return sanitizeState(existing);
+
+      // First run on IndexedDB: migrate any data from the old localStorage build.
+      let legacyRaw = null;
+      if (E2E) return idbSet(STATE_KEY, defaultState()).then(() => defaultState());
+      try {
+        legacyRaw = localStorage.getItem(LS_KEY);
+      } catch {
+        /* storage unavailable — nothing to migrate */
+      }
+
+      const initial = legacyRaw ? sanitizeState(JSON.parse(legacyRaw)) : defaultState();
+
+      return idbSet(STATE_KEY, initial).then(() => {
+        if (legacyRaw) {
+          try {
+            localStorage.removeItem(LS_KEY);
+          } catch {
+            /* ignore */
+          }
+        }
+        return initial;
+      });
+    })
+    .catch((err) => {
+      // A timeout means the database is probably fine and just slow. Loading an
+      // empty workspace here would look exactly like data loss, so refuse to
+      // guess and let the caller surface a real error instead.
+      if (err?.code === IDB_TIMEOUT) throw err;
+
+      console.warn("IndexedDB unavailable, falling back to localStorage.", err);
+      usingIndexedDB = false;
+      return loadFromLocalStorage();
+    });
+}
+
+export function saveState(state) {
+  if (!usingIndexedDB) {
+    saveToLocalStorage(state);
+    return;
+  }
+
+  idbSet(STATE_KEY, state).catch((err) => {
+    console.error("Could not save to IndexedDB, falling back to localStorage.", err);
+    usingIndexedDB = false;
+    saveToLocalStorage(state);
+  });
+}
