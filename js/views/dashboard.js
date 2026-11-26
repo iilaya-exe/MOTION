@@ -136,7 +136,7 @@ function renderDay(classesToday, tasksToday, holidays, eventsToday, today) {
   if (nowH >= first - 2 && nowH < first) first = Math.floor(nowH);
   if (nowH > last && nowH <= last + 2) last = Math.ceil(nowH + 0.01);
   if (last - first < 4) last = first + 4;
-  const HOUR = 64;
+  const HOUR = 84;
   const y = (min) => ((min - first * 60) / 60) * HOUR;
 
   let grid = "";
@@ -148,17 +148,23 @@ function renderDay(classesToday, tasksToday, holidays, eventsToday, today) {
   classesToday.forEach((c) => {
     const s = toMinutes(c.start);
     const e = toMinutes(c.end);
+    // A block fills its own slot and may grow into free time below it (for
+    // its tasks), but always stops 4px short of the next class's start.
+    const nextStart = Math.min(...classesToday.map((o) => toMinutes(o.start)).filter((m) => m > s));
+    const slot = y(e) - y(s) - 4;
+    const room = Number.isFinite(nextStart) ? y(nextStart) - y(s) - 4 : Infinity;
+    const size = `min-height:${Math.min(slot, room)}px` + (Number.isFinite(room) ? `;max-height:${room}px` : "");
     const isNow = s <= nowM && nowM < e;
     const isPast = e <= nowM;
     const tasks = byClass.get(c.id);
     grid +=
-      `<div class="tl-item ${colorClass(c)}${isNow ? " is-now" : ""}${isPast ? " is-past" : ""}" style="top:${y(s) + 2}px;min-height:${y(e) - y(s) - 4}px">` +
+      `<div class="tl-item ${colorClass(c)}${isNow ? " is-now" : ""}${isPast ? " is-past" : ""}${Math.min(slot, room) < 60 ? " is-short" : ""}" style="top:${y(s) + 2}px;${size}">` +
       `<div class="tl-title">${c.emoji ? `<span class="class-emoji">${esc(c.emoji)}</span>` : ""}${esc(c.subject)}` +
       (c.section ? ` <span class="tl-code">${esc(c.section)}</span>` : "") + "</div>" +
       `<div class="tl-meta"><span class="tl-time">${icon("clock")}${esc(formatTime(c.start))} – ${esc(formatTime(c.end))}</span>` +
       (c.room ? `<span>${icon("pin")}${esc(c.room)}</span>` : "") + "</div>" +
       (isNow
-        ? `<div class="tl-progress"><i style="width:${Math.round(((nowM - s) / (e - s)) * 100)}%"></i></div><div class="tl-left">${leftLabel(e - nowM)}</div>`
+        ? `<div class="tl-live"><div class="tl-progress"><i style="width:${Math.round(((nowM - s) / (e - s)) * 100)}%"></i></div><div class="tl-left">${leftLabel(e - nowM)}</div></div>`
         : "") +
       (tasks.length ? `<ul class="tl-tasks">${tasks.map((t) => taskChip(t, today)).join("")}</ul>` : "") +
       "</div>";
@@ -174,6 +180,28 @@ function renderDay(classesToday, tasksToday, holidays, eventsToday, today) {
     (allDay ? `<div class="tl-allday">${allDay}</div>` : "") +
     `<div class="tl-day" style="height:${y(last * 60) + 8}px">${grid}</div>` +
     looseTasks(loose, today, true);
+
+  // A class boxed in by the next one shows the tasks that fit; the rest are
+  // counted in its title row, which is always visible.
+  host.querySelectorAll(".tl-item").forEach((item) => {
+    const rows = [...item.querySelectorAll(".tl-tasks > li")];
+    if (!rows.length || item.scrollHeight <= item.clientHeight + 1) return;
+    const more = document.createElement("span");
+    more.className = "tl-more";
+    item.querySelector(".tl-title").append(more);
+    let hidden = 0;
+    while (hidden < rows.length && item.scrollHeight > item.clientHeight + 1) {
+      rows[rows.length - 1 - hidden].hidden = true;
+      hidden++;
+      more.textContent = `+${hidden} task${hidden === 1 ? "" : "s"}`;
+    }
+    if (hidden === rows.length) item.querySelector(".tl-tasks").hidden = true;
+  });
+
+  // The last class can run past the scale with its tasks; make room for it.
+  const day = host.querySelector(".tl-day");
+  const bottom = Math.max(0, ...[...day.querySelectorAll(".tl-item")].map((el) => el.offsetTop + el.offsetHeight));
+  if (bottom + 8 > day.offsetHeight) day.style.height = `${bottom + 8}px`;
 }
 
 function looseTasks(list, today, hasClasses) {

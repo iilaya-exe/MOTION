@@ -154,11 +154,19 @@ function renderWeek() {
   });
 
   // Hour labels.
+  // The current time lives here, in the gutter, so it never sits on a class;
+  // the hour labels it would collide with step aside.
+  const showNow = days.includes(today) && nowMin > first * 60 && nowMin < last * 60;
+  const nearNow = (h) => showNow && Math.abs(h * 60 - nowMin) < 22;
   html += '<div class="tt-hours">';
   // The first hour sits on the top edge, so its label hangs below the line.
-  html += `<span class="tt-hour is-first" style="top:0">${hourLabel(first)}</span>`;
+  if (!nearNow(first)) html += `<span class="tt-hour is-first" style="top:0">${hourLabel(first)}</span>`;
   for (let h = first + 1; h < last; h++) {
-    html += `<span class="tt-hour" style="top:${pct(h * 60)}%">${hourLabel(h)}</span>`;
+    if (!nearNow(h)) html += `<span class="tt-hour" style="top:${pct(h * 60)}%">${hourLabel(h)}</span>`;
+  }
+  if (showNow) {
+    const label = formatTime(`${Math.floor(nowMin / 60)}:${nowMin % 60}`).replace(" ", "\u00a0");
+    html += `<span class="tt-hour tt-now-label" style="top:${pct(nowMin)}%"><span class="mark">${label}</span></span>`;
   }
   html += "</div>";
 
@@ -168,12 +176,18 @@ function renderWeek() {
     for (let h = first + 1; h < last; h++) {
       html += `<span class="tt-line" style="top:${pct(h * 60)}%"></span>`;
     }
+    // Faint across the other days, drawn first so classes sit over it.
+    if (showNow && d !== today) {
+      html += `<span class="tt-now is-faint" style="top:${pct(nowMin)}%" aria-hidden="true"></span>`;
+    }
     layoutDay(classesOnDay(classes, d)).forEach(({ c, start, end, lane, lanes }) => {
       const tasks = openTaskCount(c.id);
       const past = d === today && end <= nowMin;
       html +=
-        `<button type="button" class="tt-block ${colorClass(c)}${past ? " is-past" : ""}" data-id="${esc(c.id)}" ` +
-        `style="top:${pct(start)}%;height:${pct(end) - pct(start)}%;` +
+        `<button type="button" class="tt-block ${colorClass(c)}${past ? " is-past" : ""}${end - start <= 45 ? " is-short" : ""}" data-id="${esc(c.id)}" ` +
+        // 1px in at the top and 2px short at the bottom: back-to-back classes
+        // keep a visible seam instead of fusing into one block.
+        `style="top:calc(${pct(start)}% + 1px);height:calc(${pct(end) - pct(start)}% - 3px);` +
         `left:calc(${(lane / lanes) * 100}% + 4px);width:calc(${100 / lanes}% - 8px)" ` +
         `title="${esc(c.subject)}, ${esc(formatTime(c.start))} – ${esc(formatTime(c.end))}${c.room ? ", " + esc(c.room) : ""}">` +
         `<span class="tt-name">${c.emoji ? `<span class="class-emoji">${esc(c.emoji)}</span>` : ""}${esc(c.subject)}</span>` +
@@ -181,9 +195,9 @@ function renderWeek() {
         (tasks ? `<span class="tt-tasks">${tasks} task${tasks === 1 ? "" : "s"}</span>` : "") +
         "</button>";
     });
-    if (d === today && nowMin > first * 60 && nowMin < last * 60) {
-      const label = formatTime(`${Math.floor(nowMin / 60)}:${nowMin % 60}`).replace(" ", "\u00a0");
-      html += `<span class="tt-now" style="top:${pct(nowMin)}%" aria-hidden="true"><span class="mark">${label}</span></span>`;
+    // Solid across today, on top of its classes.
+    if (showNow && d === today) {
+      html += `<span class="tt-now" style="top:${pct(nowMin)}%" aria-hidden="true"></span>`;
     }
     html += "</div>";
   });

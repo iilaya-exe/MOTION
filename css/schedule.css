@@ -582,6 +582,13 @@
 .tt-block:hover { background: color-mix(in srgb, var(--cc, var(--text-3)) 18%, var(--surface)); }
 .tt-block:focus-visible { outline: none; box-shadow: inset 3px 0 0 var(--cc, var(--text-3)), var(--ring); }
 .tt-block.is-past { opacity: 0.6; }
+/* Lines keep their height; the block clips what doesn't fit instead of
+   squashing the class name away. */
+.tt-block > * { flex-shrink: 0; max-width: 100%; }
+/* 45 minutes or less: the name and time share one line. */
+.tt-block.is-short { flex-direction: row; align-items: center; flex-wrap: nowrap; gap: 6px; padding-top: 2px; padding-bottom: 2px; }
+.tt-block.is-short .tt-meta { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tt-block.is-short .tt-tasks { display: none; }
 .tt-name { font-weight: 500; display: flex; gap: 4px; align-items: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tt-meta { color: var(--text-2); font-size: var(--fs-mini); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tt-tasks { color: var(--text-2); font-variant-numeric: tabular-nums; font-size: 11px; margin-top: auto; }
@@ -596,15 +603,9 @@
   z-index: 2;
   pointer-events: none;
 }
-.tt-now .mark {
-  position: absolute;
-  left: 6px;
-  top: -9px;
-  font-variant-numeric: tabular-nums;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.5;
-}
+.tt-now.is-faint { height: 1px; background: var(--border-strong); z-index: auto; }
+.tt-now-label { z-index: 3; color: var(--text); }
+.tt-now-label .mark { font-size: 11px; font-weight: 500; }
 
 .tt-empty {
   display: flex;
