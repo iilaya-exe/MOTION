@@ -1228,9 +1228,33 @@ export async function suite(win) {
     const r = q("#settingsMenu").getBoundingClientRect();
     return r.top >= 0 && r.left >= 0 && r.bottom <= win.innerHeight && r.width > 150;
   })(), JSON.stringify(q("#settingsMenu").getBoundingClientRect()));
+  check("it opens right above its button", (() => {
+    const m = q("#settingsMenu").getBoundingClientRect();
+    const b = q("#settingsBtn").getBoundingClientRect();
+    return Math.abs(b.top - m.bottom - 6) <= 2;
+  })(), `${JSON.stringify(q("#settingsMenu").getBoundingClientRect())} vs ${JSON.stringify(q("#settingsBtn").getBoundingClientRect())}`);
   q("#settingsMenu").dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
   await settle();
   check("Escape closes it", q("#settingsMenu").classList.contains("hidden"));
+
+  // A long notes list scrolls the sidebar; the menu must still open at the button.
+  const sb = q("#sidebar");
+  const filler = win.document.createElement("div");
+  filler.style.height = "2000px";
+  sb.insertBefore(filler, sb.querySelector(".sidebar-footer"));
+  sb.scrollTop = sb.scrollHeight;
+  await settle();
+  click(q("#settingsBtn"));
+  await settle();
+  check("with the sidebar scrolled it still opens right above its button", (() => {
+    const m = q("#settingsMenu").getBoundingClientRect();
+    const b = q("#settingsBtn").getBoundingClientRect();
+    return Math.abs(b.top - m.bottom - 6) <= 2 && m.top >= 0;
+  })(), `${JSON.stringify(q("#settingsMenu").getBoundingClientRect())} vs ${JSON.stringify(q("#settingsBtn").getBoundingClientRect())}`);
+  q("#settingsMenu").dispatchEvent(new win.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  filler.remove();
+  sb.scrollTop = 0;
+  await settle();
 
   group("Phone tab bar");
   check("five tabs and an add button exist", qa("#tabBar .tab").length === 5 && !!q("#fabBtn"));

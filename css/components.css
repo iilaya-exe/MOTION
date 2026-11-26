@@ -345,7 +345,7 @@
 }
 
 .footer-btn.is-on .on-dot,
-.settings:has(#remindersBtn.is-on) #settingsBtn .on-dot { display: block; }
+body:has(#remindersBtn.is-on) #settingsBtn .on-dot { display: block; }
 
 /* Sidebar search trigger: shadcn's SidebarInput look, but a button that opens
    the command palette, with the shortcut shown as a Kbd. */

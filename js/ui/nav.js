@@ -87,6 +87,10 @@ export function mount() {
   $("sidebarToggle").addEventListener("click", () => setSidebarCollapsed(!isSidebarCollapsed()));
   // The sidebar clips overflow (it scrolls, and the rail hides its sides), so
   // the Settings menu is placed against the window, beside or above its button.
+  // It lives on <body>: the glass sidebar's backdrop-filter would otherwise
+  // become the reference box for its fixed position (pushing it up by however
+  // far the sidebar is scrolled) and stop its own glass from blurring.
+  document.body.append($("settingsMenu"));
   bindMenu($("settingsBtn"), $("settingsMenu"), {
     onOpen() {
       const r = $("settingsBtn").getBoundingClientRect();
